@@ -109,7 +109,7 @@
       var ideal = (form.querySelector('[name="betaling"]:checked') || {}).value === 'ideal';
       var r = window.ydPrijs(read(form));
       var incl = Math.round((r.once + r.month) * 1.21 * 100) / 100;
-      btn.textContent = ideal ? 'Afrekenen met iDEAL · ' + '€' + incl.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'Plaats je vacature';
+      btn.textContent = ideal ? 'Afrekenen met iDEAL · €' + incl.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' incl. btw' : 'Plaats je vacature';
     };
     form.addEventListener('change', label); form.addEventListener('input', label); wireQty(form, label); label();
 
