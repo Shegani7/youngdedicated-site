@@ -9,7 +9,7 @@ bodyClass: "page wg-page"
   <div class="container">
     <p class="wg-eyebrow">Plaats je vacature</p>
     <h1>Tien minuten. Daarna doen wij het werk.</h1>
-    <p class="wg-lead">Binnen 3 werkdagen zie je een voorbeeld van je vacaturepagina en advertenties. Pas na jouw akkoord gaat hij live en betaal je.</p>
+    <p class="wg-lead">Binnen 3 werkdagen zie je een voorbeeld van je vacaturepagina en advertenties. Na jouw akkoord gaat hij live. De factuur volgt met een betaallink.</p>
   </div>
 </section>
 
@@ -82,10 +82,14 @@ bodyClass: "page wg-page"
             <label class="wg-fields__wide">E-mail<input name="email" type="email" required autocomplete="email"></label>
             <label class="wg-fields__wide">Factuuradres<input name="factuuradres" required autocomplete="street-address" placeholder="Straat, huisnummer, postcode en plaats"></label>
           </div>
-          <p class="wg-mini__label">Betalen na jouw akkoord op het voorbeeld</p>
-          <label class="wg-option wg-option--small"><input type="radio" name="betaling" value="ideal" checked><span class="wg-option__body"><strong>iDEAL</strong> <span>je krijgt een betaallink bij het voorbeeld</span></span></label>
-          <label class="wg-option wg-option--small"><input type="radio" name="betaling" value="factuur"><span class="wg-option__body"><strong>Op factuur</strong> <span>binnen 14 dagen</span></span></label>
-          <label class="wg-check"><input type="checkbox" name="akkoord" value="ja" required> Ik ga akkoord met de <a href="/algemene-voorwaarden/" target="_blank">algemene voorwaarden</a> en de <a href="/privacyverklaring/" target="_blank">privacyverklaring</a>.</label>
+          <div class="wg-flow">
+            <p class="wg-mini__label">Zo gaat het verder</p>
+            <p class="wg-flow__step"><b class="wg-flow__n">1</b><span><strong>Binnen 3 werkdagen</strong> je voorbeeldvacature en advertenties. E&eacute;n feedbackronde zit erin.</span></p>
+            <p class="wg-flow__step"><b class="wg-flow__n">2</b><span><strong>Jouw akkoord</strong> en je vacature gaat live.</span></p>
+            <p class="wg-flow__step"><b class="wg-flow__n">3</b><span><strong>Factuur met betaallink</strong> voor iDEAL of overboeking. Betaaltermijn 14 dagen.</span></p>
+          </div>
+          <label class="wg-check"><input type="checkbox" name="akkoord" value="ja" required> <span>Ik geef opdracht voor mijn vacature en ga akkoord met de <a href="/algemene-voorwaarden/" target="_blank">algemene voorwaarden</a> en de <a href="/privacyverklaring/" target="_blank">privacyverklaring</a>.</span></label>
+          <button class="button wg-order__submit" type="submit" data-cta="bestelling-verstuur-onder">Start mijn vacature</button>
         </fieldset>
       </div>
 
@@ -93,10 +97,10 @@ bodyClass: "page wg-page"
         <p class="wg-summary__title">Jouw vacature</p>
         <ul class="wg-summary__lines" id="lines"></ul>
         <div class="wg-summary__total" id="totals"></div>
-        <button class="button wg-summary__cta" type="submit" data-cta="bestelling-verstuur">Plaats je vacature</button>
+        <button class="button wg-summary__cta" type="submit" data-cta="bestelling-verstuur">Start mijn vacature</button>
         <ul class="wg-summary__trust">
           <li>Binnen 3 werkdagen een voorbeeld</li>
-          <li>Je betaalt pas na jouw akkoord</li>
+          <li>Factuur pas bij jouw akkoord</li>
           <li>Geen kosten per aanname</li>
           <li>Garantie op resultaat</li>
         </ul>
