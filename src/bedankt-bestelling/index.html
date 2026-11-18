@@ -55,7 +55,7 @@ bodyClass: "page wg-page"
   if (!order || !box || !window.ydPrijs) return;
   var r = window.ydPrijs(order), incl = Math.round((r.once + r.month) * 1.21 * 100) / 100;
   btn.textContent = 'Betaal nu met iDEAL · ' + eur(incl);
-  box.hidden = false;
+  fetch('/api/betaling').then(function (x) { return x.json(); }).then(function (d) { if (d && d.ready) box.hidden = false; }).catch(function () {});
   btn.addEventListener('click', function () {
     btn.disabled = true; btn.textContent = 'Even geduld…';
     fetch('/api/betaling', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(order) })
