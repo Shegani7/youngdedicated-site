@@ -102,5 +102,37 @@
       var sys = form.querySelector('#systeem-wrap'); if (sys) sys.hidden = k.ontvangst !== 'eigen-systeem';
     };
     form.addEventListener('change', upd2); form.addEventListener('input', upd2); wireQty(form, upd2); upd2();
+
+    /* iDEAL via Mollie: eerst de bestelling opslaan in Netlify Forms, dan naar de betaalpagina. */
+    var btn = form.querySelector('.wg-summary__cta');
+    var label = function () {
+      var ideal = (form.querySelector('[name="betaling"]:checked') || {}).value === 'ideal';
+      var r = window.ydPrijs(read(form));
+      var incl = Math.round((r.once + r.month) * 1.21 * 100) / 100;
+      btn.textContent = ideal ? 'Afrekenen met iDEAL · ' + '€' + incl.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'Plaats je vacature';
+    };
+    form.addEventListener('change', label); form.addEventListener('input', label); wireQty(form, label); label();
+
+    form.addEventListener('submit', function (e) {
+      var ideal = (form.querySelector('[name="betaling"]:checked') || {}).value === 'ideal';
+      if (!ideal || !window.fetch || form.dataset.busy) return;
+      e.preventDefault();
+      form.dataset.busy = '1'; btn.disabled = true; btn.textContent = 'Even geduld…';
+      var fd = new FormData(form), k = read(form);
+      var body = { looptijd: k.looptijd, aantal: k.aantal, beeld: k.beeld, termijnen: k.termijnen ? 'ja' : 'nee', selectie: k.selectie, contract: k.contract,
+        bedrijf: fd.get('bedrijf'), kvk: fd.get('kvk'), naam: fd.get('naam'), email: fd.get('email'), functie: fd.get('functie') };
+      var klaar = function () { location.href = '/bedankt-bestelling/?betaling=later'; };
+      fetch('/', { method: 'POST', body: fd })
+        .then(function (r) { if (!r.ok) throw new Error('form'); })
+        .then(function () {
+          return fetch('/api/betaling', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+              if (d && d.checkoutUrl) { try { sessionStorage.setItem('ydBetaling', d.id); } catch (x) {} location.href = d.checkoutUrl; }
+              else klaar();
+            }, klaar);
+        })
+        .catch(function () { delete form.dataset.busy; btn.disabled = false; label(); form.submit(); });
+    });
   }
 })();

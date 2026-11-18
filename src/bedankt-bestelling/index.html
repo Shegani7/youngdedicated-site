@@ -11,13 +11,28 @@ bodyClass: "page wg-page"
     <div class="wg-thanks__check" aria-hidden="true"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></div>
     <p class="wg-eyebrow">Gelukt</p>
     <h1>Je vacature staat in de planning.</h1>
+    <p class="wg-pay" id="betaalstatus" hidden></p>
     <p class="wg-lead">Binnen 1 werkdag hoor je van ons. Dit gebeurt er nu:</p>
     <ol class="wg-steps wg-steps--light">
       <li><span class="wg-steps__when">Binnen 1 werkdag</span><strong>Bevestiging</strong><span>Je krijgt een mail met de planning. Missen we nog iets, dan vragen we het daarin.</span></li>
       <li><span class="wg-steps__when">Binnen 3 werkdagen</span><strong>Voorbeeld ter goedkeuring</strong><span>Je ziet de vacaturepagina en de advertenties. E&eacute;n ronde feedback zit erin.</span></li>
-      <li><span class="wg-steps__when">Na jouw akkoord</span><strong>Betalen en live</strong><span>Met iDEAL of op factuur. Daarna gaat je campagne live.</span></li>
+      <li><span class="wg-steps__when">Na jouw akkoord</span><strong>Live</strong><span>Je campagne gaat live. Koos je voor factuur, dan ontvang je die nu.</span></li>
       <li><span class="wg-steps__when">Elke week</span><strong>Update</strong><span>Bereik, sollicitanten en wat we bijsturen.</span></li>
     </ol>
     <p><a class="wg-link" href="/">Terug naar de homepage</a></p>
   </div>
 </section>
+<script>
+(function () {
+  var el = document.getElementById('betaalstatus'), q = new URLSearchParams(location.search).get('betaling');
+  if (!el || !q) return;
+  var id = null; try { id = sessionStorage.getItem('ydBetaling'); } catch (e) {}
+  var toon = function (cls, html) { el.className = 'wg-pay ' + cls; el.innerHTML = html; el.hidden = false; };
+  if (q === 'later' || !id) { toon('wg-pay--info', 'Je bestelling is binnen. De betaallink voor iDEAL sturen we je per mail.'); return; }
+  fetch('/api/betaling-status?id=' + encodeURIComponent(id)).then(function (r) { return r.json(); }).then(function (d) {
+    if (d.status === 'paid') { toon('wg-pay--ok', 'Betaling gelukt: &euro;' + Number(d.bedrag).toLocaleString('nl-NL', { minimumFractionDigits: 2 }) + ' incl. btw. De factuur sturen we je binnen 1 werkdag.'); try { sessionStorage.removeItem('ydBetaling'); } catch (e) {} }
+    else if (d.status === 'open' && d.checkoutUrl) toon('wg-pay--warn', 'Je betaling is nog niet afgerond. <a href="' + d.checkoutUrl + '">Rond hem hier af</a>.');
+    else toon('wg-pay--warn', 'Je bestelling is binnen, maar de betaling is niet gelukt. Geen zorgen: we sturen je een nieuwe betaallink per mail.');
+  }).catch(function () { toon('wg-pay--info', 'Je bestelling is binnen. We bevestigen je betaling per mail.'); });
+})();
+</script>

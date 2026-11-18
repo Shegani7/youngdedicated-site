@@ -499,3 +499,9 @@
 @media (max-width:991px){.ydf-top{grid-template-columns:1fr 1fr}.ydf-brand{grid-column:1/-1}}
 @media (max-width:575px){.ydf{padding-top:56px}.ydf-top{grid-template-columns:1fr;gap:32px;padding-bottom:36px}.ydf-bottom{flex-direction:column;padding-bottom:90px}}
 @media (max-width:575px){.ydf-bottom{padding-bottom:22px}.ydf-mark{margin-bottom:70px}}
+/* Betaalstatus na iDEAL */
+.wg-pay{margin:6px 0 18px;padding:14px 18px;border-radius:12px;font-weight:600;line-height:1.5}
+.wg-pay--ok{background:#e7f8f1;color:#0b5c43}
+.wg-pay--warn{background:#fff4dc;color:#6b4b00}
+.wg-pay--info{background:var(--wg-grey);color:var(--wg-ink)}
+.wg-pay a{color:inherit;text-decoration:underline}
