@@ -102,5 +102,13 @@
       var sys = form.querySelector('#systeem-wrap'); if (sys) sys.hidden = k.ontvangst !== 'eigen-systeem';
     };
     form.addEventListener('change', upd2); form.addEventListener('input', upd2); wireQty(form, upd2); upd2();
+
+    /* Keuzes bewaren voor de voorrangsoptie op de bedankpagina. */
+    form.addEventListener('submit', function () {
+      var k = read(form), fd = new FormData(form);
+      var o = { looptijd: k.looptijd, aantal: k.aantal, beeld: k.beeld, termijnen: k.termijnen ? 'ja' : 'nee', selectie: k.selectie, contract: k.contract,
+        bedrijf: fd.get('bedrijf'), kvk: fd.get('kvk'), naam: fd.get('naam'), email: fd.get('email'), functie: fd.get('functie') };
+      try { sessionStorage.setItem('ydOrder', JSON.stringify(o)); } catch (e) {}
+    });
   }
 })();
