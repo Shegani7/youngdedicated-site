@@ -104,12 +104,13 @@
     form.addEventListener('change', upd2); form.addEventListener('input', upd2); wireQty(form, upd2); upd2();
 
     /* iDEAL via Mollie: eerst de bestelling opslaan in Netlify Forms, dan naar de betaalpagina. */
-    var btn = form.querySelector('.wg-summary__cta');
+    var btns = form.querySelectorAll('.js-submit');
+    var setBtns = function (t, dis) { btns.forEach(function (b) { b.textContent = t; b.disabled = !!dis; }); };
     var label = function () {
       var ideal = (form.querySelector('[name="betaling"]:checked') || {}).value === 'ideal';
       var r = window.ydPrijs(read(form));
       var incl = Math.round((r.once + r.month) * 1.21 * 100) / 100;
-      btn.textContent = ideal ? 'Afrekenen met iDEAL · €' + incl.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' incl. btw' : 'Plaats je vacature';
+      setBtns(ideal ? 'Afrekenen met iDEAL · €' + incl.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' incl. btw' : 'Plaats je vacature');
     };
     form.addEventListener('change', label); form.addEventListener('input', label); wireQty(form, label); label();
 
@@ -117,7 +118,7 @@
       var ideal = (form.querySelector('[name="betaling"]:checked') || {}).value === 'ideal';
       if (!ideal || !window.fetch || form.dataset.busy) return;
       e.preventDefault();
-      form.dataset.busy = '1'; btn.disabled = true; btn.textContent = 'Even geduld…';
+      form.dataset.busy = '1'; setBtns('Even geduld…', true);
       var fd = new FormData(form), k = read(form);
       var body = { looptijd: k.looptijd, aantal: k.aantal, beeld: k.beeld, termijnen: k.termijnen ? 'ja' : 'nee', selectie: k.selectie, contract: k.contract,
         bedrijf: fd.get('bedrijf'), kvk: fd.get('kvk'), naam: fd.get('naam'), email: fd.get('email'), functie: fd.get('functie') };
@@ -132,7 +133,7 @@
               else klaar();
             }, klaar);
         })
-        .catch(function () { delete form.dataset.busy; btn.disabled = false; label(); form.submit(); });
+        .catch(function () { delete form.dataset.busy; setBtns('', false); label(); form.submit(); });
     });
   }
 })();

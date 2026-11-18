@@ -85,7 +85,8 @@ bodyClass: "page wg-page"
           <p class="wg-mini__label">Betalen</p>
           <label class="wg-option wg-option--small"><input type="radio" name="betaling" value="ideal" checked><span class="wg-option__body"><strong>iDEAL</strong> <span>direct afrekenen, veilig via Mollie</span></span></label>
           <label class="wg-option wg-option--small"><input type="radio" name="betaling" value="factuur"><span class="wg-option__body"><strong>Op factuur</strong> <span>binnen 14 dagen</span></span></label>
-          <label class="wg-check"><input type="checkbox" name="akkoord" value="ja" required> Ik ga akkoord met de <a href="/algemene-voorwaarden/" target="_blank">algemene voorwaarden</a> en de <a href="/privacyverklaring/" target="_blank">privacyverklaring</a>.</label>
+          <label class="wg-check"><input type="checkbox" name="akkoord" value="ja" required> <span>Ik ga akkoord met de <a href="/algemene-voorwaarden/" target="_blank">algemene voorwaarden</a> en de <a href="/privacyverklaring/" target="_blank">privacyverklaring</a>.</span></label>
+          <button class="button wg-order__submit js-submit" type="submit" data-cta="bestelling-verstuur-onder">Plaats je vacature</button>
         </fieldset>
       </div>
 
@@ -93,7 +94,7 @@ bodyClass: "page wg-page"
         <p class="wg-summary__title">Jouw vacature</p>
         <ul class="wg-summary__lines" id="lines"></ul>
         <div class="wg-summary__total" id="totals"></div>
-        <button class="button wg-summary__cta" type="submit" data-cta="bestelling-verstuur">Plaats je vacature</button>
+        <button class="button wg-summary__cta js-submit" type="submit" data-cta="bestelling-verstuur">Plaats je vacature</button>
         <ul class="wg-summary__trust">
           <li>Binnen 3 werkdagen een voorbeeld</li>
           <li>Veilig betalen met iDEAL of op factuur</li>
