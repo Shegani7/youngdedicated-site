@@ -41,3 +41,10 @@ Netlify builds every push to `main` (`npm run build`, publish `_site`). Other br
 Applications now reach Recruitee through Netlify Forms email notifications (one per vacancy, to the Recruitee job inbox).
 `tools/recruitee-function/submission-created.mjs` is an alternative that posts straight to the Recruitee API. It is switched off,
 because running both creates duplicate candidates. To use it: move it to `netlify/functions/` and remove the email notifications.
+
+## Voorrang (direct betalen via Mollie)
+
+After a request, `/bedankt-bestelling/` offers priority: pay now with iDEAL, kick-off within 1 working day, preview within 2.
+The order choices are kept in sessionStorage on submit; `netlify/functions/mollie-betaling.mjs` (`/api/betaling`) computes the amount on the server
+(`netlify/functions/lib/prijs.mjs`, keep in line with `src/assets/config.js`) and returns the Mollie checkout. `/api/betaling-status` shows the result.
+Needs `MOLLIE_API_KEY` in Netlify (test_ key to try, live_ key for real).

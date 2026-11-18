@@ -291,7 +291,6 @@
 /* hoe het werkt */
 .wg-hero2--page{padding:170px 0 90px}
 .wg-flow{list-style:none;counter-reset:f;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:20px}
-.wg-flow li{counter-increment:f;position:relative;background:#fff;padding:78px 22px 24px;box-shadow:0 20px 50px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:6px;font-size:15px;border-top:4px solid var(--wg-gold)}
 .wg-flow li:before{content:"0" counter(f);position:absolute;top:20px;left:22px;font-size:44px;font-weight:900;line-height:1;color:transparent;-webkit-text-stroke:2px var(--wg-ink)}
 .wg-flow strong{font-size:19px}
 .wg-flow__when{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--wg-gold)}
@@ -501,3 +500,22 @@
 @media (max-width:991px){.ydf-top{grid-template-columns:1fr 1fr}.ydf-brand{grid-column:1/-1}}
 @media (max-width:575px){.ydf{padding-top:56px}.ydf-top{grid-template-columns:1fr;gap:32px;padding-bottom:36px}.ydf-bottom{flex-direction:column;padding-bottom:90px}}
 @media (max-width:575px){.ydf-bottom{padding-bottom:22px}.ydf-mark{margin-bottom:70px}}
+.wg-order__submit{display:block;width:100%;margin-top:22px!important;font-size:17px;padding:18px 24px!important}
+.wg-next{margin:8px 0 18px;padding:18px 20px;background:var(--wg-grey);border-radius:12px}
+.wg-next__step{display:flex;gap:12px;align-items:baseline;margin:8px 0 0;line-height:1.55}
+.wg-next__n{flex:0 0 24px;height:24px;border-radius:50%;background:var(--wg-ink);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+/* Voorrang en betaalstatus op de bedankpagina */
+.wg-fast{margin:36px 0 28px;padding:28px;border-radius:16px;background:var(--wg-ink);color:#fff}
+.wg-fast h2{color:#fff;margin:6px 0 14px;font-size:clamp(22px,3vw,30px)}
+.wg-fast ul{margin:0 0 20px;padding-left:20px;line-height:1.7}
+.wg-fast__btn{width:100%;background:var(--wg-gold)!important;color:var(--wg-ink)!important;border-color:var(--wg-gold)!important}
+.wg-fast__small{margin:14px 0 0;font-size:14px;opacity:.75;line-height:1.5}
+.wg-pay{margin:6px 0 18px;padding:14px 18px;border-radius:12px;font-weight:600;line-height:1.5}
+.wg-pay--ok{background:#e7f8f1;color:#0b5c43}
+.wg-pay--warn{background:#fff4dc;color:#6b4b00}
+.wg-pay--info{background:var(--wg-grey);color:var(--wg-ink)}
+.wg-pay a{color:inherit;text-decoration:underline}
+.wg-fast h2{padding:0!important;margin-left:0!important;text-indent:0}
+.wg-fast h2:before,.wg-fast h2:after,.wg-fast__btn:before,.wg-fast__btn:after{display:none!important}
+.wg-next__step strong{font-size:inherit}
+.wg-order__submit:before,.wg-order__submit:after{display:none!important}

@@ -11,13 +11,59 @@ bodyClass: "page wg-page"
     <div class="wg-thanks__check" aria-hidden="true"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></div>
     <p class="wg-eyebrow">Gelukt</p>
     <h1>Je vacature staat in de planning.</h1>
+    <p class="wg-pay" id="betaalstatus" hidden></p>
     <p class="wg-lead">Binnen 1 werkdag hoor je van ons. Dit gebeurt er nu:</p>
     <ol class="wg-steps wg-steps--light">
-      <li><span class="wg-steps__when">Binnen 1 werkdag</span><strong>Bevestiging</strong><span>Je krijgt een mail met de planning. Missen we nog iets, dan vragen we het daarin.</span></li>
+      <li><span class="wg-steps__when">Binnen 1 werkdag</span><strong>Vragenlijst en kick-off</strong><span>Je krijgt een korte vragenlijst en we plannen een kick-off van 30 minuten.</span></li>
       <li><span class="wg-steps__when">Binnen 3 werkdagen</span><strong>Voorbeeld ter goedkeuring</strong><span>Je ziet de vacaturepagina en de advertenties. E&eacute;n ronde feedback zit erin.</span></li>
-      <li><span class="wg-steps__when">Na jouw akkoord</span><strong>Betalen en live</strong><span>Met iDEAL of op factuur. Daarna gaat je campagne live.</span></li>
+      <li><span class="wg-steps__when">Na jouw akkoord</span><strong>Live en factuur</strong><span>Je campagne gaat live. De factuur krijg je met een betaallink voor iDEAL of overboeking, betaaltermijn 14 dagen.</span></li>
       <li><span class="wg-steps__when">Elke week</span><strong>Update</strong><span>Bereik, sollicitanten en wat we bijsturen.</span></li>
     </ol>
+    <div class="wg-fast" id="voorrang" hidden>
+      <p class="wg-eyebrow">Haast?</p>
+      <h2>Voorrang: direct betalen, eerder live.</h2>
+      <ul>
+        <li>Kick-off binnen 1 werkdag, op een moment dat jij kiest</li>
+        <li>Je voorbeeld binnen 2 werkdagen</li>
+        <li>We werken door tot je akkoord geeft</li>
+      </ul>
+      <button class="button wg-fast__btn" type="button" id="voorrang-btn">Betaal nu met iDEAL</button>
+      <p class="wg-fast__small">Zelfde kwaliteit als op factuur. Je gaat alleen voor in de rij. Bedrag incl. btw: het eenmalige deel plus de eerste maand.</p>
+    </div>
     <p><a class="wg-link" href="/">Terug naar de homepage</a></p>
   </div>
 </section>
+<script src="/assets/config.js"></script>
+<script>
+(function () {
+  var eur = function (v) { return '€' + Number(v).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  var el = document.getElementById('betaalstatus'), box = document.getElementById('voorrang'), btn = document.getElementById('voorrang-btn');
+  var q = new URLSearchParams(location.search).get('betaling');
+  var toon = function (cls, html) { el.className = 'wg-pay ' + cls; el.innerHTML = html; el.hidden = false; };
+  var order = null; try { order = JSON.parse(sessionStorage.getItem('ydOrder') || 'null'); } catch (e) {}
+
+  if (q === 'ideal') {
+    var id = null; try { id = sessionStorage.getItem('ydBetaling'); } catch (e) {}
+    if (!id) return;
+    fetch('/api/betaling-status?id=' + encodeURIComponent(id)).then(function (r) { return r.json(); }).then(function (d) {
+      if (d.status === 'paid') { toon('wg-pay--ok', 'Betaald: ' + eur(d.bedrag) + ' incl. btw. Je hebt voorrang. We nemen binnen 1 werkdag contact op voor de kick-off.'); try { sessionStorage.removeItem('ydBetaling'); sessionStorage.removeItem('ydOrder'); } catch (e) {} }
+      else if (d.status === 'open' && d.checkoutUrl) toon('wg-pay--warn', 'Je betaling is nog niet afgerond. <a href="' + d.checkoutUrl + '">Rond hem hier af</a>.');
+      else { toon('wg-pay--info', 'De betaling is niet doorgegaan. Geen probleem: je aanvraag staat gewoon en je krijgt de factuur bij akkoord.'); if (order && box) box.hidden = false; }
+    }).catch(function () {});
+    return;
+  }
+  if (!order || !box || !window.ydPrijs) return;
+  var r = window.ydPrijs(order), incl = Math.round((r.once + r.month) * 1.21 * 100) / 100;
+  btn.textContent = 'Betaal nu met iDEAL · ' + eur(incl);
+  fetch('/api/betaling').then(function (x) { return x.json(); }).then(function (d) { if (d && d.ready) box.hidden = false; }).catch(function () {});
+  btn.addEventListener('click', function () {
+    btn.disabled = true; btn.textContent = 'Even geduld…';
+    fetch('/api/betaling', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(order) })
+      .then(function (x) { return x.ok ? x.json() : null; })
+      .then(function (d) {
+        if (d && d.checkoutUrl) { try { sessionStorage.setItem('ydBetaling', d.id); } catch (e) {} location.href = d.checkoutUrl; }
+        else { box.hidden = true; toon('wg-pay--info', 'Direct betalen lukt nu even niet. Je aanvraag staat gewoon. We sturen je een betaallink per mail.'); }
+      }, function () { box.hidden = true; toon('wg-pay--info', 'Direct betalen lukt nu even niet. Je aanvraag staat gewoon. We sturen je een betaallink per mail.'); });
+  });
+})();
+</script>
