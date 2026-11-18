@@ -10,17 +10,18 @@ const json = (status, body) =>
 const kort = (v, max = 60) => String(v || "").replace(/\s+/g, " ").trim().slice(0, max);
 
 // A test key only works outside production, so real customers never land on a test checkout.
-const usableKey = () => {
+const isLiveSite = (req) => /(^|\.)youngdedicated\.nl$/.test(new URL(req.url).hostname);
+const usableKey = (req) => {
   const key = process.env.MOLLIE_API_KEY || "";
   if (!key) return null;
-  if (process.env.CONTEXT === "production" && !key.startsWith("live_")) return null;
+  if (isLiveSite(req) && !key.startsWith("live_")) return null;
   return key;
 };
 
 export default async (req) => {
-  if (req.method === "GET") return json(200, { ready: Boolean(usableKey()) });
+  if (req.method === "GET") return json(200, { ready: Boolean(usableKey(req)) });
   if (req.method !== "POST") return json(405, { error: "method" });
-  const key = usableKey();
+  const key = usableKey(req);
   if (!key) return json(503, { error: "not-configured" });
 
   let k;
