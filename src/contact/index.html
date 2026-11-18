@@ -1,0 +1,72 @@
+---
+layout: "base.njk"
+title: "Contact | YoungDedicated"
+description: "Vragen over werving of je vacature? Bel, mail of kom langs in Bilthoven. Je spreekt direct met de mensen die je campagne maken."
+permalink: "/contact/"
+bodyClass: "page wg-page"
+---
+<section class="wg-hero2 wg-hero2--page">
+  <div class="wg-hero2__bg" style="background-image:url(/wp-content/uploads/2021/10/YoungDedicated-Voor-Werkgevers-Hoe-doen-we-dat.jpg)"></div>
+  <div class="container wg-hero2__inner">
+    <p class="wg-eyebrow wg-eyebrow--gold">Contact</p>
+    <h1>Even sparren? <span class="wg-mark">Bel ons.</span></h1>
+    <p class="wg-lead">Je spreekt direct met de mensen die je vacature en campagne maken. Vrijblijvend en zonder verkooppraatje.</p>
+    <div class="wg-ctas">
+      <a class="button" href="tel:+31850607714" data-cta="contact-hero-bel">Bel 085 06 07 714</a>
+      <a class="wg-ghost" href="#contactformulier" data-cta="contact-hero-form">Stuur een bericht</a>
+    </div>
+  </div>
+</section>
+
+<section class="wg-section wg-section--tight">
+  <div class="container">
+    <div class="wg-grid wg-grid--3 wg-contact">
+      <a class="wg-card wg-contact__item wg-reveal" href="tel:+31850607714" data-cta="contact-kaart-bel">
+        <span class="wg-contact__label">Bellen</span>
+        <strong>085 06 07 714</strong>
+        <span>Maandag tot en met vrijdag</span>
+      </a>
+      <a class="wg-card wg-contact__item wg-reveal" href="mailto:groei@youngdedicated.nl" data-cta="contact-kaart-mail">
+        <span class="wg-contact__label">Mailen</span>
+        <strong>groei@youngdedicated.nl</strong>
+        <span>Voor vragen, offertes en samenwerking</span>
+      </a>
+      <a class="wg-card wg-contact__item wg-reveal" href="https://www.google.com/maps/dir/?api=1&amp;destination=P.C.+Staalweg+16,+3721+TJ+Bilthoven" target="_blank" rel="noopener" data-cta="contact-kaart-route">
+        <span class="wg-contact__label">Langskomen</span>
+        <strong>P.C. Staalweg 16</strong>
+        <span>3721 TJ Bilthoven &middot; Plan je route</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="wg-section wg-section--grey" id="contactformulier">
+  <div class="container">
+    <p class="wg-eyebrow">Stuur een bericht</p>
+    <h2 class="wg-contact__h2">Waar kunnen we je mee helpen?</h2>
+    <p class="wg-intro">Vertel kort wie je zoekt of waar je tegenaan loopt. We nemen contact met je op.</p>
+    <div class="wg-contact__split">
+      <div>
+        <ol class="wg-contact__next">
+          <li><strong>We lezen je vraag</strong><span>Geen standaardmail. Iemand die werving snapt kijkt ernaar.</span></li>
+          <li><strong>We bellen je</strong><span>Kort gesprek over je vacature, je regio en wat je nodig hebt.</span></li>
+          <li><strong>Je krijgt een eerlijk advies</strong><span>Ook als een campagne voor jouw vacature geen zin heeft.</span></li>
+        </ol>
+        <p class="wg-small">Weet je al wat je zoekt? <a class="wg-link" href="/plaats-je-vacature/" data-cta="contact-naar-plaats">Plaats direct je vacature</a></p>
+      </div>
+      <form class="wg-card wg-contact__form" name="contact" method="POST" action="/bedankt/" enctype="multipart/form-data" data-netlify="true" netlify-honeypot="bot-field" id="gform_1">
+        <input type="hidden" name="form-name" value="contact">
+        <p hidden><label>Niet invullen: <input name="bot-field"></label></p>
+        <div class="wg-fields">
+          <label>Naam<input name="naam" type="text" required autocomplete="name"></label>
+          <label>Bedrijf<input name="bedrijf" type="text" autocomplete="organization"></label>
+          <label>E-mailadres<input name="e-mailadres" type="email" required autocomplete="email"></label>
+          <label>Telefoon<input name="telefoon" type="tel" placeholder="06 12345678" autocomplete="tel"></label>
+          <label class="wg-fields__wide">Je vraag<textarea name="uw-vraag" rows="5" required placeholder="Bijvoorbeeld: we zoeken twee servicemonteurs in de regio Utrecht"></textarea></label>
+        </div>
+        <button type="submit" class="button" data-cta="contact-verstuur">Verstuur bericht</button>
+        <p class="wg-small">Vrijblijvend. Je zit nergens aan vast.</p>
+      </form>
+    </div>
+  </div>
+</section>

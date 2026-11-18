@@ -1,0 +1,8 @@
+[
+  {"label": "Hoe het werkt", "url": "/effectieve-personeelswerving/"},
+  {"label": "Prijzen", "url": "/prijzen/"},
+  {"label": "Resultaten", "url": "/cases/"},
+  {"label": "Contact", "url": "/contact/"},
+  {"label": "Vacatures", "url": "/vacatures/", "small": true},
+  {"label": "Plaats je vacature", "url": "/plaats-je-vacature/", "cta": true}
+]

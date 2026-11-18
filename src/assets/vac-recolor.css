@@ -1,0 +1,39 @@
+/* automatisch: alle YoungDedicated-goud/groen naar merkkleur */
+body.vac2 .h1 strong,body.vac2 h1 strong{background-color:var(--brand2)!important}
+body.vac2 .employer-item__title:after,body.vac2 .vacancy-item__title:after{background-color:var(--brand2)!important}
+body.vac2 blockquote p{color:var(--brand2)!important}
+body.vac2 .share-button:focus,body.vac2 .share-button:hover{color:var(--brand2)!important}
+body.vac2 .breadcrumbs a.back-link:hover{color:var(--brand2)!important}
+body.vac2 form input:focus,body.vac2 form textarea:focus{border-color:var(--brand2)!important}
+body.vac2 .gform_wrapper .gform_submission_error{color:var(--brand2)!important!important}
+body.vac2 .gform_wrapper .gfield_validation_message{color:var(--brand2)!important}
+body.vac2 .gform_wrapper .gfield_required{color:var(--brand2)!important}
+body.vac2 .jumbotron:after{background-color:var(--brand2)!important}
+body.vac2 .jumbotron .background-image-wrapper .icon-right{color:var(--brand2)!important}
+body.vac2 .jumbotron.jumbotron--background-image .breadcrumbs a.back-link:focus,body.vac2 .jumbotron.jumbotron--background-image .breadcrumbs a.back-link:hover{color:var(--brand2)!important}
+body.vac2 .jumbotron.jumbotron--whitepaper .breadcrumbs a.back-link:focus,body.vac2 .jumbotron.jumbotron--whitepaper .breadcrumbs a.back-link:hover{color:var(--brand2)!important}
+body.vac2 .pagination-item:hover{border-bottom-color:var(--brand2)!important;border-right-color:var(--brand2)!important}
+body.vac2 .pagination-item.current{border-bottom-color:var(--brand2)!important;border-right-color:var(--brand2)!important}
+body.vac2 .swiper-carousel:before{background-color:var(--brand2)!important}
+body.vac2 .content-row--columns .background-image-wrapper .icon-right{color:var(--brand2)!important}
+body.vac2 .image-card .background{background-color:var(--brand2)!important}
+body.vac2 .content-row--grow-path .point .icon-right{color:var(--brand2)!important}
+body.vac2 .content-row--procedure .point:first-child .circle .icon-right{color:var(--brand2)!important}
+body.vac2 .content-row--pros-cons .container-pros-cons .reason .icon-right{color:var(--brand2)!important}
+body.vac2 .content-row--quickfacts .container-quickfacts:before{background-color:var(--brand2)!important}
+body.vac2 .content-row--quickfacts .container-quickfacts .vacancy-facts ul li:before{color:var(--brand2)!important}
+body.vac2 .content-row--quickfacts .container-quickfacts .vacancy-facts .label-list li:before{background-color:var(--brand2)!important}
+body.vac2 .content-row--text ul li:before{color:var(--brand2)!important}
+body.vac2 .content-row--text-and-image .full-width.image span.icon-right{color:var(--brand2)!important}
+body.vac2 .content-row--text-image-icons .icon-1:before,body.vac2 .content-row--text-image-icons .icon-2:before,body.vac2 .content-row--text-image-icons .icon-3:before,body.vac2 .content-row--text-image-icons .icon-4:before{color:var(--brand2)!important}
+body.vac2 .content-row--whitepaper .button:focus,body.vac2 .content-row--whitepaper .button:hover{background-color:var(--brand2)!important;border-color:var(--brand2)!important}
+body.vac2 .content-row--whitepaper .button:focus:before,body.vac2 .content-row--whitepaper .button:hover:before{background-color:var(--brand2)!important}
+body.vac2 .content-row--workday .swiper-button-next:after,body.vac2 .content-row--workday .swiper-button-prev:after{color:var(--brand2)!important}
+body.vac2 .content-row--workday .shadow{background-color:var(--brand2)!important}
+body.vac2 .blog-item .image-wrapper:before,body.vac2 .case-item .image-wrapper:before,body.vac2 .whitepaper-item .image-wrapper:before{background-color:var(--brand2)!important}
+body.vac2 .single-vacancy .line strong{border-bottom:4px solid var(--brand2)!important}
+body.vac2 .user-icons a .user-popup{background-color:var(--brand2)!important}
+body.vac2 .user-icons a:hover span{color:var(--brand2)!important}
+body.vac2 .employer-item__link:focus .employer-item,body.vac2 .employer-item__link:focus .vacancy-item,body.vac2 .employer-item__link:hover .employer-item,body.vac2 .employer-item__link:hover .vacancy-item,body.vac2 .vacancy-item__link:focus .employer-item,body.vac2 .vacancy-item__link:focus .vacancy-item,body.vac2 .vacancy-item__link:hover .employer-item,body.vac2 .vacancy-item__link:hover .vacancy-item{box-shadow:20px 21px var(--brand2)!important}
+body.vac2 .employer-item__link:focus .employer-item:before,body.vac2 .employer-item__link:focus .vacancy-item:before,body.vac2 .employer-item__link:hover .employer-item:before,body.vac2 .employer-item__link:hover .vacancy-item:before,body.vac2 .vacancy-item__link:focus .employer-item:before,body.vac2 .vacancy-item__link:focus .vacancy-item:before,body.vac2 .vacancy-item__link:hover .employer-item:before,body.vac2 .vacancy-item__link:hover .vacancy-item:before{background-color:var(--brand2)!important}
+body.vac2 .employer-icon{color:var(--brand2)!important}

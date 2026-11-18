@@ -1,0 +1,9 @@
+/* Aanvullingen op het oude thema */
+.vacancy-filled-note{background:#fff8e1;border-left:4px solid #d4af37;padding:14px 18px;margin:0 0 20px;font-size:15px}
+.vacancy-filled-note p{margin:0}
+
+/* Vacaturekaarten: gelijke hoogte en gelijke beeldverhouding */
+.list--latest-vacancy .row > [class*="col-"]{display:flex}
+.list--latest-vacancy .vacancy-item__link{display:flex;flex-direction:column;width:100%}
+.list--latest-vacancy .vacancy-item{flex:1 1 auto}
+.list--latest-vacancy .vacancy-item img{width:100%;height:auto;aspect-ratio:940/610;object-fit:cover}
