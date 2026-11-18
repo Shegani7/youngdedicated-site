@@ -475,6 +475,8 @@
 .ydf-top{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:48px;padding-bottom:56px}
 .ydf-logo svg{width:170px;height:auto}
 .ydf-logo svg [fill="#000000"]{fill:#fff}
+.ydf-logo #Fill-1{fill:none}
+.ydf-logo [fill="#FFFFFF"]{fill:var(--wg-gold)}
 .ydf-tag{margin:18px 0 22px;max-width:360px;line-height:1.6}
 .ydf-cta{display:inline-flex;align-items:center;gap:10px;color:#111!important;background:var(--wg-gold);font-weight:800;padding:12px 18px;text-decoration:none!important;transition:transform .2s,background .2s}
 .ydf-cta:hover{transform:translateY(-2px);background:#e0c770}
