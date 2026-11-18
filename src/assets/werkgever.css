@@ -499,9 +499,9 @@
 @media (max-width:575px){.ydf{padding-top:56px}.ydf-top{grid-template-columns:1fr;gap:32px;padding-bottom:36px}.ydf-bottom{flex-direction:column;padding-bottom:90px}}
 @media (max-width:575px){.ydf-bottom{padding-bottom:22px}.ydf-mark{margin-bottom:70px}}
 .wg-order__submit{display:block;width:100%;margin-top:22px!important;font-size:17px;padding:18px 24px!important}
-.wg-flow{margin:8px 0 18px;padding:18px 20px;background:var(--wg-grey);border-radius:12px}
-.wg-flow__step{display:flex;gap:12px;align-items:baseline;margin:8px 0 0;line-height:1.55}
-.wg-flow__n{flex:0 0 24px;height:24px;border-radius:50%;background:var(--wg-ink);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.wg-next{margin:8px 0 18px;padding:18px 20px;background:var(--wg-grey);border-radius:12px}
+.wg-next__step{display:flex;gap:12px;align-items:baseline;margin:8px 0 0;line-height:1.55}
+.wg-next__n{flex:0 0 24px;height:24px;border-radius:50%;background:var(--wg-ink);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 /* Voorrang en betaalstatus op de bedankpagina */
 .wg-fast{margin:36px 0 28px;padding:28px;border-radius:16px;background:var(--wg-ink);color:#fff}
 .wg-fast h2{color:#fff;margin:6px 0 14px;font-size:clamp(22px,3vw,30px)}
@@ -515,3 +515,5 @@
 .wg-pay a{color:inherit;text-decoration:underline}
 .wg-fast h2{padding:0!important;margin-left:0!important;text-indent:0}
 .wg-fast h2:before,.wg-fast h2:after,.wg-fast__btn:before,.wg-fast__btn:after{display:none!important}
+.wg-next__step strong{font-size:inherit}
+.wg-order__submit:before,.wg-order__submit:after{display:none!important}
