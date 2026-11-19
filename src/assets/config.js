@@ -24,14 +24,14 @@
     if (k.beeld === 'wij') {
       if (door && k.termijnen) { month += P.termijn; lines.push(['Beeld op locatie, 12 termijnen', eur(P.termijn) + ' p/m']); }
       else { once += P.beeld; lines.push(['Beeld op locatie', eur(P.beeld)]); }
-    } else { lines.push(['Eigen beeld', 'inbegrepen']); }
+    } else { lines.push(['Eigen beeld: jouw foto\'s en video\'s', 'inbegrepen']); }
     if (k.selectie === 'wij') {
       if (door) { month += n * P.selectie; lines.push(['Selectie door ons', eur(n * P.selectie) + ' p/m']); }
       else { once += n * P.selectie; lines.push(['Selectie door ons', eur(n * P.selectie)]); }
     }
     lines.push(['Aannemen zoveel je wilt', 'geen extra kosten']);
-    var labels = { mailbox: 'in je mailbox', 'eigen-systeem': 'in je eigen systeem', 'ons-systeem': 'in ons systeem' };
-    lines.push(['Sollicitanten ' + (labels[k.ontvangst] || 'in je mailbox'), 'inbegrepen']);
+    if (k.ontvangst === 'eigen-systeem') lines.push(['Koppeling met je eigen systeem', 'niet inbegrepen']);
+    else lines.push(['Sollicitanten ' + (k.ontvangst === 'ons-systeem' ? 'in ons systeem' : 'in je mailbox'), 'inbegrepen']);
     return { n: n, door: door, jaar: door && k.contract === '12', lines: lines, once: once, month: month, eur: eur };
   };
 
