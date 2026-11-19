@@ -14,7 +14,7 @@
   var demo = /[?&]demo\b/.test(location.search) || sessionStorage.getItem('yd-demo') === '1';
   var sb = !demo && window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
   var S = { profile: null, orgs: [], orgId: null, vacancies: [], apps: [], stats: [], budget: [], vacFilter: 'all', mStage: 'nieuw', open: null, events: [], as: 'klant', wiz: null, poolFit: 'all', claim: null };
-  var PRICE = { dertig: 165000, doorlopend: 99500, selectie: 49500, beeld: 300000 };
+  var PRICE = { maand: 165000, platform: 125000, media: 40000, selectie: 49500, beeld: 300000 };
   var app = document.getElementById('app');
 
   /* ---------- helpers ---------- */
@@ -244,7 +244,10 @@
       '<div class="kpi kpi--hl"><span>Per geschikte kandidaat</span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b></div></div>';
     h += '<div class="grid grid-2">' +
       '<div class="card"><p class="card__label">Waar gaat je geld heen</p>' +
-        '<div class="money-row"><span>Mediabudget</span><b>' + eur(m.budget) + '</b></div>' +
+        '<div class="money-row"><span>Je abonnement</span><b>' + eur(PRICE.maand) + ' p/m</b></div>' +
+        '<div class="money-row"><span>&nbsp;&nbsp;waarvan platform en begeleiding</span><b>' + eur(PRICE.platform) + '</b></div>' +
+        '<div class="money-row"><span>&nbsp;&nbsp;waarvan mediabudget per maand</span><b>' + eur(PRICE.media) + '</b></div>' +
+        '<div class="money-row"><span>Mediabudget totaal, incl. bijgekocht</span><b>' + eur(m.budget) + '</b></div>' +
         '<div class="money-row"><span>Besteed in Meta (Facebook en Instagram)</span><b>' + eur(m.spend) + '</b></div>' +
         '<div class="money-row"><span>Nog te besteden</span><b>' + eur(left) + '</b></div>' +
         '<div class="money-row"><span>Gemiddeld per dag</span><b>' + eur(perDay) + '</b></div>' +
@@ -306,14 +309,15 @@
     var h = '<div class="scrim" data-action="close"></div><div class="modal modal--wide" role="dialog" aria-modal="true" aria-label="Nieuwe vacature"><p class="card__label">Stap ' + step + ' van 3</p>';
     if (step === 1) h += '<h2>Wie zoek je?</h2><label for="w-title">Functie</label><input id="w-title" type="text" value="' + esc(w.title) + '" placeholder="Bijvoorbeeld: servicemonteur"><label for="w-loc">Plaats</label><input id="w-loc" type="text" value="' + esc(w.location) + '" placeholder="Bijvoorbeeld: Utrecht">';
     if (step === 2) h += '<h2>Hoe lang?</h2><div class="packs">' +
-      '<button class="pack" data-action="wset" data-k="plan" data-v="30dagen" aria-pressed="' + (w.plan === '30dagen') + '"><span><b>30 dagen</b><small>Met garantie op geschikte sollicitanten</small></span><span>' + eur(PRICE.dertig) + '</span></button>' +
-      '<button class="pack" data-action="wset" data-k="plan" data-v="doorlopend" aria-pressed="' + (w.plan === 'doorlopend') + '"><span><b>Doorlopend</b><small>Altijd instroom. Levert het meest op.</small></span><span>' + eur(PRICE.doorlopend) + ' p/m</span></button></div>';
+      '<button class="pack" data-action="wset" data-k="plan" data-v="kwartaal" aria-pressed="' + (w.plan === 'kwartaal') + '"><span><b>Minimaal 3 maanden</b><small>Met garantie op geschikte kandidaten</small></span><span>' + eur(PRICE.maand) + ' p/m</span></button>' +
+      '<button class="pack" data-action="wset" data-k="plan" data-v="jaar" aria-pressed="' + (w.plan === 'jaar') + '"><span><b>Jaarcontract</b><small>1 maand gratis. Altijd instroom.</small></span><span>' + eur(PRICE.maand * 11 / 12) + ' p/m</span></button></div>' +
+      '<div class="money-row"><span>Platform: pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>' + eur(PRICE.platform) + '</b></div><div class="money-row"><span>Mediabudget: gaat 1 op 1 naar je advertenties</span><b>' + eur(PRICE.media) + '</b></div>';
     if (step === 3) {
-      var once = (w.plan === '30dagen' ? PRICE.dertig : 0) + (w.selection ? PRICE.selectie : 0) + (w.beeld ? PRICE.beeld : 0);
+      var once = (w.selection ? PRICE.selectie : 0) + (w.beeld ? PRICE.beeld : 0);
       h += '<h2>Wat mogen wij nog doen?</h2><div class="packs">' +
         '<button class="pack" data-action="wset" data-k="selection" aria-pressed="' + !!w.selection + '"><span><b>Selectie door ons</b><small>Wij bellen iedereen binnen 24 uur</small></span><span>+ ' + eur(PRICE.selectie) + '</span></button>' +
         '<button class="pack" data-action="wset" data-k="beeld" aria-pressed="' + !!w.beeld + '"><span><b>Foto en video door ons</b><small>Anders gebruiken we jullie eigen beeld</small></span><span>+ ' + eur(PRICE.beeld) + '</span></button></div>' +
-        '<div class="money-row"><span>Eenmalig</span><b>' + eur(once) + '</b></div>' + (w.plan === 'doorlopend' ? '<div class="money-row"><span>Per maand</span><b>' + eur(PRICE.doorlopend) + '</b></div>' : '') +
+        '<div class="money-row"><span>Per maand</span><b>' + eur(w.plan === 'jaar' ? PRICE.maand * 11 / 12 : PRICE.maand) + '</b></div>' + (once ? '<div class="money-row"><span>Eenmalig</span><b>' + eur(once) + '</b></div>' : '') +
         '<p class="hint">Inclusief vacaturepagina, campagnes, portaal, opvolging en plaatsing op gratis vacaturesites. Bedragen excl. btw. Je betaalt pas na de kick-off.</p>';
     }
     h += '<div class="row" style="margin-top:16px">' + (step > 1 ? '<button class="btn btn--ghost" data-action="wback">Terug</button>' : '') +
@@ -499,7 +503,7 @@
       return api.buy(t.dataset.vac, cents).then(function () { modal = null; render(); toast('Besteld: ' + eur(cents) + '. De betaallink komt per mail.'); }).catch(function () { toast('Bestellen mislukt. Mail team@youngdedicated.nl.'); });
     }
     if (act === 'tores') { S.vacFilter = t.dataset.id; location.hash = '#/resultaten'; return; }
-    if (act === 'newvac') { S.wiz = { step: 1, title: '', location: '', plan: 'doorlopend', selection: false, beeld: false }; modal = 'wiz'; return render(); }
+    if (act === 'newvac') { S.wiz = { step: 1, title: '', location: '', plan: 'kwartaal', selection: false, beeld: false }; modal = 'wiz'; return render(); }
     if (act === 'wset') { if (t.dataset.v) S.wiz[t.dataset.k] = t.dataset.v; else S.wiz[t.dataset.k] = !S.wiz[t.dataset.k]; return render(); }
     if (act === 'wback') { S.wiz.step--; return render(); }
     if (act === 'wnext') {
