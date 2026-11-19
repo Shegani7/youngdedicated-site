@@ -14,7 +14,7 @@
   var demo = /[?&]demo\b/.test(location.search) || sessionStorage.getItem('yd-demo') === '1';
   var sb = !demo && window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
   var S = { profile: null, orgs: [], orgId: null, vacancies: [], apps: [], stats: [], budget: [], vacFilter: 'all', mStage: 'nieuw', open: null, events: [], as: 'klant', wiz: null, poolFit: 'all', claim: null };
-  var PRICE = { maand: 150000, platform: 100000, media: 50000, selectie: 49500, beeld: 300000 };
+  var PRICE = { vacature: 175000, vacYd: 100000, vacMedia: 75000, jaar: 120000, jaarYd: 60000, jaarMedia: 60000, selectie: 49500, beeld: 300000 };
   var app = document.getElementById('app');
 
   /* ---------- helpers ---------- */
@@ -172,8 +172,8 @@
     var cr = credit();
     var m = metrics('all');
     var target = S.vacancies.reduce(function (t, v) { return t + (v.target_qualified || 0); }, 0) || 1;
-    var v30 = S.vacancies.find(function (v) { return v.plan === '30dagen' && v.start_date; });
-    var day = v30 ? Math.min(30, Math.max(1, Math.ceil((Date.now() - new Date(v30.start_date)) / 864e5))) : null;
+    var v30 = S.vacancies.find(function (v) { return v.plan === 'vacature' && v.start_date; });
+    var day = v30 ? Math.min(60, Math.max(1, Math.ceil((Date.now() - new Date(v30.start_date)) / 864e5))) : null;
     var pct = m.budget ? Math.min(100, Math.round(m.spend / m.budget * 100)) : 0;
     var first = (S.profile.full_name || '').split(' ')[0];
     var h = '<h1>' + greet + (first ? ', ' + esc(first) : '') + '.</h1>' +
@@ -186,7 +186,7 @@
           '<div class="bar"><span style="width:' + pct + '%"></span></div><div class="bar-legend"><span>' + pct + '% besteed</span><span>' + eur(m.cpa) + ' per sollicitant</span></div></div>' +
         '<div class="card"><p class="card__label">Garantie</p><p class="big">' + m.qual + ' <small>van ' + target + ' geschikt</small></p>' +
           '<div class="bar bar--green"><span style="width:' + Math.min(100, Math.round(m.qual / target * 100)) + '%"></span></div>' +
-          '<div class="bar-legend"><span>' + (m.qual >= target ? 'Doel gehaald' : 'Nog ' + (target - m.qual) + ' te gaan') + '</span><span>' + (day ? 'Dag ' + day + ' van 30' : 'Doorlopend') + '</span></div></div>' +
+          '<div class="bar-legend"><span>' + (m.qual >= target ? 'Doel gehaald' : 'Nog ' + (target - m.qual) + ' te gaan') + '</span><span>' + (day ? (day <= 30 ? 'Garantiecheck dag 30, nu dag ' + day : 'Dag ' + day + ' van 60') : 'Jaarmodel') + '</span></div></div>' +
       '</div>';
     if (cr.credit) h += '<div class="card section cashback"><div><p class="card__label">Cashback</p><b>' + eur(cr.credit) + ' tegoed</b><p class="hint">Een kandidaat die niet bij jou paste, is via ons netwerk elders aangenomen. Je tegoed gaat automatisch van je volgende vacature af.</p></div></div>';
     h += '<div class="section"><h2>' + (selYD ? 'Deze mensen bellen wij' : 'Bel deze mensen') + '</h2>' + (fresh.length ? '<div class="list">' + fresh.map(function (a) { return personRow(a, true); }).join('') + '</div>' : '<div class="card empty"><strong>Lekker bezig.</strong>Nieuwe sollicitanten verschijnen hier direct.</div>') + '</div>';
@@ -244,9 +244,14 @@
       '<div class="kpi kpi--hl"><span>Per geschikte kandidaat</span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b></div></div>';
     h += '<div class="grid grid-2">' +
       '<div class="card"><p class="card__label">Waar gaat je geld heen</p>' +
-        '<div class="money-row"><span>Je abonnement</span><b>' + eur(PRICE.maand) + ' p/m</b></div>' +
-        '<div class="money-row"><span>&nbsp;&nbsp;waarvan platform en begeleiding</span><b>' + eur(PRICE.platform) + '</b></div>' +
-        '<div class="money-row"><span>&nbsp;&nbsp;waarvan mediabudget per maand</span><b>' + eur(PRICE.media) + '</b></div>' +
+        (S.vacancies.some(function (v) { return v.plan === 'jaar'; }) ?
+          '<div class="money-row"><span>Jaarmodel per vacature</span><b>' + eur(PRICE.jaar) + ' p/m</b></div>' +
+          '<div class="money-row"><span>&nbsp;&nbsp;waarvan platform en begeleiding</span><b>' + eur(PRICE.jaarYd) + '</b></div>' +
+          '<div class="money-row"><span>&nbsp;&nbsp;waarvan mediabudget</span><b>' + eur(PRICE.jaarMedia) + '</b></div>' : '') +
+        (S.vacancies.some(function (v) { return v.plan === 'vacature'; }) ?
+          '<div class="money-row"><span>Vacature, eenmalig</span><b>' + eur(PRICE.vacature) + '</b></div>' +
+          '<div class="money-row"><span>&nbsp;&nbsp;waarvan platform en begeleiding</span><b>' + eur(PRICE.vacYd) + '</b></div>' +
+          '<div class="money-row"><span>&nbsp;&nbsp;waarvan mediabudget, over max. 60 dagen</span><b>' + eur(PRICE.vacMedia) + '</b></div>' : '') +
         '<div class="money-row"><span>Mediabudget totaal, incl. bijgekocht</span><b>' + eur(m.budget) + '</b></div>' +
         '<div class="money-row"><span>Besteed in Meta (Facebook en Instagram)</span><b>' + eur(m.spend) + '</b></div>' +
         '<div class="money-row"><span>Nog te besteden</span><b>' + eur(left) + '</b></div>' +
@@ -271,14 +276,14 @@
     return rows.map(function (r) { var w = r[1] ? Math.max(3, Math.log10(r[1] + 1) / max * 100) : 0; return '<div class="funnel__row"><span>' + r[0] + '</span><div class="funnel__bar" style="width:' + w + '%"></div><b>' + num(r[1]) + '</b></div>'; }).join('');
   }
 
-  function vacDay(v) { return v.plan === '30dagen' && v.start_date ? Math.min(30, Math.max(1, Math.ceil((Date.now() - new Date(v.start_date)) / 864e5))) : null; }
+  function vacDay(v) { return v.plan === 'vacature' && v.start_date ? Math.min(60, Math.max(1, Math.ceil((Date.now() - new Date(v.start_date)) / 864e5))) : null; }
   function viewVacancies() {
     var h = '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>Vacatures</h1><p class="sub">Alles wat nu voor je werft.</p></div>' +
       (demo ? '<button class="btn btn--gold" data-action="newvac">+ Nieuwe vacature</button>' : '<a class="btn btn--gold" href="/plaats-je-vacature/">+ Nieuwe vacature</a>') + '</div><div class="list">';
     h += S.vacancies.map(function (v) {
       var m = metrics(v.id), day = vacDay(v);
       return '<a class="card vac vac--link" href="#/vacatures/' + v.id + '"><div class="vac__main"><span class="pill pill--' + v.status + '">' + esc(v.status) + '</span>' +
-        '<p class="vac__title" style="margin-top:8px">' + esc(v.title) + '</p><p class="hint" style="margin:2px 0 0">' + esc(v.location || '') + ' · ' + (v.status === 'concept' ? 'Aanvraag ingediend' : day ? 'Dag ' + day + ' van 30' : 'Doorlopend') + (v.selection_by_yd ? ' · Selectie door ons' : '') + '</p></div>' +
+        '<p class="vac__title" style="margin-top:8px">' + esc(v.title) + '</p><p class="hint" style="margin:2px 0 0">' + esc(v.location || '') + ' · ' + (v.status === 'concept' ? 'Aanvraag ingediend' : day ? 'Dag ' + day + ' van 60' : 'Jaarmodel') + (v.selection_by_yd ? ' · Selectie door ons' : '') + '</p></div>' +
         '<div class="row"><div class="kpi"><span>Sollicitanten</span><b>' + m.apps + '</b></div><div class="kpi"><span>Geschikt</span><b>' + m.qual + '</b></div><div class="kpi"><span>Besteed</span><b>' + eur(m.spend) + '</b></div></div>' +
         '<span class="vac__go" aria-hidden="true">&rsaquo;</span></a>';
     }).join('');
@@ -288,7 +293,7 @@
     var v = vac(id); if (!v.id) return viewVacancies();
     var m = metrics(id), day = vacDay(v);
     var steps = v.milestones || [{ label: 'Aanvraag', done: true }, { label: 'Kick-off', done: v.status !== 'concept' }, { label: 'Betaald', done: v.status !== 'concept' }, { label: 'Live', done: v.status === 'live' || v.status === 'vervuld' }, { label: 'Vervuld', done: v.status === 'vervuld' }];
-    var h = '<p><a class="hint" href="#/vacatures">&lsaquo; Alle vacatures</a></p><h1>' + esc(v.title) + '</h1><p class="sub">' + esc(v.location || '') + ' · ' + (day ? 'Dag ' + day + ' van 30' : v.plan === 'doorlopend' ? 'Doorlopend' : '') + '</p>';
+    var h = '<p><a class="hint" href="#/vacatures">&lsaquo; Alle vacatures</a></p><h1>' + esc(v.title) + '</h1><p class="sub">' + esc(v.location || '') + ' · ' + (day ? 'Dag ' + day + ' van 60, garantiecheck op dag 30' : v.plan === 'jaar' ? 'Jaarmodel, doorlopend' : '') + '</p>';
     h += '<div class="card"><ol class="stepper">' + steps.map(function (st, i) { var cur = !st.done && (i === 0 || steps[i - 1].done); return '<li class="' + (st.done ? 'done' : cur ? 'cur' : '') + '"><span>' + (st.done ? '&#10003;' : i + 1) + '</span>' + st.label + '</li>'; }).join('') + '</ol>' +
       (v.status === 'concept' ? '<p class="hint" style="margin-top:12px">We bellen je binnen 1 werkdag voor de kick-off. Na je akkoord en betaling staat je vacature binnen 5 werkdagen live.</p>' : '') + '</div>';
     h += '<div class="kpis section"><div class="kpi"><span>Sollicitanten</span><b>' + m.apps + '</b></div><div class="kpi"><span>Geschikt</span><b>' + m.qual + '</b></div><div class="kpi"><span>Aangenomen</span><b>' + m.hired + '</b></div><div class="kpi"><span>Besteed</span><b>' + eur(m.spend) + '</b></div><div class="kpi kpi--hl"><span>Per geschikte kandidaat</span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b></div></div>';
@@ -305,24 +310,24 @@
     return h;
   }
   var PLANS = [
-    { key: 'maand', name: 'Per maand', months: 3, free: 0, note: 'Minimaal 3 maanden, met garantie' },
-    { key: 'half', name: 'Half jaar', months: 6, free: 1, note: '1 maand platform gratis' },
-    { key: 'jaar', name: 'Jaar', months: 12, free: 2, note: '2 maanden platform gratis' }
+    { key: 'vacature', name: 'Vacature', price: PRICE.vacature, unit: 'eenmalig', yd: PRICE.vacYd, media: PRICE.vacMedia, note: 'Snel invullen. Media over max. 60 dagen, met garantie', mediaNote: 'Mediabudget: 1 op 1 naar je advertenties, over max. 60 dagen' },
+    { key: 'jaar', name: 'Jaarmodel', price: PRICE.jaar, unit: 'p/m', yd: PRICE.jaarYd, media: PRICE.jaarMedia, note: 'Voor doorlopende vacatures. €14.400 per jaar', mediaNote: 'Mediabudget per maand: 1 op 1 naar je advertenties' }
   ];
-  function perMonth(key) { var pl = PLANS.find(function (x) { return x.key === key; }) || PLANS[0]; return Math.round(PRICE.platform * (pl.months - pl.free) / pl.months + PRICE.media); }
+  function planOf(key) { return PLANS.find(function (x) { return x.key === key; }) || PLANS[0]; }
   function modalWizard() {
     var w = S.wiz, step = w.step;
     var h = '<div class="scrim" data-action="close"></div><div class="modal modal--wide" role="dialog" aria-modal="true" aria-label="Nieuwe vacature"><p class="card__label">Stap ' + step + ' van 3</p>';
     if (step === 1) h += '<h2>Wie zoek je?</h2><label for="w-title">Functie</label><input id="w-title" type="text" value="' + esc(w.title) + '" placeholder="Bijvoorbeeld: servicemonteur"><label for="w-loc">Plaats</label><input id="w-loc" type="text" value="' + esc(w.location) + '" placeholder="Bijvoorbeeld: Utrecht">';
     if (step === 2) h += '<h2>Hoe lang?</h2><div class="packs">' +
-      PLANS.map(function (pl) { return '<button class="pack" data-action="wset" data-k="plan" data-v="' + pl.key + '" aria-pressed="' + (w.plan === pl.key) + '"><span><b>' + pl.name + '</b><small>' + pl.note + '</small></span><span>' + eur(perMonth(pl.key)) + ' p/m</span></button>'; }).join('') + '</div>' +
-      '<div class="money-row"><span>Platform: pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>' + eur(PRICE.platform) + '</b></div><div class="money-row"><span>Mediabudget: gaat 1 op 1 naar je advertenties</span><b>' + eur(PRICE.media) + '</b></div>';
+      PLANS.map(function (pl) { return '<button class="pack" data-action="wset" data-k="plan" data-v="' + pl.key + '" aria-pressed="' + (w.plan === pl.key) + '"><span><b>' + pl.name + '</b><small>' + pl.note + '</small></span><span>' + eur(pl.price) + ' ' + pl.unit + '</span></button>'; }).join('') + '</div>' +
+      '<div class="money-row"><span>Platform: pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>' + eur(planOf(w.plan).yd) + '</b></div><div class="money-row"><span>' + planOf(w.plan).mediaNote + '</span><b>' + eur(planOf(w.plan).media) + '</b></div>' +
+      (w.plan === 'vacature' ? '<p class="hint">Garantie: na 30 dagen geen geschikte sollicitanten? Dan 30 dagen gratis extra. Lukt het dan nog niet, dan krijg je ' + eur(PRICE.vacMedia) + ' terug.</p>' : '');
     if (step === 3) {
       var once = (w.selection ? PRICE.selectie : 0) + (w.beeld ? PRICE.beeld : 0);
       h += '<h2>Wat mogen wij nog doen?</h2><div class="packs">' +
         '<button class="pack" data-action="wset" data-k="selection" aria-pressed="' + !!w.selection + '"><span><b>Selectie door ons</b><small>Wij bellen iedereen binnen 24 uur</small></span><span>+ ' + eur(PRICE.selectie) + '</span></button>' +
         '<button class="pack" data-action="wset" data-k="beeld" aria-pressed="' + !!w.beeld + '"><span><b>Foto en video door ons</b><small>Anders gebruiken we jullie eigen beeld</small></span><span>+ ' + eur(PRICE.beeld) + '</span></button></div>' +
-        '<div class="money-row"><span>Gemiddeld per maand, per vacature</span><b>' + eur(perMonth(w.plan)) + '</b></div>' + (once ? '<div class="money-row"><span>Eenmalig</span><b>' + eur(once) + '</b></div>' : '') +
+        '<div class="money-row"><span>' + (w.plan === 'jaar' ? 'Per maand, per vacature' : 'Per vacature, eenmalig') + '</span><b>' + eur(planOf(w.plan).price) + '</b></div>' + (once ? '<div class="money-row"><span>Eenmalig</span><b>' + eur(once) + '</b></div>' : '') +
         '<p class="hint">Inclusief vacaturepagina, campagnes, portaal, opvolging en plaatsing op gratis vacaturesites. Bedragen excl. btw. Je betaalt pas na de kick-off.</p>';
     }
     h += '<div class="row" style="margin-top:16px">' + (step > 1 ? '<button class="btn btn--ghost" data-action="wback">Terug</button>' : '') +
@@ -342,7 +347,7 @@
     var act = C.clients.reduce(function (t, c) { return t + c.vacancies; }, 0);
     var speed = C.clients.map(function (c) { return c.speed_h; }).sort(function (a, b) { return a - b; })[Math.floor(C.clients.length / 2)];
     var cpq = Math.round(C.clients.reduce(function (t, c) { return t + c.cpq; }, 0) / C.clients.length);
-    var mix = [['Abonnementen', mrr, '#111'], ['Eenmalig (30 dagen, selectie)', C.once_month_cents, '#d1b75c'], ['Fee op extra budget', C.media_fee_month_cents, '#9c8740'], ['Recruitersnetwerk', C.network_month_cents, '#02daac']];
+    var mix = [['Jaarmodel, platformdeel', mrr, '#111'], ['Vacatures (YD-deel) en selectie', C.once_month_cents, '#d1b75c'], ['Fee op extra budget', C.media_fee_month_cents, '#9c8740'], ['Recruitersnetwerk', C.network_month_cents, '#02daac']];
     var tot = mix.reduce(function (t, x) { return t + x[1]; }, 0);
     var maxT = Math.max.apply(null, C.mrr_trend);
     var h = '<h1>Cockpit</h1><p class="sub">De cijfers waar een koper naar kijkt. Demo met verzonnen klanten.</p>';
@@ -508,7 +513,7 @@
       return api.buy(t.dataset.vac, cents).then(function () { modal = null; render(); toast('Besteld: ' + eur(cents) + '. De betaallink komt per mail.'); }).catch(function () { toast('Bestellen mislukt. Mail team@youngdedicated.nl.'); });
     }
     if (act === 'tores') { S.vacFilter = t.dataset.id; location.hash = '#/resultaten'; return; }
-    if (act === 'newvac') { S.wiz = { step: 1, title: '', location: '', plan: 'half', selection: false, beeld: false }; modal = 'wiz'; return render(); }
+    if (act === 'newvac') { S.wiz = { step: 1, title: '', location: '', plan: 'vacature', selection: false, beeld: false }; modal = 'wiz'; return render(); }
     if (act === 'wset') { if (t.dataset.v) S.wiz[t.dataset.k] = t.dataset.v; else S.wiz[t.dataset.k] = !S.wiz[t.dataset.k]; return render(); }
     if (act === 'wback') { S.wiz.step--; return render(); }
     if (act === 'wnext') {
