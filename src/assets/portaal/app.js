@@ -1,0 +1,423 @@
+/* YoungDedicated portaal: kandidaten, opvolging en resultaten in één scherm. */
+(function () {
+  'use strict';
+  var SB_URL = 'https://spcnezlzxaqnjexuzeck.supabase.co';
+  var SB_KEY = 'sb_publishable_1-tmttt2Tgvn59t8i6ZSJw_0tPoK8iF';
+  var LOGO = '/assets/email/youngdedicated-logo.png';
+  var STAGES = [
+    { key: 'nieuw', label: 'Nieuw' }, { key: 'gebeld', label: 'Gebeld' }, { key: 'gesprek', label: 'Gesprek' },
+    { key: 'aangenomen', label: 'Aangenomen' }, { key: 'afgewezen', label: 'Afgewezen' }
+  ];
+  var STAGE_LABEL = {}; STAGES.forEach(function (s) { STAGE_LABEL[s.key] = s.label; });
+  var PACKS = [25000, 50000, 100000];
+
+  var demo = /[?&]demo\b/.test(location.search) || sessionStorage.getItem('yd-demo') === '1';
+  var sb = !demo && window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
+  var S = { profile: null, orgs: [], orgId: null, vacancies: [], apps: [], stats: [], budget: [], vacFilter: 'all', mStage: 'nieuw', open: null, events: [] };
+  var app = document.getElementById('app');
+
+  /* ---------- helpers ---------- */
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function eur(c, dec) { var v = (c || 0) / 100; return '€' + v.toLocaleString('nl-NL', { minimumFractionDigits: dec ? 2 : 0, maximumFractionDigits: dec ? 2 : 0 }); }
+  function num(v) { return (v || 0).toLocaleString('nl-NL'); }
+  function hoursSince(iso) { return (Date.now() - new Date(iso)) / 36e5; }
+  function ago(iso) {
+    var h = hoursSince(iso);
+    if (h < 1) return 'net binnen';
+    if (h < 24) return Math.floor(h) + ' uur geleden';
+    var d = Math.floor(h / 24); return d === 1 ? 'gisteren' : d + ' dagen geleden';
+  }
+  function fdate(iso) { return new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }) + ', ' + new Date(iso).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }); }
+  function name(a) { return ((a.candidate.first_name || '') + ' ' + (a.candidate.last_name || '')).trim() || 'Onbekend'; }
+  function ini(a) { return ((a.candidate.first_name || '?')[0] + (a.candidate.last_name || '').replace(/^(van|de|der|den)\s+/g, '').charAt(0)).toUpperCase(); }
+  function vac(id) { return S.vacancies.find(function (v) { return v.id === id; }) || {}; }
+  function intlPhone(p) { p = String(p || '').replace(/\D/g, ''); return p.charAt(0) === '0' ? '31' + p.slice(1) : p; }
+  function toast(msg) { var t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2600); }
+  var I = {
+    phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>',
+    wa: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.4-.7-2.8-1.1-4.6-4-4.8-4.2-.1-.2-1.1-1.5-1.1-2.9 0-1.4.7-2 1-2.3.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.6 2 1.1 1 2 1.3 2.3 1.4.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.7-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg>',
+    mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>',
+    people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/></svg>',
+    chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>',
+    brief: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>'
+  };
+
+  /* ---------- data layer ---------- */
+  var api = demo ? {
+    session: function () { return Promise.resolve(window.YD_DEMO.profile); },
+    orgs: function () { return Promise.resolve(window.YD_DEMO.orgs); },
+    load: function (org) {
+      var D = window.YD_DEMO; function f(x) { return x.organization_id === org; }
+      return Promise.resolve({ vacancies: D.vacancies.filter(f), apps: D.apps.filter(f), stats: D.stats.filter(f), budget: D.budget.filter(f) });
+    },
+    events: function (a) { return Promise.resolve(window.YD_DEMO.events.filter(function (e) { return e.application_id === a.id; })); },
+    setStage: function (a, stage) {
+      var D = window.YD_DEMO;
+      D.events.push({ application_id: a.id, type: 'fase', from_stage: a.stage, to_stage: stage, created_at: new Date().toISOString(), actor_name: S.profile.full_name });
+      a.stage = stage; a.stage_changed_at = new Date().toISOString();
+      if (!a.first_contact_at) a.first_contact_at = a.stage_changed_at;
+      if (stage === 'aangenomen') a.qualified = true;
+      return Promise.resolve();
+    },
+    setFields: function (a, f) { Object.assign(a, f); return Promise.resolve(); },
+    addEvent: function (a, type, body) { window.YD_DEMO.events.push({ application_id: a.id, type: type, body: body, created_at: new Date().toISOString(), actor_name: S.profile.full_name }); return Promise.resolve(); },
+    buy: function (vacId, cents) { var t = { id: 'b' + Date.now(), organization_id: S.orgId, vacancy_id: vacId, amount_cents: cents, type: 'bijgekocht', status: 'open', created_at: new Date().toISOString() }; window.YD_DEMO.budget.push(t); S.budget.push(t); return Promise.resolve(); },
+    cv: function () { toast('Demo: hier opent het cv.'); return Promise.resolve(null); },
+    signOut: function () { sessionStorage.removeItem('yd-demo'); location.href = '/portaal/'; }
+  } : {
+    session: function () {
+      return sb.auth.getSession().then(function (r) {
+        var u = r.data.session && r.data.session.user; if (!u) return null;
+        return sb.from('profiles').select('*').eq('id', u.id).single().then(function (p) { return p.data; });
+      });
+    },
+    orgs: function () { return sb.from('organizations').select('id,name').order('name').then(function (r) { return r.data || []; }); },
+    load: function (org) {
+      return Promise.all([
+        sb.from('vacancies').select('*').eq('organization_id', org).order('created_at'),
+        sb.from('applications').select('*, candidate:candidates(first_name,last_name,email,phone,city,cv_path)').eq('organization_id', org).order('created_at', { ascending: false }),
+        sb.from('campaign_stats_daily').select('*').eq('organization_id', org).order('date'),
+        sb.from('budget_transactions').select('*').eq('organization_id', org)
+      ]).then(function (r) { return { vacancies: r[0].data || [], apps: r[1].data || [], stats: r[2].data || [], budget: r[3].data || [] }; });
+    },
+    events: function (a) { return sb.from('application_events').select('*').eq('application_id', a.id).order('created_at').then(function (r) { return r.data || []; }); },
+    setStage: function (a, stage) {
+      var f = { stage: stage }; if (!a.first_contact_at) f.first_contact_at = new Date().toISOString();
+      return sb.from('applications').update(f).eq('id', a.id).select().single().then(function (r) { if (r.error) throw r.error; Object.assign(a, r.data); });
+    },
+    setFields: function (a, f) { return sb.from('applications').update(f).eq('id', a.id).then(function (r) { if (r.error) throw r.error; Object.assign(a, f); }); },
+    addEvent: function (a, type, body) {
+      return sb.auth.getUser().then(function (u) {
+        return sb.from('application_events').insert({ organization_id: a.organization_id, application_id: a.id, type: type, body: body, actor_id: u.data.user.id, actor_name: S.profile.full_name });
+      }).then(function (r) { if (r.error) throw r.error; });
+    },
+    buy: function (vacId, cents) {
+      return sb.auth.getUser().then(function (u) {
+        return sb.from('budget_transactions').insert({ organization_id: S.orgId, vacancy_id: vacId, amount_cents: cents, type: 'bijgekocht', status: 'open', created_by: u.data.user.id }).select().single();
+      }).then(function (r) { if (r.error) throw r.error; S.budget.push(r.data); });
+    },
+    cv: function (path) { return sb.storage.from('cvs').createSignedUrl(path, 120).then(function (r) { return r.data && r.data.signedUrl; }); },
+    signOut: function () { sb.auth.signOut().then(function () { location.href = '/portaal/'; }); }
+  };
+
+  /* ---------- metrics ---------- */
+  function scope(list) { return S.vacFilter === 'all' ? list : list.filter(function (x) { return x.vacancy_id === S.vacFilter; }); }
+  function metrics(vacId) {
+    function f(x) { return !vacId || vacId === 'all' || x.vacancy_id === vacId; }
+    var st = S.stats.filter(f), ap = S.apps.filter(f), bu = S.budget.filter(f);
+    var m = { spend: 0, imp: 0, reach: 0, clicks: 0, budget: 0, pending: 0 };
+    st.forEach(function (s) { m.spend += s.spend_cents; m.imp += s.impressions; m.reach += s.reach; m.clicks += s.clicks; });
+    bu.forEach(function (b) { if (b.status === 'actief' || b.status === 'betaald') m.budget += b.amount_cents; else if (b.status === 'open') m.pending += b.amount_cents; });
+    m.apps = ap.length;
+    m.qual = ap.filter(function (a) { return a.qualified; }).length;
+    m.hired = ap.filter(function (a) { return a.stage === 'aangenomen'; }).length;
+    m.cpa = m.apps ? Math.round(m.spend / m.apps) : 0;
+    m.cpq = m.qual ? Math.round(m.spend / m.qual) : 0;
+    m.days = st.length;
+    return m;
+  }
+
+  /* ---------- shell ---------- */
+  function route() { return (location.hash.replace('#/', '') || 'vandaag').split('/')[0]; }
+  var NAV = [['vandaag', 'Vandaag', I.home], ['kandidaten', 'Kandidaten', I.people], ['resultaten', 'Resultaten', I.chart], ['vacatures', 'Vacatures', I.brief]];
+  function shell(inner) {
+    var r = route();
+    var orgSel = S.profile.role === 'yd_admin' && S.orgs.length > 1
+      ? '<select class="org-select" data-action="org" aria-label="Kies klant">' + S.orgs.map(function (o) { return '<option value="' + o.id + '"' + (o.id === S.orgId ? ' selected' : '') + '>' + esc(o.name) + '</option>'; }).join('') + '</select>'
+      : '<span class="hint">' + esc((S.orgs.find(function (o) { return o.id === S.orgId; }) || {}).name || '') + '</span>';
+    return '<header class="top"><div class="top__in"><a href="#/vandaag"><img class="top__logo" src="' + LOGO + '" alt="YoungDedicated"></a>' +
+      '<nav class="nav">' + NAV.map(function (n) { return '<a href="#/' + n[0] + '"' + (r === n[0] ? ' aria-current="page"' : '') + '>' + n[1] + '</a>'; }).join('') + '</nav>' +
+      '<div class="top__right">' + (demo ? '<span class="demo-flag">Demo</span>' : '') + orgSel +
+      '<button class="avatar" data-action="logout" title="Uitloggen">' + esc((S.profile.full_name || '?').charAt(0).toUpperCase()) + '</button></div></div></header>' +
+      '<main>' + inner + '</main>' +
+      '<nav class="tabs">' + NAV.map(function (n) { return '<a href="#/' + n[0] + '"' + (r === n[0] ? ' aria-current="page"' : '') + '>' + n[2] + n[1] + '</a>'; }).join('') + '</nav>';
+  }
+  function vacChips(withAll) {
+    if (S.vacancies.length < 2 && !withAll) return '';
+    var list = (withAll ? [{ id: 'all', title: 'Alle vacatures' }] : []).concat(S.vacancies);
+    return '<div class="chips" role="group" aria-label="Vacature">' + list.map(function (v) {
+      return '<button class="chip" data-action="vac" data-id="' + v.id + '" aria-pressed="' + (S.vacFilter === v.id) + '">' + esc(v.title) + '</button>';
+    }).join('') + '</div>';
+  }
+  function timer(a) {
+    var h = hoursSince(a.created_at), cls = h > 24 ? 'timer--late' : h > 12 ? 'timer--warn' : '';
+    return '<span class="timer ' + cls + '">' + (h > 24 ? 'Wacht ' + Math.floor(h / 24) + 'd' : 'Nog ' + Math.max(1, Math.ceil(24 - h)) + ' uur') + '</span>';
+  }
+  function personRow(a, withTimer) {
+    var v = vac(a.vacancy_id);
+    return '<div class="person" role="button" tabindex="0" data-action="open" data-id="' + a.id + '">' +
+      '<span class="person__ini">' + esc(ini(a)) + '</span>' +
+      '<span class="person__main"><p class="person__name">' + esc(name(a)) + '</p><p class="person__meta">' + esc(v.title || '') + ' · ' + esc(a.candidate.city || '') + ' · ' + ago(a.created_at) + '</p></span>' +
+      (withTimer ? timer(a) : '') +
+      '<span class="person__act">' + (a.candidate.phone ? '<a class="icon-btn icon-btn--green" href="tel:' + esc(a.candidate.phone) + '" data-action="called" data-id="' + a.id + '" aria-label="Bel ' + esc(name(a)) + '">' + I.phone + '</a>' : '') + '</span></div>';
+  }
+
+  /* ---------- views ---------- */
+  function viewToday() {
+    var hour = new Date().getHours(), greet = hour < 12 ? 'Goedemorgen' : hour < 18 ? 'Goedemiddag' : 'Goedenavond';
+    var fresh = S.apps.filter(function (a) { return a.stage === 'nieuw'; }).sort(function (a, b) { return new Date(a.created_at) - new Date(b.created_at); });
+    var late = fresh.filter(function (a) { return hoursSince(a.created_at) > 24; });
+    var talks = S.apps.filter(function (a) { return a.stage === 'gesprek'; });
+    var m = metrics('all');
+    var target = S.vacancies.reduce(function (t, v) { return t + (v.target_qualified || 0); }, 0) || 1;
+    var v30 = S.vacancies.find(function (v) { return v.plan === '30dagen' && v.start_date; });
+    var day = v30 ? Math.min(30, Math.max(1, Math.ceil((Date.now() - new Date(v30.start_date)) / 864e5))) : null;
+    var pct = m.budget ? Math.min(100, Math.round(m.spend / m.budget * 100)) : 0;
+    var first = (S.profile.full_name || '').split(' ')[0];
+    var h = '<h1>' + greet + (first ? ', ' + esc(first) : '') + '.</h1>' +
+      '<p class="sub">' + (fresh.length ? '<span class="mark">' + fresh.length + (fresh.length === 1 ? ' persoon wacht' : ' mensen wachten') + ' op je belletje.</span>' : 'Iedereen is opgevolgd. Zo hoort het.') + '</p>' +
+      '<div class="grid grid-3">' +
+        '<div class="card card--dark"><p class="card__label">Bel vandaag</p><p class="big">' + fresh.length + ' <small>nieuw</small></p>' +
+          '<p class="muted">Bel binnen 24 uur. Dan is de sollicitant nog warm.</p>' +
+          (late.length ? '<p style="margin-top:14px"><a class="btn btn--gold btn--sm" href="mailto:team@youngdedicated.nl?subject=' + encodeURIComponent('Selectie uitbesteden: wil YoungDedicated onze sollicitanten bellen?') + '">Geen tijd? Wij doen de selectie</a></p>' : '') + '</div>' +
+        '<div class="card"><p class="card__label">Mediabudget</p><p class="big">' + eur(m.spend) + ' <small>van ' + eur(m.budget) + '</small></p>' +
+          '<div class="bar"><span style="width:' + pct + '%"></span></div><div class="bar-legend"><span>' + pct + '% besteed</span><span>' + eur(m.cpa) + ' per sollicitant</span></div></div>' +
+        '<div class="card"><p class="card__label">Garantie</p><p class="big">' + m.qual + ' <small>van ' + target + ' geschikt</small></p>' +
+          '<div class="bar bar--green"><span style="width:' + Math.min(100, Math.round(m.qual / target * 100)) + '%"></span></div>' +
+          '<div class="bar-legend"><span>' + (m.qual >= target ? 'Doel gehaald' : 'Nog ' + (target - m.qual) + ' te gaan') + '</span><span>' + (day ? 'Dag ' + day + ' van 30' : 'Doorlopend') + '</span></div></div>' +
+      '</div>';
+    h += '<div class="section"><h2>Bel deze mensen</h2>' + (fresh.length ? '<div class="list">' + fresh.map(function (a) { return personRow(a, true); }).join('') + '</div>' : '<div class="card empty"><strong>Lekker bezig.</strong>Nieuwe sollicitanten verschijnen hier direct.</div>') + '</div>';
+    if (talks.length) h += '<div class="section"><h2>Neem een besluit</h2><p class="hint" style="margin:-6px 0 12px">Deze mensen hadden een gesprek. Aannemen of niet?</p><div class="list">' + talks.map(function (a) { return personRow(a, false); }).join('') + '</div></div>';
+    return h;
+  }
+
+  function viewCandidates() {
+    var list = scope(S.apps);
+    var h = '<h1>Kandidaten</h1><p class="sub">Sleep een kaart naar de volgende stap, of tik erop.</p>' + vacChips(true);
+    h += '<div class="board">' + STAGES.map(function (s) {
+      var c = list.filter(function (a) { return a.stage === s.key; });
+      return '<div class="col" data-stage="' + s.key + '"><h3>' + s.label + ' <span>' + c.length + '</span></h3>' + c.map(function (a) {
+        return '<button class="kcard" draggable="true" data-action="open" data-id="' + a.id + '"><b>' + esc(name(a)) + '</b><small>' + esc(vac(a.vacancy_id).title || '') + ' · ' + ago(a.created_at) + '</small>' +
+          (a.qualified ? '<br><span class="badge">Geschikt</span>' : '') + (s.key === 'nieuw' && hoursSince(a.created_at) > 24 ? '<br><span class="badge badge--gold">Wacht &gt; 24 uur</span>' : '') + '</button>';
+      }).join('') + '</div>';
+    }).join('') + '</div>';
+    var ms = list.filter(function (a) { return a.stage === S.mStage; });
+    h += '<div class="mobile-stages"><div class="chips">' + STAGES.map(function (s) {
+      return '<button class="chip" data-action="mstage" data-id="' + s.key + '" aria-pressed="' + (S.mStage === s.key) + '">' + s.label + '<span class="n">' + list.filter(function (a) { return a.stage === s.key; }).length + '</span></button>';
+    }).join('') + '</div>' + (ms.length ? '<div class="list">' + ms.map(function (a) { return personRow(a, S.mStage === 'nieuw'); }).join('') + '</div>' : '<div class="card empty">Niemand in deze stap.</div>') + '</div>';
+    return h;
+  }
+
+  function chart(vacId) {
+    var st = S.stats.filter(function (s) { return vacId === 'all' || s.vacancy_id === vacId; });
+    var by = {}; st.forEach(function (s) { var d = by[s.date] || (by[s.date] = { spend: 0, leads: 0 }); d.spend += s.spend_cents; d.leads += s.leads; });
+    var days = Object.keys(by).sort().slice(-30);
+    if (!days.length) return '<div class="empty">Nog geen campagnedata. Die verschijnt zodra de campagne draait.</div>';
+    var W = 720, H = 220, P = { l: 44, r: 36, t: 12, b: 26 }, iw = W - P.l - P.r, ih = H - P.t - P.b;
+    var maxS = Math.max.apply(null, days.map(function (d) { return by[d].spend; })) || 1;
+    var maxL = Math.max(3, Math.max.apply(null, days.map(function (d) { return by[d].leads; })));
+    var bw = iw / days.length;
+    var bars = days.map(function (d, i) { var hgt = by[d].spend / maxS * ih; return '<rect x="' + (P.l + i * bw + bw * 0.18).toFixed(1) + '" y="' + (P.t + ih - hgt).toFixed(1) + '" width="' + (bw * 0.64).toFixed(1) + '" height="' + hgt.toFixed(1) + '" rx="3" fill="#d1b75c"><title>' + d + ': ' + eur(by[d].spend) + ', ' + by[d].leads + ' sollicitanten</title></rect>'; }).join('');
+    var pts = days.map(function (d, i) { return (P.l + i * bw + bw / 2).toFixed(1) + ',' + (P.t + ih - by[d].leads / maxL * ih).toFixed(1); });
+    var dots = days.map(function (d, i) { return by[d].leads ? '<circle cx="' + (P.l + i * bw + bw / 2).toFixed(1) + '" cy="' + (P.t + ih - by[d].leads / maxL * ih).toFixed(1) + '" r="3.5" fill="#00a882"/>' : ''; }).join('');
+    var lbl = days.map(function (d, i) { return i % Math.ceil(days.length / 6) === 0 ? '<text x="' + (P.l + i * bw + bw / 2) + '" y="' + (H - 6) + '" text-anchor="middle">' + new Date(d).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }) + '</text>' : ''; }).join('');
+    var grid = [0, 0.5, 1].map(function (f) { var y = P.t + ih - f * ih; return '<line x1="' + P.l + '" x2="' + (W - P.r) + '" y1="' + y + '" y2="' + y + '" stroke="#ece9df"/><text x="' + (P.l - 6) + '" y="' + (y + 4) + '" text-anchor="end">' + eur(maxS * f) + '</text><text x="' + (W - P.r + 6) + '" y="' + (y + 4) + '">' + (f === 0.5 ? '' : Math.round(maxL * f)) + '</text>'; }).join('');
+    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Besteding en sollicitanten per dag">' + grid + bars +
+      '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#00a882" stroke-width="2.5" stroke-linejoin="round"/>' + dots + lbl + '</svg>' +
+      '<div class="legend"><span><i style="background:#d1b75c"></i>Besteed per dag (links)</span><span><i style="background:#00a882"></i>Sollicitanten per dag (rechts)</span></div>';
+  }
+
+  function viewResults() {
+    if (S.vacFilter === 'all' && S.vacancies.length === 1) S.vacFilter = S.vacancies[0].id;
+    var m = metrics(S.vacFilter);
+    var left = Math.max(0, m.budget - m.spend);
+    var perDay = m.days ? Math.round(m.spend / m.days) : 0;
+    var h = '<h1>Resultaten</h1><p class="sub">Live. Je ziet precies waar je geld heen gaat en wat het oplevert.</p>' + vacChips(S.vacancies.length > 1);
+    h += '<div class="kpis">' +
+      '<div class="kpi"><span>Besteed</span><b>' + eur(m.spend) + '</b></div>' +
+      '<div class="kpi"><span>Sollicitanten</span><b>' + m.apps + '</b></div>' +
+      '<div class="kpi"><span>Per sollicitant</span><b>' + eur(m.cpa) + '</b></div>' +
+      '<div class="kpi"><span>Geschikt</span><b>' + m.qual + '</b></div>' +
+      '<div class="kpi kpi--hl"><span>Per geschikte kandidaat</span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b></div></div>';
+    h += '<div class="grid grid-2">' +
+      '<div class="card"><p class="card__label">Waar gaat je geld heen</p>' +
+        '<div class="money-row"><span>Mediabudget</span><b>' + eur(m.budget) + '</b></div>' +
+        '<div class="money-row"><span>Besteed in Meta (Facebook en Instagram)</span><b>' + eur(m.spend) + '</b></div>' +
+        '<div class="money-row"><span>Nog te besteden</span><b>' + eur(left) + '</b></div>' +
+        '<div class="money-row"><span>Gemiddeld per dag</span><b>' + eur(perDay) + '</b></div>' +
+        (m.pending ? '<div class="money-row"><span>Bijgekocht, wacht op betaling</span><b>' + eur(m.pending) + '</b></div>' : '') +
+        '<div class="bar"><span style="width:' + (m.budget ? Math.min(100, Math.round(m.spend / m.budget * 100)) : 0) + '%"></span></div>' +
+        '<p style="margin-top:16px"><button class="btn btn--gold btn--block" data-action="buy">Meer reacties? Verhoog je budget</button></p></div>' +
+      '<div class="card"><p class="card__label">Van bereik naar aanname</p><div class="funnel">' + funnelRows(m) + '</div>' +
+        '<p class="hint" style="margin-top:12px">Een klik betekent: iemand opende je vacaturepagina of formulier.</p></div>' +
+      '</div>';
+    h += '<div class="card section"><p class="card__label">Laatste 30 dagen</p>' + chart(S.vacFilter) + '</div>';
+    var src = {}; scope(S.apps).forEach(function (a) { src[a.source || 'Onbekend'] = (src[a.source || 'Onbekend'] || 0) + 1; });
+    h += '<div class="card section"><p class="card__label">Waar komen je sollicitanten vandaan</p>' + Object.keys(src).sort(function (a, b) { return src[b] - src[a]; }).map(function (k) { return '<div class="money-row"><span>' + esc(k) + '</span><b>' + src[k] + '</b></div>'; }).join('') + '</div>';
+    return h;
+  }
+  function funnelRows(m) {
+    var rows = [['Bereik', m.reach], ['Klikken', m.clicks], ['Sollicitanten', m.apps], ['Geschikt', m.qual], ['Aangenomen', m.hired]];
+    var max = Math.log10((rows[0][1] || 1) + 1);
+    return rows.map(function (r) { var w = r[1] ? Math.max(3, Math.log10(r[1] + 1) / max * 100) : 0; return '<div class="funnel__row"><span>' + r[0] + '</span><div class="funnel__bar" style="width:' + w + '%"></div><b>' + num(r[1]) + '</b></div>'; }).join('');
+  }
+
+  function viewVacancies() {
+    var h = '<h1>Vacatures</h1><p class="sub">Alles wat nu voor je werft.</p><div class="list">';
+    h += S.vacancies.map(function (v) {
+      var m = metrics(v.id);
+      var day = v.plan === '30dagen' && v.start_date ? Math.min(30, Math.max(1, Math.ceil((Date.now() - new Date(v.start_date)) / 864e5))) : null;
+      return '<div class="card vac"><div class="vac__main"><span class="pill pill--' + v.status + '">' + esc(v.status) + '</span>' +
+        '<p class="vac__title" style="margin-top:8px">' + esc(v.title) + '</p><p class="hint" style="margin:2px 0 0">' + esc(v.location || '') + ' · ' + (day ? 'Dag ' + day + ' van 30' : 'Doorlopend') + '</p></div>' +
+        '<div class="row"><div class="kpi"><span>Sollicitanten</span><b>' + m.apps + '</b></div><div class="kpi"><span>Geschikt</span><b>' + m.qual + '</b></div><div class="kpi"><span>Besteed</span><b>' + eur(m.spend) + '</b></div></div>' +
+        '<div class="row">' + (v.page_url ? '<a class="btn btn--ghost btn--sm" href="' + esc(v.page_url) + '" target="_blank" rel="noopener">Bekijk vacature</a>' : '') +
+        '<button class="btn btn--sm" data-action="tovac" data-id="' + v.id + '">Kandidaten</button></div></div>';
+    }).join('');
+    h += '</div><div class="note">Nieuwe vacature of iets aanpassen? Mail <a href="mailto:team@youngdedicated.nl">team@youngdedicated.nl</a>. Wij regelen het binnen 1 werkdag.</div>';
+    return h;
+  }
+
+  /* ---------- drawer ---------- */
+  function drawer() {
+    var a = S.apps.find(function (x) { return x.id === S.open; }); if (!a) return '';
+    var v = vac(a.vacancy_id), idx = STAGES.findIndex(function (s) { return s.key === a.stage; });
+    var bar = STAGES.slice(0, 4).map(function (s, i) { var cls = a.stage === 'afgewezen' ? 'rej' : a.stage === 'aangenomen' ? 'hired' : i <= idx ? 'on' : ''; return '<span class="' + cls + '"></span>'; }).join('');
+    var next = { nieuw: ['gebeld', 'Gebeld, past goed'], gebeld: ['gesprek', 'Uitnodigen voor gesprek'], gesprek: ['aangenomen', 'Aannemen'] }[a.stage];
+    var decide = next
+      ? '<div class="decide"><button class="btn ' + (next[0] === 'aangenomen' ? 'btn--green' : '') + '" data-action="stage" data-stage="' + next[0] + '">' + next[1] + '</button><button class="btn btn--red" data-action="stage" data-stage="afgewezen">Afwijzen</button></div>'
+      : '<div class="card" style="text-align:center"><b>' + (a.stage === 'aangenomen' ? 'Aangenomen. Gefeliciteerd!' : 'Afgewezen') + '</b><p><button class="btn btn--ghost btn--sm" data-action="stage" data-stage="gebeld">Terugzetten</button></p></div>';
+    var qa = Object.keys(a.answers || {}).map(function (k) { return '<dt>' + esc(k) + '</dt><dd>' + esc(a.answers[k]) + '</dd>'; }).join('');
+    var tl = S.events.slice().reverse().map(function (e) {
+      var txt = e.type === 'fase' ? 'Van ' + (STAGE_LABEL[e.from_stage] || e.from_stage) + ' naar <b>' + (STAGE_LABEL[e.to_stage] || e.to_stage) + '</b>' : esc(e.body || '');
+      return '<li>' + txt + '<small>' + esc(e.actor_name || '') + ' · ' + fdate(e.created_at) + '</small></li>';
+    }).join('');
+    var c = a.candidate;
+    return '<div class="scrim" data-action="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="' + esc(name(a)) + '">' +
+      '<div class="drawer__head"><button class="icon-btn drawer__close" data-action="close" aria-label="Sluiten">' + I.close + '</button>' +
+      '<h2>' + esc(name(a)) + '</h2><p>' + esc(v.title || '') + ' · ' + esc(c.city || '') + ' · ' + ago(a.created_at) + '</p><div class="stagebar">' + bar + '</div></div>' +
+      '<div class="drawer__body">' +
+        '<div class="row">' + (c.phone ? '<a class="btn btn--green" href="tel:' + esc(c.phone) + '" data-action="called" data-id="' + a.id + '">' + I.phone + 'Bel</a><a class="btn" style="background:#25d366" href="https://wa.me/' + intlPhone(c.phone) + '" target="_blank" rel="noopener" data-action="called" data-id="' + a.id + '">' + I.wa + 'WhatsApp</a>' : '') +
+          (c.email ? '<a class="btn btn--ghost" href="mailto:' + esc(c.email) + '">' + I.mail + 'Mail</a>' : '') + '</div>' +
+        decide +
+        '<div class="card"><p class="card__label">Geschikte kandidaat?</p><div class="row"><button class="chip" data-action="qual" data-v="true" aria-pressed="' + (a.qualified === true) + '">Ja, geschikt</button><button class="chip" data-action="qual" data-v="false" aria-pressed="' + (a.qualified === false) + '">Nee</button></div><p class="hint">Telt mee voor je garantie en leert de campagne wie je zoekt.</p></div>' +
+        '<div class="card"><p class="card__label">Antwoorden</p><dl class="qa" style="margin:0">' + (qa || '<dd class="muted">Geen extra vragen.</dd>') + '</dl>' +
+          (c.cv_path ? '<p><button class="btn btn--ghost btn--sm" data-action="cv">Bekijk cv</button></p>' : '') + '</div>' +
+        '<div class="card"><p class="card__label">Notitie</p><textarea id="note" placeholder="Wat viel op in het gesprek?"></textarea><p><button class="btn btn--sm" data-action="note">Opslaan</button></p></div>' +
+        '<div class="card"><p class="card__label">Tijdlijn</p><ul class="timeline">' + (tl || '<li>Nog niets gebeurd.</li>') + '</ul></div>' +
+      '</div></aside>';
+  }
+  function modalBuy() {
+    var vacId = S.vacFilter === 'all' ? (S.vacancies[0] || {}).id : S.vacFilter;
+    var m = metrics(vacId);
+    return '<div class="scrim" data-action="close"></div><div class="modal" role="dialog" aria-modal="true" aria-label="Meer reacties">' +
+      '<h2>Meer reacties voor ' + esc(vac(vacId).title || '') + '</h2><p class="hint">Kies een extra budget. Wij zetten het in op de advertenties die nu het best werken.</p>' +
+      '<div class="packs">' + PACKS.map(function (p, i) {
+        var est = m.cpa ? Math.round(p / m.cpa) : null;
+        return '<button class="pack" data-action="pack" data-v="' + p + '" aria-pressed="' + (i === 1) + '"><span><b>' + eur(p) + '</b><small>' + (est ? 'Ongeveer ' + est + ' extra sollicitanten' : 'Extra bereik') + '</small></span><span>' + (i === 1 ? 'Meest gekozen' : '') + '</span></button>';
+      }).join('') + '</div>' +
+      (m.cpa ? '<p class="hint">Schatting op basis van je huidige ' + eur(m.cpa) + ' per sollicitant. Geen garantie op aantallen.</p>' : '') +
+      '<div class="row" style="margin-top:12px"><button class="btn btn--gold" data-action="confirm-buy" data-vac="' + vacId + '">Bestellen</button><button class="btn btn--ghost" data-action="close">Annuleren</button></div>' +
+      '<p class="hint">Je krijgt een betaallink per mail. Na betaling staat het budget binnen 1 werkdag live. Bedragen excl. btw.</p></div>';
+  }
+
+  /* ---------- render ---------- */
+  var modal = null;
+  function render() {
+    if (!S.profile) return;
+    var r = route();
+    var body = r === 'kandidaten' ? viewCandidates() : r === 'resultaten' ? viewResults() : r === 'vacatures' ? viewVacancies() : viewToday();
+    app.innerHTML = shell(body) + (S.open ? drawer() : '') + (modal === 'buy' ? modalBuy() : '');
+    bindDnD();
+  }
+  function openApp(id) {
+    S.open = id; S.events = [];
+    var a = S.apps.find(function (x) { return x.id === id; });
+    render();
+    api.events(a).then(function (e) { S.events = e; if (S.open === id) render(); });
+  }
+  function bindDnD() {
+    app.querySelectorAll('.kcard').forEach(function (k) { k.addEventListener('dragstart', function (e) { e.dataTransfer.setData('text/plain', k.dataset.id); }); });
+    app.querySelectorAll('.col').forEach(function (c) {
+      c.addEventListener('dragover', function (e) { e.preventDefault(); c.classList.add('drop'); });
+      c.addEventListener('dragleave', function () { c.classList.remove('drop'); });
+      c.addEventListener('drop', function (e) {
+        e.preventDefault(); c.classList.remove('drop');
+        var a = S.apps.find(function (x) { return x.id === e.dataTransfer.getData('text/plain'); });
+        if (a && a.stage !== c.dataset.stage) changeStage(a, c.dataset.stage);
+      });
+    });
+  }
+  function changeStage(a, stage) {
+    api.setStage(a, stage).then(function () {
+      toast(name(a) + ': ' + STAGE_LABEL[stage]);
+      if (S.open === a.id) return api.events(a).then(function (e) { S.events = e; render(); });
+      render();
+    }).catch(function () { toast('Opslaan mislukt. Probeer het opnieuw.'); });
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-action]'); if (!t) return;
+    var act = t.dataset.action;
+    var a = S.apps.find(function (x) { return x.id === S.open; });
+    if (act === 'called') {
+      e.stopPropagation();
+      var ca = S.apps.find(function (x) { return x.id === t.dataset.id; });
+      if (ca) api.addEvent(ca, 'contact', t.href.indexOf('wa.me') > -1 ? 'WhatsApp gestuurd' : 'Gebeld').catch(function () {});
+      return;
+    }
+    if (act === 'open') return openApp(t.dataset.id);
+    if (act === 'close') { S.open = null; modal = null; return render(); }
+    if (act === 'vac') { S.vacFilter = t.dataset.id; return render(); }
+    if (act === 'mstage') { S.mStage = t.dataset.id; return render(); }
+    if (act === 'tovac') { S.vacFilter = t.dataset.id; location.hash = '#/kandidaten'; return; }
+    if (act === 'stage' && a) return changeStage(a, t.dataset.stage);
+    if (act === 'qual' && a) { var q = t.dataset.v === 'true'; return api.setFields(a, { qualified: a.qualified === q ? null : q }).then(render).catch(function () { toast('Opslaan mislukt.'); }); }
+    if (act === 'note' && a) {
+      var txt = (document.getElementById('note').value || '').trim(); if (!txt) return;
+      return api.addEvent(a, 'notitie', txt).then(function () { return api.events(a); }).then(function (ev) { S.events = ev; toast('Notitie opgeslagen'); render(); }).catch(function () { toast('Opslaan mislukt.'); });
+    }
+    if (act === 'cv' && a) { var w = demo ? null : window.open('', '_blank'); return api.cv(a.candidate.cv_path).then(function (u) { if (u && w) w.location = u; else if (w) w.close(); }); }
+    if (act === 'buy') { modal = 'buy'; return render(); }
+    if (act === 'pack') { app.querySelectorAll('.pack').forEach(function (p) { p.setAttribute('aria-pressed', p === t); }); return; }
+    if (act === 'confirm-buy') {
+      var sel = app.querySelector('.pack[aria-pressed=true]'); var cents = +sel.dataset.v;
+      return api.buy(t.dataset.vac, cents).then(function () { modal = null; render(); toast('Besteld: ' + eur(cents) + '. De betaallink komt per mail.'); }).catch(function () { toast('Bestellen mislukt. Mail team@youngdedicated.nl.'); });
+    }
+    if (act === 'logout') return api.signOut();
+    if (act === 'demo') { sessionStorage.setItem('yd-demo', '1'); location.reload(); }
+  });
+  document.addEventListener('change', function (e) { if (e.target.dataset.action === 'org') { S.orgId = e.target.value; S.vacFilter = 'all'; loadOrg(); } });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && (S.open || modal)) { S.open = null; modal = null; render(); }
+    if (e.key === 'Enter' && e.target.matches('.person')) openApp(e.target.dataset.id);
+  });
+  window.addEventListener('hashchange', function () { S.open = null; modal = null; render(); window.scrollTo(0, 0); });
+
+  /* ---------- login ---------- */
+  function viewLogin(sent) {
+    app.innerHTML = '<div class="login"><div class="login__art"><h2>Personeel dat blijft.<br>Zonder gedoe.</h2><p>Jouw sollicitanten, je resultaten en je budget. Altijd live, op één plek.</p></div>' +
+      '<form class="login__form" id="login"><img src="' + LOGO + '" alt="YoungDedicated">' +
+      (sent ? '<h1>Check je mail.</h1><p class="sub">We stuurden een inloglink naar ' + esc(sent) + '. Tik erop en je bent binnen.</p>'
+        : '<h1>Inloggen</h1><p class="sub">Geen wachtwoord nodig. Je krijgt een link per mail.</p><label for="email">E-mailadres</label><input id="email" type="email" required autocomplete="email" placeholder="naam@bedrijf.nl"><p style="margin-top:16px"><button class="btn btn--block" type="submit">Stuur mijn inloglink</button></p>') +
+      '<p style="margin-top:8px"><button class="btn btn--ghost btn--block" type="button" data-action="demo">Bekijk de demo</button></p>' +
+      '<div class="note">Nog geen account? Je krijgt toegang zodra je vacature bij ons live gaat.</div></form></div>';
+    var f = document.getElementById('login');
+    f.addEventListener('submit', function (e) {
+      e.preventDefault(); var em = document.getElementById('email').value.trim();
+      sb.auth.signInWithOtp({ email: em, options: { emailRedirectTo: location.origin + '/portaal/', shouldCreateUser: true } }).then(function (r) {
+        if (r.error) toast('Versturen lukte niet. Probeer het over een minuut opnieuw.'); else viewLogin(em);
+      });
+    });
+  }
+
+  /* ---------- boot ---------- */
+  function loadOrg() {
+    return api.load(S.orgId).then(function (d) { Object.assign(S, d); render(); });
+  }
+  function boot() {
+    api.session().then(function (p) {
+      if (!p) return viewLogin();
+      S.profile = p;
+      return api.orgs().then(function (o) {
+        S.orgs = o;
+        S.orgId = p.organization_id || (o[0] && o[0].id);
+        if (!S.orgId) { app.innerHTML = '<div class="login__form"><img src="' + LOGO + '" alt=""><h1>Bijna klaar.</h1><p class="sub">Je account wordt nog gekoppeld aan je bedrijf. We laten het je weten.</p></div>'; return; }
+        return loadOrg();
+      });
+    }).catch(function () { app.innerHTML = '<div class="login__form"><h1>Even geen verbinding.</h1><p class="sub">Ververs de pagina.</p></div>'; });
+  }
+  if (sb) sb.auth.onAuthStateChange(function (ev) { if (ev === 'SIGNED_IN' && !S.profile) boot(); });
+  boot();
+})();
