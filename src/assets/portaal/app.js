@@ -14,7 +14,7 @@
   var demo = /[?&]demo\b/.test(location.search) || sessionStorage.getItem('yd-demo') === '1';
   var sb = !demo && window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
   var S = { profile: null, orgs: [], orgId: null, vacancies: [], apps: [], stats: [], budget: [], vacFilter: 'all', mStage: 'nieuw', open: null, events: [], as: 'klant', wiz: null, poolFit: 'all', claim: null };
-  var PRICE = { maand: 165000, platform: 125000, media: 40000, selectie: 49500, beeld: 300000 };
+  var PRICE = { maand: 150000, platform: 100000, media: 50000, selectie: 49500, beeld: 300000 };
   var app = document.getElementById('app');
 
   /* ---------- helpers ---------- */
@@ -304,20 +304,25 @@
       '<div class="card"><p class="card__label">Snel naar</p><div class="row"><button class="btn btn--sm" data-action="tovac" data-id="' + v.id + '">Kandidaten</button><button class="btn btn--ghost btn--sm" data-action="tores" data-id="' + v.id + '">Resultaten</button>' + (v.page_url ? '<a class="btn btn--ghost btn--sm" href="' + esc(v.page_url) + '" target="_blank" rel="noopener">Vacaturepagina</a>' : '') + '</div></div></div>';
     return h;
   }
+  var PLANS = [
+    { key: 'maand', name: 'Per maand', months: 3, free: 0, note: 'Minimaal 3 maanden, met garantie' },
+    { key: 'half', name: 'Half jaar', months: 6, free: 1, note: '1 maand platform gratis' },
+    { key: 'jaar', name: 'Jaar', months: 12, free: 2, note: '2 maanden platform gratis' }
+  ];
+  function perMonth(key) { var pl = PLANS.find(function (x) { return x.key === key; }) || PLANS[0]; return Math.round(PRICE.platform * (pl.months - pl.free) / pl.months + PRICE.media); }
   function modalWizard() {
     var w = S.wiz, step = w.step;
     var h = '<div class="scrim" data-action="close"></div><div class="modal modal--wide" role="dialog" aria-modal="true" aria-label="Nieuwe vacature"><p class="card__label">Stap ' + step + ' van 3</p>';
     if (step === 1) h += '<h2>Wie zoek je?</h2><label for="w-title">Functie</label><input id="w-title" type="text" value="' + esc(w.title) + '" placeholder="Bijvoorbeeld: servicemonteur"><label for="w-loc">Plaats</label><input id="w-loc" type="text" value="' + esc(w.location) + '" placeholder="Bijvoorbeeld: Utrecht">';
     if (step === 2) h += '<h2>Hoe lang?</h2><div class="packs">' +
-      '<button class="pack" data-action="wset" data-k="plan" data-v="kwartaal" aria-pressed="' + (w.plan === 'kwartaal') + '"><span><b>Minimaal 3 maanden</b><small>Met garantie op geschikte kandidaten</small></span><span>' + eur(PRICE.maand) + ' p/m</span></button>' +
-      '<button class="pack" data-action="wset" data-k="plan" data-v="jaar" aria-pressed="' + (w.plan === 'jaar') + '"><span><b>Jaarcontract</b><small>1 maand gratis. Altijd instroom.</small></span><span>' + eur(PRICE.maand * 11 / 12) + ' p/m</span></button></div>' +
+      PLANS.map(function (pl) { return '<button class="pack" data-action="wset" data-k="plan" data-v="' + pl.key + '" aria-pressed="' + (w.plan === pl.key) + '"><span><b>' + pl.name + '</b><small>' + pl.note + '</small></span><span>' + eur(perMonth(pl.key)) + ' p/m</span></button>'; }).join('') + '</div>' +
       '<div class="money-row"><span>Platform: pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>' + eur(PRICE.platform) + '</b></div><div class="money-row"><span>Mediabudget: gaat 1 op 1 naar je advertenties</span><b>' + eur(PRICE.media) + '</b></div>';
     if (step === 3) {
       var once = (w.selection ? PRICE.selectie : 0) + (w.beeld ? PRICE.beeld : 0);
       h += '<h2>Wat mogen wij nog doen?</h2><div class="packs">' +
         '<button class="pack" data-action="wset" data-k="selection" aria-pressed="' + !!w.selection + '"><span><b>Selectie door ons</b><small>Wij bellen iedereen binnen 24 uur</small></span><span>+ ' + eur(PRICE.selectie) + '</span></button>' +
         '<button class="pack" data-action="wset" data-k="beeld" aria-pressed="' + !!w.beeld + '"><span><b>Foto en video door ons</b><small>Anders gebruiken we jullie eigen beeld</small></span><span>+ ' + eur(PRICE.beeld) + '</span></button></div>' +
-        '<div class="money-row"><span>Per maand</span><b>' + eur(w.plan === 'jaar' ? PRICE.maand * 11 / 12 : PRICE.maand) + '</b></div>' + (once ? '<div class="money-row"><span>Eenmalig</span><b>' + eur(once) + '</b></div>' : '') +
+        '<div class="money-row"><span>Gemiddeld per maand, per vacature</span><b>' + eur(perMonth(w.plan)) + '</b></div>' + (once ? '<div class="money-row"><span>Eenmalig</span><b>' + eur(once) + '</b></div>' : '') +
         '<p class="hint">Inclusief vacaturepagina, campagnes, portaal, opvolging en plaatsing op gratis vacaturesites. Bedragen excl. btw. Je betaalt pas na de kick-off.</p>';
     }
     h += '<div class="row" style="margin-top:16px">' + (step > 1 ? '<button class="btn btn--ghost" data-action="wback">Terug</button>' : '') +
@@ -503,7 +508,7 @@
       return api.buy(t.dataset.vac, cents).then(function () { modal = null; render(); toast('Besteld: ' + eur(cents) + '. De betaallink komt per mail.'); }).catch(function () { toast('Bestellen mislukt. Mail team@youngdedicated.nl.'); });
     }
     if (act === 'tores') { S.vacFilter = t.dataset.id; location.hash = '#/resultaten'; return; }
-    if (act === 'newvac') { S.wiz = { step: 1, title: '', location: '', plan: 'kwartaal', selection: false, beeld: false }; modal = 'wiz'; return render(); }
+    if (act === 'newvac') { S.wiz = { step: 1, title: '', location: '', plan: 'half', selection: false, beeld: false }; modal = 'wiz'; return render(); }
     if (act === 'wset') { if (t.dataset.v) S.wiz[t.dataset.k] = t.dataset.v; else S.wiz[t.dataset.k] = !S.wiz[t.dataset.k]; return render(); }
     if (act === 'wback') { S.wiz.step--; return render(); }
     if (act === 'wnext') {

@@ -114,13 +114,13 @@
   ];
   var cockpit = {
     clients: [
-      { name: 'Van Walsem Kachelspecialist', plan: 'Doorlopend', mrr: 99500, vacancies: 1, cpq: 8200, speed_h: 6, health: 'op koers' },
+      { name: 'Van Walsem Kachelspecialist', plan: 'Half jaar', mrr: 150000, vacancies: 1, cpq: 8200, speed_h: 6, health: 'op koers' },
       { name: 'YoungDedicated (eigen)', plan: '30 dagen', mrr: 0, vacancies: 1, cpq: 9100, speed_h: 9, health: 'op koers' },
-      { name: 'Demo Installatietechniek', plan: 'Doorlopend', mrr: 199000, vacancies: 2, cpq: 7400, speed_h: 4, health: 'op koers' },
-      { name: 'Demo Horeca Groep', plan: 'Doorlopend', mrr: 82900, vacancies: 1, cpq: 5100, speed_h: 31, health: 'let op: belt traag' },
+      { name: 'Demo Installatietechniek', plan: 'Half jaar', mrr: 300000, vacancies: 2, cpq: 7400, speed_h: 4, health: 'op koers' },
+      { name: 'Demo Horeca Groep', plan: 'Half jaar', mrr: 133300, vacancies: 1, cpq: 5100, speed_h: 31, health: 'let op: belt traag' },
       { name: 'Demo Servicebedrijf', plan: '30 dagen', mrr: 0, vacancies: 1, cpq: 12600, speed_h: 12, health: 'let op: weinig geschikt' }
     ],
-    mrr_trend: [99500, 99500, 182400, 182400, 281900, 381400],
+    mrr_trend: [150000, 150000, 283300, 283300, 433300, 583300],
     months: ['jun', 'jul', 'aug', 'sep', 'okt', 'nov'],
     once_month_cents: 165000 * 2 + 49500,
     media_fee_month_cents: 41250,
