@@ -13,7 +13,8 @@
 
   var demo = /[?&]demo\b/.test(location.search) || sessionStorage.getItem('yd-demo') === '1';
   var sb = !demo && window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
-  var S = { profile: null, orgs: [], orgId: null, vacancies: [], apps: [], stats: [], budget: [], vacFilter: 'all', mStage: 'nieuw', open: null, events: [] };
+  var S = { profile: null, orgs: [], orgId: null, vacancies: [], apps: [], stats: [], budget: [], vacFilter: 'all', mStage: 'nieuw', open: null, events: [], as: 'klant', wiz: null, poolFit: 'all', claim: null };
+  var PRICE = { dertig: 165000, doorlopend: 99500, selectie: 49500, beeld: 300000 };
   var app = document.getElementById('app');
 
   /* ---------- helpers ---------- */
@@ -32,7 +33,7 @@
   function ini(a) { return ((a.candidate.first_name || '?')[0] + (a.candidate.last_name || '').replace(/^(van|de|der|den)\s+/g, '').charAt(0)).toUpperCase(); }
   function vac(id) { return S.vacancies.find(function (v) { return v.id === id; }) || {}; }
   function intlPhone(p) { p = String(p || '').replace(/\D/g, ''); return p.charAt(0) === '0' ? '31' + p.slice(1) : p; }
-  function toast(msg) { var t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2600); }
+  function toast(msg) { document.querySelectorAll('.toast').forEach(function (x) { x.remove(); }); var t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2600); }
   var I = {
     phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>',
     wa: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.4-.7-2.8-1.1-4.6-4-4.8-4.2-.1-.2-1.1-1.5-1.1-2.9 0-1.4.7-2 1-2.3.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.6 2 1.1 1 2 1.3 2.3 1.4.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.7-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg>',
@@ -120,19 +121,26 @@
   }
 
   /* ---------- shell ---------- */
-  function route() { return (location.hash.replace('#/', '') || 'vandaag').split('/')[0]; }
-  var NAV = [['vandaag', 'Vandaag', I.home], ['kandidaten', 'Kandidaten', I.people], ['resultaten', 'Resultaten', I.chart], ['vacatures', 'Vacatures', I.brief]];
+  function routeParts() { return (location.hash.replace('#/', '') || '').split('/'); }
+  function route() { return routeParts()[0] || (S.as === 'recruiter' ? 'pool' : 'vandaag'); }
+  var NAV_KLANT = [['vandaag', 'Vandaag', I.home], ['kandidaten', 'Kandidaten', I.people], ['resultaten', 'Resultaten', I.chart], ['vacatures', 'Vacatures', I.brief]];
+  function navItems() {
+    if (S.as === 'recruiter') return [['pool', 'Kandidatenpool', I.people], ['plaatsingen', 'Mijn plaatsingen', I.brief]];
+    if (S.as === 'yd') return [['cockpit', 'Cockpit', I.chart]].concat(NAV_KLANT.slice(0, 3));
+    return NAV_KLANT;
+  }
   function shell(inner) {
-    var r = route();
-    var orgSel = S.profile.role === 'yd_admin' && S.orgs.length > 1
+    var r = route(), NAV = navItems();
+    var roleSel = demo ? '<select class="org-select role-select" data-action="role" aria-label="Bekijk als">' + [['klant', 'Bekijk als klant'], ['yd', 'Bekijk als YoungDedicated'], ['recruiter', 'Bekijk als recruiter']].map(function (o) { return '<option value="' + o[0] + '"' + (S.as === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' : '';
+    var orgSel = S.as === 'recruiter' ? '<span class="hint">Demo Techniek Recruitment</span>' : (S.profile.role === 'yd_admin' && S.as !== 'klant' || !demo && S.profile.role === 'yd_admin') && S.orgs.length > 1
       ? '<select class="org-select" data-action="org" aria-label="Kies klant">' + S.orgs.map(function (o) { return '<option value="' + o.id + '"' + (o.id === S.orgId ? ' selected' : '') + '>' + esc(o.name) + '</option>'; }).join('') + '</select>'
       : '<span class="hint">' + esc((S.orgs.find(function (o) { return o.id === S.orgId; }) || {}).name || '') + '</span>';
     return '<header class="top"><div class="top__in"><a href="#/vandaag"><img class="top__logo" src="' + LOGO + '" alt="YoungDedicated"></a>' +
       '<nav class="nav">' + NAV.map(function (n) { return '<a href="#/' + n[0] + '"' + (r === n[0] ? ' aria-current="page"' : '') + '>' + n[1] + '</a>'; }).join('') + '</nav>' +
-      '<div class="top__right">' + (demo ? '<span class="demo-flag">Demo</span>' : '') + orgSel +
+      '<div class="top__right">' + (demo ? '<span class="demo-flag">Demo</span>' : '') + roleSel + orgSel +
       '<button class="avatar" data-action="logout" title="Uitloggen">' + esc((S.profile.full_name || '?').charAt(0).toUpperCase()) + '</button></div></div></header>' +
       '<main>' + inner + '</main>' +
-      '<nav class="tabs">' + NAV.map(function (n) { return '<a href="#/' + n[0] + '"' + (r === n[0] ? ' aria-current="page"' : '') + '>' + n[2] + n[1] + '</a>'; }).join('') + '</nav>';
+      '<nav class="tabs" style="grid-template-columns:repeat(' + NAV.length + ',1fr)">' + NAV.map(function (n) { return '<a href="#/' + n[0] + '"' + (r === n[0] ? ' aria-current="page"' : '') + '>' + n[2] + n[1] + '</a>'; }).join('') + '</nav>';
   }
   function vacChips(withAll) {
     if (S.vacancies.length < 2 && !withAll) return '';
@@ -160,6 +168,8 @@
     var fresh = S.apps.filter(function (a) { return a.stage === 'nieuw'; }).sort(function (a, b) { return new Date(a.created_at) - new Date(b.created_at); });
     var late = fresh.filter(function (a) { return hoursSince(a.created_at) > 24; });
     var talks = S.apps.filter(function (a) { return a.stage === 'gesprek'; });
+    var selYD = S.vacancies.some(function (v) { return v.selection_by_yd; });
+    var cr = credit();
     var m = metrics('all');
     var target = S.vacancies.reduce(function (t, v) { return t + (v.target_qualified || 0); }, 0) || 1;
     var v30 = S.vacancies.find(function (v) { return v.plan === '30dagen' && v.start_date; });
@@ -170,15 +180,16 @@
       '<p class="sub">' + (fresh.length ? '<span class="mark">' + fresh.length + (fresh.length === 1 ? ' persoon wacht' : ' mensen wachten') + ' op je belletje.</span>' : 'Iedereen is opgevolgd. Zo hoort het.') + '</p>' +
       '<div class="grid grid-3">' +
         '<div class="card card--dark"><p class="card__label">Bel vandaag</p><p class="big">' + fresh.length + ' <small>nieuw</small></p>' +
-          '<p class="muted">Bel binnen 24 uur. Dan is de sollicitant nog warm.</p>' +
-          (late.length ? '<p style="margin-top:14px"><a class="btn btn--gold btn--sm" href="mailto:team@youngdedicated.nl?subject=' + encodeURIComponent('Selectie uitbesteden: wil YoungDedicated onze sollicitanten bellen?') + '">Geen tijd? Wij doen de selectie</a></p>' : '') + '</div>' +
+          (selYD ? '<p class="muted">Selectie uitbesteed. YoungDedicated belt iedereen binnen 24 uur en zet geschikte mensen klaar voor jou.</p>' : '<p class="muted">Bel binnen 24 uur. Dan is de sollicitant nog warm.</p>') +
+          (late.length && !selYD ? '<p style="margin-top:14px"><a class="btn btn--gold btn--sm" href="mailto:team@youngdedicated.nl?subject=' + encodeURIComponent('Selectie uitbesteden: wil YoungDedicated onze sollicitanten bellen?') + '">Geen tijd? Wij doen de selectie</a></p>' : '') + '</div>' +
         '<div class="card"><p class="card__label">Mediabudget</p><p class="big">' + eur(m.spend) + ' <small>van ' + eur(m.budget) + '</small></p>' +
           '<div class="bar"><span style="width:' + pct + '%"></span></div><div class="bar-legend"><span>' + pct + '% besteed</span><span>' + eur(m.cpa) + ' per sollicitant</span></div></div>' +
         '<div class="card"><p class="card__label">Garantie</p><p class="big">' + m.qual + ' <small>van ' + target + ' geschikt</small></p>' +
           '<div class="bar bar--green"><span style="width:' + Math.min(100, Math.round(m.qual / target * 100)) + '%"></span></div>' +
           '<div class="bar-legend"><span>' + (m.qual >= target ? 'Doel gehaald' : 'Nog ' + (target - m.qual) + ' te gaan') + '</span><span>' + (day ? 'Dag ' + day + ' van 30' : 'Doorlopend') + '</span></div></div>' +
       '</div>';
-    h += '<div class="section"><h2>Bel deze mensen</h2>' + (fresh.length ? '<div class="list">' + fresh.map(function (a) { return personRow(a, true); }).join('') + '</div>' : '<div class="card empty"><strong>Lekker bezig.</strong>Nieuwe sollicitanten verschijnen hier direct.</div>') + '</div>';
+    if (cr.credit) h += '<div class="card section cashback"><div><p class="card__label">Cashback</p><b>' + eur(cr.credit) + ' tegoed</b><p class="hint">Een kandidaat die niet bij jou paste, is via ons netwerk elders aangenomen. Je tegoed gaat automatisch van je volgende vacature af.</p></div></div>';
+    h += '<div class="section"><h2>' + (selYD ? 'Deze mensen bellen wij' : 'Bel deze mensen') + '</h2>' + (fresh.length ? '<div class="list">' + fresh.map(function (a) { return personRow(a, true); }).join('') + '</div>' : '<div class="card empty"><strong>Lekker bezig.</strong>Nieuwe sollicitanten verschijnen hier direct.</div>') + '</div>';
     if (talks.length) h += '<div class="section"><h2>Neem een besluit</h2><p class="hint" style="margin:-6px 0 12px">Deze mensen hadden een gesprek. Aannemen of niet?</p><div class="list">' + talks.map(function (a) { return personRow(a, false); }).join('') + '</div></div>';
     return h;
   }
@@ -243,6 +254,9 @@
       '<div class="card"><p class="card__label">Van bereik naar aanname</p><div class="funnel">' + funnelRows(m) + '</div>' +
         '<p class="hint" style="margin-top:12px">Een klik betekent: iemand opende je vacaturepagina of formulier.</p></div>' +
       '</div>';
+    var cr = credit();
+    if (demo) h += '<div class="card section"><p class="card__label">Cashback uit het netwerk</p><div class="row" style="justify-content:space-between"><div><b class="big" style="font-size:32px">' + eur(cr.credit) + '</b><p class="hint">Tegoed voor je volgende vacature</p></div><div class="hint" style="max-width:420px">Wijs je een geschikte kandidaat af die toestemming gaf, dan bieden wij hem aan in ons recruitersnetwerk. Wordt hij elders aangenomen, dan krijg jij een deel van de fee terug.</div></div>' +
+      cr.list.map(function (p) { return '<div class="money-row"><span>' + esc(p.initials) + ' · ' + esc(p.role) + ', geplaatst via ' + esc(p.recruiter) + '</span><b>+ ' + eur(Math.round(p.fee_cents * 0.2)) + '</b></div>'; }).join('') + '</div>';
     h += '<div class="card section"><p class="card__label">Laatste 30 dagen</p>' + chart(S.vacFilter) + '</div>';
     var src = {}; scope(S.apps).forEach(function (a) { src[a.source || 'Onbekend'] = (src[a.source || 'Onbekend'] || 0) + 1; });
     h += '<div class="card section"><p class="card__label">Waar komen je sollicitanten vandaan</p>' + Object.keys(src).sort(function (a, b) { return src[b] - src[a]; }).map(function (k) { return '<div class="money-row"><span>' + esc(k) + '</span><b>' + src[k] + '</b></div>'; }).join('') + '</div>';
@@ -254,19 +268,121 @@
     return rows.map(function (r) { var w = r[1] ? Math.max(3, Math.log10(r[1] + 1) / max * 100) : 0; return '<div class="funnel__row"><span>' + r[0] + '</span><div class="funnel__bar" style="width:' + w + '%"></div><b>' + num(r[1]) + '</b></div>'; }).join('');
   }
 
+  function vacDay(v) { return v.plan === '30dagen' && v.start_date ? Math.min(30, Math.max(1, Math.ceil((Date.now() - new Date(v.start_date)) / 864e5))) : null; }
   function viewVacancies() {
-    var h = '<h1>Vacatures</h1><p class="sub">Alles wat nu voor je werft.</p><div class="list">';
+    var h = '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>Vacatures</h1><p class="sub">Alles wat nu voor je werft.</p></div>' +
+      (demo ? '<button class="btn btn--gold" data-action="newvac">+ Nieuwe vacature</button>' : '<a class="btn btn--gold" href="/plaats-je-vacature/">+ Nieuwe vacature</a>') + '</div><div class="list">';
     h += S.vacancies.map(function (v) {
-      var m = metrics(v.id);
-      var day = v.plan === '30dagen' && v.start_date ? Math.min(30, Math.max(1, Math.ceil((Date.now() - new Date(v.start_date)) / 864e5))) : null;
-      return '<div class="card vac"><div class="vac__main"><span class="pill pill--' + v.status + '">' + esc(v.status) + '</span>' +
-        '<p class="vac__title" style="margin-top:8px">' + esc(v.title) + '</p><p class="hint" style="margin:2px 0 0">' + esc(v.location || '') + ' · ' + (day ? 'Dag ' + day + ' van 30' : 'Doorlopend') + '</p></div>' +
+      var m = metrics(v.id), day = vacDay(v);
+      return '<a class="card vac vac--link" href="#/vacatures/' + v.id + '"><div class="vac__main"><span class="pill pill--' + v.status + '">' + esc(v.status) + '</span>' +
+        '<p class="vac__title" style="margin-top:8px">' + esc(v.title) + '</p><p class="hint" style="margin:2px 0 0">' + esc(v.location || '') + ' · ' + (v.status === 'concept' ? 'Aanvraag ingediend' : day ? 'Dag ' + day + ' van 30' : 'Doorlopend') + (v.selection_by_yd ? ' · Selectie door ons' : '') + '</p></div>' +
         '<div class="row"><div class="kpi"><span>Sollicitanten</span><b>' + m.apps + '</b></div><div class="kpi"><span>Geschikt</span><b>' + m.qual + '</b></div><div class="kpi"><span>Besteed</span><b>' + eur(m.spend) + '</b></div></div>' +
-        '<div class="row">' + (v.page_url ? '<a class="btn btn--ghost btn--sm" href="' + esc(v.page_url) + '" target="_blank" rel="noopener">Bekijk vacature</a>' : '') +
-        '<button class="btn btn--sm" data-action="tovac" data-id="' + v.id + '">Kandidaten</button></div></div>';
+        '<span class="vac__go" aria-hidden="true">&rsaquo;</span></a>';
     }).join('');
-    h += '</div><div class="note">Nieuwe vacature of iets aanpassen? Mail <a href="mailto:team@youngdedicated.nl">team@youngdedicated.nl</a>. Wij regelen het binnen 1 werkdag.</div>';
+    return h + '</div>';
+  }
+  function viewVacancy(id) {
+    var v = vac(id); if (!v.id) return viewVacancies();
+    var m = metrics(id), day = vacDay(v);
+    var steps = v.milestones || [{ label: 'Aanvraag', done: true }, { label: 'Kick-off', done: v.status !== 'concept' }, { label: 'Betaald', done: v.status !== 'concept' }, { label: 'Live', done: v.status === 'live' || v.status === 'vervuld' }, { label: 'Vervuld', done: v.status === 'vervuld' }];
+    var h = '<p><a class="hint" href="#/vacatures">&lsaquo; Alle vacatures</a></p><h1>' + esc(v.title) + '</h1><p class="sub">' + esc(v.location || '') + ' · ' + (day ? 'Dag ' + day + ' van 30' : v.plan === 'doorlopend' ? 'Doorlopend' : '') + '</p>';
+    h += '<div class="card"><ol class="stepper">' + steps.map(function (st, i) { var cur = !st.done && (i === 0 || steps[i - 1].done); return '<li class="' + (st.done ? 'done' : cur ? 'cur' : '') + '"><span>' + (st.done ? '&#10003;' : i + 1) + '</span>' + st.label + '</li>'; }).join('') + '</ol>' +
+      (v.status === 'concept' ? '<p class="hint" style="margin-top:12px">We bellen je binnen 1 werkdag voor de kick-off. Na je akkoord en betaling staat je vacature binnen 5 werkdagen live.</p>' : '') + '</div>';
+    h += '<div class="kpis section"><div class="kpi"><span>Sollicitanten</span><b>' + m.apps + '</b></div><div class="kpi"><span>Geschikt</span><b>' + m.qual + '</b></div><div class="kpi"><span>Aangenomen</span><b>' + m.hired + '</b></div><div class="kpi"><span>Besteed</span><b>' + eur(m.spend) + '</b></div><div class="kpi kpi--hl"><span>Per geschikte kandidaat</span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b></div></div>';
+    var ch = v.channels || [];
+    if (ch.length) {
+      var tot = ch.reduce(function (t, c) { return t + c.clicks; }, 0) || 1;
+      h += '<div class="card section"><p class="card__label">Waar staat je vacature</p><p class="hint" style="margin:-4px 0 12px">Betaald op Instagram en Facebook, en gratis op vacaturesites en Google. Eén vacature, overal tegelijk.</p><table class="tbl"><thead><tr><th>Kanaal</th><th>Soort</th><th>Status</th><th class="r">Bezoekers</th></tr></thead><tbody>' +
+        ch.map(function (c) { return '<tr><td><b>' + esc(c.name) + '</b><div class="minibar"><span style="width:' + Math.round(c.clicks / tot * 100) + '%"></span></div></td><td>' + c.kind + '</td><td><span class="pill pill--' + (c.status === 'live' ? 'live' : 'gepauzeerd') + '">' + c.status + '</span></td><td class="r">' + num(c.clicks) + '</td></tr>'; }).join('') + '</tbody></table></div>';
+    }
+    h += '<div class="grid grid-2 section"><div class="card"><p class="card__label">Selectie</p>' +
+      (v.selection_by_yd ? '<p><b>YoungDedicated doet de selectie.</b> Wij bellen elke sollicitant binnen 24 uur en zetten alleen geschikte mensen bij jou klaar.</p>' : '<p><b>Jij doet de selectie.</b> Geen tijd? Wij bellen elke sollicitant binnen 24 uur en zetten alleen geschikte mensen klaar.</p>') +
+      (demo ? '<p><button class="btn ' + (v.selection_by_yd ? 'btn--ghost' : 'btn--gold') + ' btn--sm" data-action="togglesel" data-id="' + v.id + '">' + (v.selection_by_yd ? 'Zelf selecteren' : 'Selectie uitbesteden, €495') + '</button></p>' : '') + '</div>' +
+      '<div class="card"><p class="card__label">Snel naar</p><div class="row"><button class="btn btn--sm" data-action="tovac" data-id="' + v.id + '">Kandidaten</button><button class="btn btn--ghost btn--sm" data-action="tores" data-id="' + v.id + '">Resultaten</button>' + (v.page_url ? '<a class="btn btn--ghost btn--sm" href="' + esc(v.page_url) + '" target="_blank" rel="noopener">Vacaturepagina</a>' : '') + '</div></div></div>';
     return h;
+  }
+  function modalWizard() {
+    var w = S.wiz, step = w.step;
+    var h = '<div class="scrim" data-action="close"></div><div class="modal modal--wide" role="dialog" aria-modal="true" aria-label="Nieuwe vacature"><p class="card__label">Stap ' + step + ' van 3</p>';
+    if (step === 1) h += '<h2>Wie zoek je?</h2><label for="w-title">Functie</label><input id="w-title" type="text" value="' + esc(w.title) + '" placeholder="Bijvoorbeeld: servicemonteur"><label for="w-loc">Plaats</label><input id="w-loc" type="text" value="' + esc(w.location) + '" placeholder="Bijvoorbeeld: Utrecht">';
+    if (step === 2) h += '<h2>Hoe lang?</h2><div class="packs">' +
+      '<button class="pack" data-action="wset" data-k="plan" data-v="30dagen" aria-pressed="' + (w.plan === '30dagen') + '"><span><b>30 dagen</b><small>Met garantie op geschikte sollicitanten</small></span><span>' + eur(PRICE.dertig) + '</span></button>' +
+      '<button class="pack" data-action="wset" data-k="plan" data-v="doorlopend" aria-pressed="' + (w.plan === 'doorlopend') + '"><span><b>Doorlopend</b><small>Altijd instroom. Levert het meest op.</small></span><span>' + eur(PRICE.doorlopend) + ' p/m</span></button></div>';
+    if (step === 3) {
+      var once = (w.plan === '30dagen' ? PRICE.dertig : 0) + (w.selection ? PRICE.selectie : 0) + (w.beeld ? PRICE.beeld : 0);
+      h += '<h2>Wat mogen wij nog doen?</h2><div class="packs">' +
+        '<button class="pack" data-action="wset" data-k="selection" aria-pressed="' + !!w.selection + '"><span><b>Selectie door ons</b><small>Wij bellen iedereen binnen 24 uur</small></span><span>+ ' + eur(PRICE.selectie) + '</span></button>' +
+        '<button class="pack" data-action="wset" data-k="beeld" aria-pressed="' + !!w.beeld + '"><span><b>Foto en video door ons</b><small>Anders gebruiken we jullie eigen beeld</small></span><span>+ ' + eur(PRICE.beeld) + '</span></button></div>' +
+        '<div class="money-row"><span>Eenmalig</span><b>' + eur(once) + '</b></div>' + (w.plan === 'doorlopend' ? '<div class="money-row"><span>Per maand</span><b>' + eur(PRICE.doorlopend) + '</b></div>' : '') +
+        '<p class="hint">Inclusief vacaturepagina, campagnes, portaal, opvolging en plaatsing op gratis vacaturesites. Bedragen excl. btw. Je betaalt pas na de kick-off.</p>';
+    }
+    h += '<div class="row" style="margin-top:16px">' + (step > 1 ? '<button class="btn btn--ghost" data-action="wback">Terug</button>' : '') +
+      '<button class="btn ' + (step === 3 ? 'btn--gold' : '') + '" data-action="wnext">' + (step === 3 ? 'Aanvraag versturen' : 'Volgende') + '</button></div></div>';
+    return h;
+  }
+
+  /* ---------- cashback, netwerk, cockpit, recruiter (demo) ---------- */
+  function credit() {
+    if (!demo) return { credit: 0, list: [] };
+    var list = window.YD_DEMO.placements.filter(function (p) { return p.org === S.orgId && p.status === 'geplaatst'; });
+    return { credit: list.reduce(function (t, p) { return t + Math.round(p.fee_cents * 0.2); }, 0), list: list };
+  }
+  function split(fee) { return { recruiter: Math.round(fee / 2), yd: Math.round(fee / 2), client: Math.round(fee * 0.2), ydNet: Math.round(fee * 0.3) }; }
+  function viewCockpit() {
+    var C = window.YD_DEMO.cockpit, mrr = C.mrr_trend[C.mrr_trend.length - 1];
+    var act = C.clients.reduce(function (t, c) { return t + c.vacancies; }, 0);
+    var speed = C.clients.map(function (c) { return c.speed_h; }).sort(function (a, b) { return a - b; })[Math.floor(C.clients.length / 2)];
+    var cpq = Math.round(C.clients.reduce(function (t, c) { return t + c.cpq; }, 0) / C.clients.length);
+    var mix = [['Abonnementen', mrr, '#111'], ['Eenmalig (30 dagen, selectie)', C.once_month_cents, '#d1b75c'], ['Fee op extra budget', C.media_fee_month_cents, '#9c8740'], ['Recruitersnetwerk', C.network_month_cents, '#02daac']];
+    var tot = mix.reduce(function (t, x) { return t + x[1]; }, 0);
+    var maxT = Math.max.apply(null, C.mrr_trend);
+    var h = '<h1>Cockpit</h1><p class="sub">De cijfers waar een koper naar kijkt. Demo met verzonnen klanten.</p>';
+    h += '<div class="kpis"><div class="kpi kpi--hl"><span>MRR</span><b>' + eur(mrr) + '</b></div><div class="kpi"><span>ARR</span><b>' + eur(mrr * 12) + '</b></div><div class="kpi"><span>Netto-omzetretentie</span><b>' + C.nrr + '%</b></div><div class="kpi"><span>Mediaan belsnelheid</span><b>' + speed + ' uur</b></div><div class="kpi"><span>Per geschikte kandidaat</span><b>' + eur(cpq) + '</b></div></div>';
+    h += '<div class="grid grid-2"><div class="card"><p class="card__label">Terugkerende omzet per maand</p><div class="mrr">' + C.mrr_trend.map(function (v, i) { return '<div><span style="height:' + Math.max(4, Math.round(v / maxT * 140)) + 'px"></span><b>' + eur(v) + '</b><small>' + C.months[i] + '</small></div>'; }).join('') + '</div></div>' +
+      '<div class="card"><p class="card__label">Omzetmix deze maand</p><div class="stack">' + mix.map(function (x) { return '<span style="width:' + (x[1] / tot * 100).toFixed(1) + '%;background:' + x[2] + '"></span>'; }).join('') + '</div>' +
+      mix.map(function (x) { return '<div class="money-row"><span><i class="dot" style="background:' + x[2] + '"></i>' + x[0] + '</span><b>' + eur(x[1]) + '</b></div>'; }).join('') + '</div></div>';
+    h += '<div class="card section"><p class="card__label">Klanten (' + C.clients.length + ', ' + act + ' vacatures)</p><table class="tbl"><thead><tr><th>Klant</th><th>Model</th><th class="r">MRR</th><th class="r">Per geschikte</th><th class="r">Belsnelheid</th><th>Status</th></tr></thead><tbody>' +
+      C.clients.map(function (c) { return '<tr><td><b>' + esc(c.name) + '</b></td><td>' + c.plan + '</td><td class="r">' + (c.mrr ? eur(c.mrr) : '–') + '</td><td class="r">' + eur(c.cpq) + '</td><td class="r">' + c.speed_h + ' uur</td><td><span class="pill pill--' + (c.health === 'op koers' ? 'live' : 'gepauzeerd') + '">' + esc(c.health) + '</span></td></tr>'; }).join('') + '</tbody></table>' +
+      '<p class="hint">Belsnelheid = mediaan tijd tussen sollicitatie en eerste contact. Traag bellen is de grootste oorzaak van uitval. De cockpit laat zien bij wie je moet bijsturen.</p></div>';
+    return h;
+  }
+  function viewPool() {
+    var D = window.YD_DEMO, fits = ['all', 'Techniek', 'Sales', 'Horeca'];
+    var list = D.pool.filter(function (p) { return p.status === 'beschikbaar' && (S.poolFit === 'all' || p.fit === S.poolFit); });
+    var h = '<h1>Kandidatenpool</h1><p class="sub">Gescreende kandidaten die toestemming gaven om gedeeld te worden. Je betaalt alleen bij een plaatsing.</p>';
+    h += '<div class="card card--dark" style="margin-bottom:16px"><p class="card__label">Zo werkt het</p><div class="how"><div><b>1</b>Claim een kandidaat. Je krijgt direct de contactgegevens.</div><div><b>2</b>Plaats hem bij jouw opdrachtgever, tegen jouw eigen fee.</div><div><b>3</b>Je deelt 50% van de fee met YoungDedicated. Meer niet.</div></div></div>';
+    h += '<div class="chips">' + fits.map(function (f) { return '<button class="chip" data-action="fit" data-id="' + f + '" aria-pressed="' + (S.poolFit === f) + '">' + (f === 'all' ? 'Alles' : f) + '<span class="n">' + D.pool.filter(function (p) { return p.status === 'beschikbaar' && (f === 'all' || p.fit === f); }).length + '</span></button>'; }).join('') + '</div>';
+    h += '<div class="pool">' + list.map(function (p) {
+      return '<div class="card poolcard"><div class="row" style="justify-content:space-between"><span class="person__ini">' + esc(p.initials.replace(/[ .]/g, '').slice(0, 2).toUpperCase()) + '</span><span class="pill pill--live">' + esc(p.fit) + '</span></div>' +
+        '<p class="vac__title" style="margin-top:10px">' + esc(p.role) + '</p><p class="hint" style="margin:2px 0 10px">' + esc(p.region) + ' · ' + esc(p.experience) + ' ervaring · start ' + esc(p.available.toLowerCase()) + '</p>' +
+        '<button class="btn btn--sm btn--block" data-action="claim" data-id="' + p.id + '">Claim kandidaat</button></div>';
+    }).join('') + '</div>';
+    if (!list.length) h += '<div class="card empty">Geen kandidaten in deze categorie.</div>';
+    return h;
+  }
+  function viewPlacements() {
+    var D = window.YD_DEMO, mine = D.pool.filter(function (p) { return p.status !== 'beschikbaar'; });
+    var h = '<h1>Mijn plaatsingen</h1><p class="sub">Geclaimde kandidaten en wat je eraan verdient.</p>';
+    if (!mine.length) return h + '<div class="card empty"><strong>Nog niets geclaimd.</strong>Kies een kandidaat in de pool.</div>';
+    return h + '<div class="list">' + mine.map(function (p) {
+      var sp = split(p.fee_cents || 300000);
+      return '<div class="card vac"><div class="vac__main"><span class="pill pill--' + (p.status === 'geplaatst' ? 'live' : 'gepauzeerd') + '">' + p.status + '</span><p class="vac__title" style="margin-top:8px">' + esc(p.contact || p.initials) + ' · ' + esc(p.role) + '</p><p class="hint" style="margin:2px 0 0">' + esc(p.region) + (p.contact ? ' · ' + esc(p.phone) : '') + '</p></div>' +
+        '<div class="row"><div class="kpi"><span>Jouw fee</span><b>' + eur(p.fee_cents || 300000) + '</b></div><div class="kpi"><span>Jij houdt</span><b>' + eur(sp.recruiter) + '</b></div></div>' +
+        (p.status !== 'geplaatst' ? '<button class="btn btn--green btn--sm" data-action="placed" data-id="' + p.id + '">Geplaatst</button>' : '') + '</div>';
+    }).join('') + '</div>';
+  }
+  function modalClaim() {
+    var p = window.YD_DEMO.pool.find(function (x) { return x.id === S.claim; }), fee = 300000, sp = split(fee);
+    return '<div class="scrim" data-action="close"></div><div class="modal" role="dialog" aria-modal="true" aria-label="Kandidaat claimen"><h2>' + esc(p.role) + ' claimen</h2>' +
+      '<p class="hint">' + esc(p.region) + ' · ' + esc(p.experience) + ' ervaring. Toestemming voor delen gegeven bij sollicitatie.</p>' +
+      '<label for="c-fee">Jouw verwachte plaatsingsfee</label><input id="c-fee" type="number" min="500" step="250" value="' + fee / 100 + '" data-action="fee">' +
+      '<div id="c-split">' + splitHtml(sp) + '</div>' +
+      '<div class="row" style="margin-top:16px"><button class="btn btn--gold" data-action="confirm-claim">Claim en toon contactgegevens</button><button class="btn btn--ghost" data-action="close">Annuleren</button></div>' +
+      '<p class="hint">Je betaalt alleen als de kandidaat via jou ergens begint. Afspraken liggen vast in de netwerkovereenkomst.</p></div>';
+  }
+  function splitHtml(sp) {
+    return '<div class="money-row"><span>Jij houdt</span><b>' + eur(sp.recruiter) + '</b></div><div class="money-row"><span>YoungDedicated</span><b>' + eur(sp.yd) + '</b></div>' +
+      '<p class="hint">Van het deel van YoungDedicated gaat ' + eur(sp.client) + ' als tegoed naar de werkgever waar de kandidaat eerst solliciteerde.</p>';
   }
 
   /* ---------- drawer ---------- */
@@ -292,6 +408,9 @@
           (c.email ? '<a class="btn btn--ghost" href="mailto:' + esc(c.email) + '">' + I.mail + 'Mail</a>' : '') + '</div>' +
         decide +
         '<div class="card"><p class="card__label">Geschikte kandidaat?</p><div class="row"><button class="chip" data-action="qual" data-v="true" aria-pressed="' + (a.qualified === true) + '">Ja, geschikt</button><button class="chip" data-action="qual" data-v="false" aria-pressed="' + (a.qualified === false) + '">Nee</button></div><p class="hint">Telt mee voor je garantie en leert de campagne wie je zoekt.</p></div>' +
+        (a.stage === 'afgewezen' && demo ? '<div class="card"><p class="card__label">Netwerk</p>' + (a.candidate.consent_network
+            ? (a.network_status ? '<p><b>Aangeboden aan het recruitersnetwerk.</b> Wordt deze kandidaat elders aangenomen, dan krijg jij cashback als tegoed.</p>' : '<p>Past niet bij jou, maar misschien wel ergens anders. De kandidaat gaf toestemming om gedeeld te worden.</p><p><button class="btn btn--gold btn--sm" data-action="network">Doorplaatsen via netwerk</button></p>')
+            : '<p class="hint">Geen toestemming om te delen. Deze kandidaat wordt na 4 weken verwijderd.</p>') + '</div>' : '') +
         '<div class="card"><p class="card__label">Antwoorden</p><dl class="qa" style="margin:0">' + (qa || '<dd class="muted">Geen extra vragen.</dd>') + '</dl>' +
           (c.cv_path ? '<p><button class="btn btn--ghost btn--sm" data-action="cv">Bekijk cv</button></p>' : '') + '</div>' +
         '<div class="card"><p class="card__label">Notitie</p><textarea id="note" placeholder="Wat viel op in het gesprek?"></textarea><p><button class="btn btn--sm" data-action="note">Opslaan</button></p></div>' +
@@ -316,9 +435,13 @@
   var modal = null;
   function render() {
     if (!S.profile) return;
-    var r = route();
-    var body = r === 'kandidaten' ? viewCandidates() : r === 'resultaten' ? viewResults() : r === 'vacatures' ? viewVacancies() : viewToday();
-    app.innerHTML = shell(body) + (S.open ? drawer() : '') + (modal === 'buy' ? modalBuy() : '');
+    var r = route(), parts = routeParts();
+    if (S.as === 'recruiter' && r !== 'pool' && r !== 'plaatsingen') r = 'pool';
+    if (S.as !== 'recruiter' && (r === 'pool' || r === 'plaatsingen')) r = 'vandaag';
+    if (r === 'cockpit' && !(demo && S.as === 'yd')) r = 'vandaag';
+    var body = r === 'kandidaten' ? viewCandidates() : r === 'resultaten' ? viewResults() : r === 'vacatures' ? (parts[1] ? viewVacancy(parts[1]) : viewVacancies()) :
+      r === 'cockpit' ? viewCockpit() : r === 'pool' ? viewPool() : r === 'plaatsingen' ? viewPlacements() : viewToday();
+    app.innerHTML = shell(body) + (S.open ? drawer() : '') + (modal === 'buy' ? modalBuy() : modal === 'wiz' ? modalWizard() : modal === 'claim' ? modalClaim() : '');
     bindDnD();
   }
   function openApp(id) {
@@ -375,10 +498,45 @@
       var sel = app.querySelector('.pack[aria-pressed=true]'); var cents = +sel.dataset.v;
       return api.buy(t.dataset.vac, cents).then(function () { modal = null; render(); toast('Besteld: ' + eur(cents) + '. De betaallink komt per mail.'); }).catch(function () { toast('Bestellen mislukt. Mail team@youngdedicated.nl.'); });
     }
+    if (act === 'tores') { S.vacFilter = t.dataset.id; location.hash = '#/resultaten'; return; }
+    if (act === 'newvac') { S.wiz = { step: 1, title: '', location: '', plan: 'doorlopend', selection: false, beeld: false }; modal = 'wiz'; return render(); }
+    if (act === 'wset') { if (t.dataset.v) S.wiz[t.dataset.k] = t.dataset.v; else S.wiz[t.dataset.k] = !S.wiz[t.dataset.k]; return render(); }
+    if (act === 'wback') { S.wiz.step--; return render(); }
+    if (act === 'wnext') {
+      if (S.wiz.step === 1) { S.wiz.title = document.getElementById('w-title').value.trim(); S.wiz.location = document.getElementById('w-loc').value.trim(); if (!S.wiz.title) { toast('Vul een functie in.'); return; } }
+      if (S.wiz.step < 3) { S.wiz.step++; return render(); }
+      var nv = { id: 'vac-' + Date.now(), organization_id: S.orgId, title: S.wiz.title, location: S.wiz.location, status: 'concept', plan: S.wiz.plan, selection_by_yd: S.wiz.selection, target_qualified: 5, channels: [] };
+      window.YD_DEMO.vacancies.push(nv); S.vacancies.push(nv); modal = null; S.wiz = null;
+      toast('Aanvraag verstuurd. We bellen je binnen 1 werkdag.'); location.hash = '#/vacatures/' + nv.id; return render();
+    }
+    if (act === 'togglesel') { var tv = vac(t.dataset.id); tv.selection_by_yd = !tv.selection_by_yd; toast(tv.selection_by_yd ? 'Selectie uitbesteed. Wij bellen binnen 24 uur.' : 'Je selecteert weer zelf.'); return render(); }
+    if (act === 'network' && a) {
+      a.network_status = 'aangeboden';
+      window.YD_DEMO.pool.unshift({ id: 'pool-' + a.id, app_id: a.id, initials: a.candidate.first_name.charAt(0) + '. ' + a.candidate.last_name.charAt(0) + '.', role: vac(a.vacancy_id).title, region: a.candidate.city, experience: '1 tot 3 jaar', available: 'Direct', fit: 'Techniek', status: 'beschikbaar', from_org: a.organization_id });
+      api.addEvent(a, 'notitie', 'Aangeboden aan het recruitersnetwerk').then(function () { return api.events(a); }).then(function (ev) { S.events = ev; render(); });
+      toast('Aangeboden aan het netwerk'); return;
+    }
+    if (act === 'fit') { S.poolFit = t.dataset.id; return render(); }
+    if (act === 'claim') { S.claim = t.dataset.id; modal = 'claim'; return render(); }
+    if (act === 'confirm-claim') {
+      var cp = window.YD_DEMO.pool.find(function (x) { return x.id === S.claim; }), fee = Math.round((+document.getElementById('c-fee').value || 3000) * 100);
+      var src = cp.app_id && window.YD_DEMO.apps.find(function (x) { return x.id === cp.app_id; });
+      cp.status = 'geclaimd'; cp.fee_cents = fee; cp.contact = src ? name(src) : cp.initials; cp.phone = src ? src.candidate.phone : '06 12 34 56 78';
+      modal = null; S.claim = null; toast('Geclaimd. Contactgegevens staan in Mijn plaatsingen.'); location.hash = '#/plaatsingen'; return render();
+    }
+    if (act === 'placed') {
+      var pp = window.YD_DEMO.pool.find(function (x) { return x.id === t.dataset.id; }); pp.status = 'geplaatst';
+      window.YD_DEMO.placements.push({ id: 'pl' + Date.now(), org: pp.from_org, initials: pp.initials, role: pp.role, placed_at: new Date().toISOString(), recruiter: 'Demo Techniek Recruitment', fee_cents: pp.fee_cents, status: 'geplaatst' });
+      toast('Gefeliciteerd. De werkgever krijgt ' + eur(Math.round(pp.fee_cents * 0.2)) + ' tegoed.'); return render();
+    }
     if (act === 'logout') return api.signOut();
     if (act === 'demo') { sessionStorage.setItem('yd-demo', '1'); location.reload(); }
   });
-  document.addEventListener('change', function (e) { if (e.target.dataset.action === 'org') { S.orgId = e.target.value; S.vacFilter = 'all'; loadOrg(); } });
+  document.addEventListener('change', function (e) {
+    if (e.target.dataset.action === 'org') { S.orgId = e.target.value; S.vacFilter = 'all'; loadOrg(); }
+    if (e.target.dataset.action === 'role') { S.as = e.target.value; S.open = null; modal = null; if (S.as === 'klant' && S.orgId !== 'org-walsem') { S.orgId = 'org-walsem'; S.vacFilter = 'all'; loadOrg(); } location.hash = S.as === 'recruiter' ? '#/pool' : S.as === 'yd' ? '#/cockpit' : '#/vandaag'; render(); }
+  });
+  document.addEventListener('input', function (e) { if (e.target.dataset.action === 'fee') { var el = document.getElementById('c-split'); if (el) el.innerHTML = splitHtml(split(Math.round((+e.target.value || 0) * 100))); } });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && (S.open || modal)) { S.open = null; modal = null; render(); }
     if (e.key === 'Enter' && e.target.matches('.person')) openApp(e.target.dataset.id);

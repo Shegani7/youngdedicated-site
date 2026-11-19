@@ -76,6 +76,58 @@
     if (s) s.leads++;
   });
 
-  window.YD_DEMO = { orgs: orgs, vacancies: vacancies, budget: budget, stats: stats, apps: apps, events: events,
+  // verspreiding per vacature
+  vacancies.forEach(function (v) {
+    v.selection_by_yd = false;
+    v.channels = [
+      { key: 'meta', name: 'Instagram en Facebook', kind: 'Betaald', status: 'live', clicks: 0 },
+      { key: 'google', name: 'Google for Jobs', kind: 'Gratis', status: 'live', clicks: Math.round(20 + rnd() * 40) },
+      { key: 'werknl', name: 'werk.nl', kind: 'Gratis', status: 'live', clicks: Math.round(5 + rnd() * 20) },
+      { key: 'adzuna', name: 'Adzuna', kind: 'Gratis', status: 'live', clicks: Math.round(4 + rnd() * 15) },
+      { key: 'jooble', name: 'Jooble', kind: 'Gratis', status: 'live', clicks: Math.round(3 + rnd() * 12) },
+      { key: 'careerjet', name: 'Careerjet', kind: 'Gratis', status: 'live', clicks: Math.round(2 + rnd() * 10) },
+      { key: 'indeed', name: 'Indeed', kind: 'Gratis', status: 'in test', clicks: 0 }
+    ];
+    v.channels[0].clicks = stats.filter(function (s) { return s.vacancy_id === v.id; }).reduce(function (t, s) { return t + s.clicks; }, 0);
+    v.milestones = [
+      { label: 'Aanvraag', done: true }, { label: 'Kick-off', done: true }, { label: 'Betaald', done: true },
+      { label: 'Live', done: true }, { label: 'Vervuld', done: false }
+    ];
+  });
+  // toestemming netwerk bij een deel van de afgewezen kandidaten
+  apps.forEach(function (a) {
+    a.candidate.consent_network = a.stage === 'afgewezen' && rnd() > 0.35;
+    a.network_status = null;
+  });
+  function fitOf(r) { return /bediening|kok/i.test(r) ? 'Horeca' : /sales|recruiter/i.test(r) ? 'Sales' : 'Techniek'; }
+  var wf = ['Servicemonteur', 'Allround monteur', 'Medewerker bediening', 'Binnendienst sales', 'Installateur', 'Chauffeur', 'Kok', 'Magazijnmedewerker'];
+  var pool = apps.filter(function (a) { return a.candidate.consent_network; }).map(function (a) {
+    return { id: 'pool-' + a.id, app_id: a.id, initials: a.candidate.first_name.charAt(0) + '. ' + a.candidate.last_name.charAt(0) + '.',
+      role: vacancies.find(function (v) { return v.id === a.vacancy_id; }).title, region: a.candidate.city, experience: pick(['1 tot 3 jaar', '3 tot 5 jaar', 'Starter', '5+ jaar']),
+      available: pick(['Direct', 'Binnen een maand']), fit: null, status: 'beschikbaar', from_org: a.organization_id };
+  });
+  for (var x = 0; x < 9; x++) pool.push({ id: 'pool-x' + x, initials: pick(first).charAt(0) + '. ' + pick(last).charAt(0) + '.', role: pick(wf), region: pick(cities),
+    experience: pick(['1 tot 3 jaar', '3 tot 5 jaar', 'Starter', '5+ jaar']), available: pick(['Direct', 'Binnen een maand']), fit: null, status: 'beschikbaar', from_org: 'org-other' });
+  pool.forEach(function (p) { p.fit = fitOf(p.role); });
+  var placements = [
+    { id: 'pl1', org: 'org-walsem', initials: 'R. d. W.', role: 'Montagemonteur kachels', placed_at: iso(now - 9 * DAY), recruiter: 'Demo Techniek Recruitment', fee_cents: 300000, status: 'geplaatst' }
+  ];
+  var cockpit = {
+    clients: [
+      { name: 'Van Walsem Kachelspecialist', plan: 'Doorlopend', mrr: 99500, vacancies: 1, cpq: 8200, speed_h: 6, health: 'op koers' },
+      { name: 'YoungDedicated (eigen)', plan: '30 dagen', mrr: 0, vacancies: 1, cpq: 9100, speed_h: 9, health: 'op koers' },
+      { name: 'Demo Installatietechniek', plan: 'Doorlopend', mrr: 199000, vacancies: 2, cpq: 7400, speed_h: 4, health: 'op koers' },
+      { name: 'Demo Horeca Groep', plan: 'Doorlopend', mrr: 82900, vacancies: 1, cpq: 5100, speed_h: 31, health: 'let op: belt traag' },
+      { name: 'Demo Servicebedrijf', plan: '30 dagen', mrr: 0, vacancies: 1, cpq: 12600, speed_h: 12, health: 'let op: weinig geschikt' }
+    ],
+    mrr_trend: [99500, 99500, 182400, 182400, 281900, 381400],
+    months: ['jun', 'jul', 'aug', 'sep', 'okt', 'nov'],
+    once_month_cents: 165000 * 2 + 49500,
+    media_fee_month_cents: 41250,
+    network_month_cents: 150000,
+    nrr: 112
+  };
+
+  window.YD_DEMO = { orgs: orgs, vacancies: vacancies, budget: budget, stats: stats, apps: apps, events: events, pool: pool, placements: placements, cockpit: cockpit,
     profile: { full_name: 'Ransder', role: 'yd_admin', organization_id: null } };
 })();
