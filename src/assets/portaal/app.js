@@ -139,7 +139,7 @@
   function shell(inner) {
     var r = route(), NAV = navItems();
     var roleSel = demo ? '<select class="org-select role-select" data-action="role" aria-label="Bekijk als">' + [['klant', 'Bekijk als klant'], ['yd', 'Bekijk als YoungDedicated'], ['recruiter', 'Bekijk als recruiter']].map(function (o) { return '<option value="' + o[0] + '"' + (S.as === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' : '';
-    var orgSel = S.as === 'recruiter' ? '<span class="hint">Demo Techniek Recruitment</span>' : demo && S.as === 'klant' ? '<select class="org-select" data-action="org" aria-label="Kies branche">' + S.orgs.filter(function (o) { return o.id !== 'org-yd'; }).map(function (o) { var v0 = window.YD_DEMO.vacancies.find(function (v) { return v.organization_id === o.id; }) || {}; return '<option value="' + o.id + '"' + (o.id === S.orgId ? ' selected' : '') + '>' + esc((v0.branch ? v0.branch + ' · ' : '') + o.name) + '</option>'; }).join('') + '</select>' : (S.profile.role === 'yd_admin' && S.as !== 'klant' || !demo && S.profile.role === 'yd_admin') && S.orgs.length > 1
+    var orgSel = S.as === 'recruiter' ? '<span class="hint">Demo Techniek Recruitment</span>' : demo && S.as === 'klant' ? '<select class="org-select" data-action="org" aria-label="Kies demoklant">' + S.orgs.filter(function (o) { return o.id !== 'org-yd'; }).map(function (o) { var v0 = window.YD_DEMO.vacancies.find(function (v) { return v.organization_id === o.id; }) || {}; return '<option value="' + o.id + '"' + (o.id === S.orgId ? ' selected' : '') + '>' + esc((v0.branch ? v0.branch + ' · ' : '') + o.name) + '</option>'; }).join('') + '</select>' : (S.profile.role === 'yd_admin' && S.as !== 'klant' || !demo && S.profile.role === 'yd_admin') && S.orgs.length > 1
       ? '<select class="org-select" data-action="org" aria-label="Kies klant">' + S.orgs.map(function (o) { return '<option value="' + o.id + '"' + (o.id === S.orgId ? ' selected' : '') + '>' + esc(o.name) + '</option>'; }).join('') + '</select>'
       : '<span class="hint">' + esc((S.orgs.find(function (o) { return o.id === S.orgId; }) || {}).name || '') + '</span>';
     return '<header class="top"><div class="top__in"><a href="#/vandaag"><img class="top__logo" src="' + LOGO + '" alt="YoungDedicated"></a>' +
@@ -450,7 +450,7 @@
     return h;
   }
   function viewPool() {
-    var D = window.YD_DEMO, fits = ['all', 'Techniek', 'Horeca', 'Retail', 'Sales'];
+    var D = window.YD_DEMO, fits = ['all', 'Techniek', 'Sales'];
     var list = D.pool.filter(function (p) { return p.status === 'beschikbaar' && (S.poolFit === 'all' || p.fit === S.poolFit); });
     var h = '<h1>Kandidatenpool</h1><p class="sub">Gescreende kandidaten die toestemming gaven om gedeeld te worden. Je betaalt alleen bij een plaatsing.</p>';
     h += '<div class="card card--dark" style="margin-bottom:16px"><p class="card__label">Zo werkt het</p><div class="how"><div><b>1</b>Claim een kandidaat. Je krijgt direct de contactgegevens.</div><div><b>2</b>Plaats hem bij jouw opdrachtgever, tegen jouw eigen fee.</div><div><b>3</b>Je deelt 50% van de fee met YoungDedicated. Meer niet.</div></div></div>';

@@ -10,26 +10,26 @@
   var orgs = [
     { id: 'org-walsem', name: 'Van Walsem Kachelspecialist' },
     { id: 'org-yd', name: 'YoungDedicated' },
-    { id: 'org-horeca', name: 'Demo Horeca Groep' },
-    { id: 'org-retail', name: 'Demo Fashion Store' }
+    { id: 'org-horeca', name: 'Demo Installatietechniek' },
+    { id: 'org-retail', name: 'Demo Elektrotechniek' }
   ];
   var vacancies = [
     { id: 'vac-walsem', organization_id: 'org-walsem', title: 'Montagemonteur kachels', location: 'Rhenen', status: 'live', plan: 'jaar',
-      start_date: dateOnly(now - 23 * DAY), end_date: null, page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 5, branch: 'Techniek', contact: 'Erik van Walsem',
+      start_date: dateOnly(now - 23 * DAY), end_date: null, page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 5, branch: 'Montage', contact: 'Erik van Walsem',
       qa: { 'Ervaring met montage': ['Ja, meer dan 3 jaar', 'Ja, 1 tot 3 jaar', 'Een beetje', 'Nee, wel handig'], 'Rijbewijs B': ['Ja', 'Ja', 'Nee'], 'Wanneer kun je starten': ['Direct', 'Binnen een maand', 'Na opzegtermijn'] },
       must: [{ label: 'Rijbewijs B', q: 'Rijbewijs B', ok: '^Ja' }, { label: 'Ervaring met montage', q: 'Ervaring met montage', ok: '^Ja' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }] },
     { id: 'vac-yd', organization_id: 'org-yd', title: 'Sales recruiter', location: 'Bunnik', status: 'live', plan: 'vacature',
       start_date: dateOnly(now - 12 * DAY), end_date: dateOnly(now + 18 * DAY), page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 3, branch: 'Sales', contact: 'Ransder',
       qa: { 'Ervaring in sales': ['Ja, meer dan 2 jaar', 'Ja, bijbaan', 'Nee'], 'Uren per week': ['32 tot 40', '24 tot 32', '40'], 'Wanneer kun je starten': ['Direct', 'Binnen een maand'] },
       must: [{ label: 'Sales-ervaring', q: 'Ervaring in sales', ok: '^Ja' }, { label: 'Minimaal 32 uur', q: 'Uren per week', ok: '32 tot 40|^40' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }] },
-    { id: 'vac-horeca', organization_id: 'org-horeca', title: 'Medewerker bediening', location: 'Utrecht', status: 'live', plan: 'jaar', branch: 'Horeca', contact: 'Sanne de Wit',
+    { id: 'vac-horeca', organization_id: 'org-horeca', title: 'Servicemonteur warmtepompen', location: 'Utrecht', status: 'live', plan: 'jaar', branch: 'Installatie', contact: 'Sanne de Wit',
       start_date: dateOnly(now - 27 * DAY), end_date: null, page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 6,
-      qa: { 'Ervaring in de horeca': ['Ja, meer dan 2 jaar', 'Ja, bijbaan', 'Nee, wil het leren'], 'Beschikbaar in het weekend': ['Ja', 'Ja', 'Soms', 'Nee'], 'Uren per week': ['24 tot 32', '32 tot 40', '12 tot 24'] },
-      must: [{ label: 'Weekend beschikbaar', q: 'Beschikbaar in het weekend', ok: '^Ja' }, { label: 'Horeca-ervaring', q: 'Ervaring in de horeca', ok: '^Ja' }, { label: 'Minimaal 24 uur', q: 'Uren per week', ok: '^24|^32' }] },
-    { id: 'vac-retail', organization_id: 'org-retail', title: 'Verkoopmedewerker', location: 'Amersfoort', status: 'live', plan: 'vacature', branch: 'Retail', contact: 'Mark Jansen',
+      qa: { 'Ervaring met warmtepompen of cv': ['Ja, meer dan 2 jaar', 'Ja, minder dan 2 jaar', 'Nee, wil het leren'], 'Diploma': ['MBO 3 installatietechniek', 'MBO 2 installatietechniek', 'Geen'], 'Rijbewijs B': ['Ja', 'Ja', 'Nee'] },
+      must: [{ label: 'Rijbewijs B', q: 'Rijbewijs B', ok: '^Ja' }, { label: 'Ervaring warmtepomp of cv', q: 'Ervaring met warmtepompen of cv', ok: '^Ja' }, { label: 'MBO installatietechniek', q: 'Diploma', ok: 'MBO' }] },
+    { id: 'vac-retail', organization_id: 'org-retail', title: 'Elektromonteur', location: 'Amersfoort', status: 'live', plan: 'vacature', branch: 'Elektro', contact: 'Mark Jansen',
       start_date: dateOnly(now - 9 * DAY), end_date: dateOnly(now + 21 * DAY), page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 4,
-      qa: { 'Ervaring in verkoop': ['Ja, meer dan 1 jaar', 'Ja, bijbaan', 'Nee'], 'Zaterdag beschikbaar': ['Ja', 'Ja', 'Nee'], 'Wanneer kun je starten': ['Direct', 'Binnen een maand'] },
-      must: [{ label: 'Zaterdag beschikbaar', q: 'Zaterdag beschikbaar', ok: '^Ja' }, { label: 'Verkoopervaring', q: 'Ervaring in verkoop', ok: '^Ja' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }] }
+      qa: { 'Diploma': ['MBO 3 elektrotechniek', 'MBO 2 elektrotechniek', 'Geen'], 'VCA': ['Ja', 'Ja', 'Nee'], 'Wanneer kun je starten': ['Direct', 'Binnen een maand'] },
+      must: [{ label: 'MBO elektro', q: 'Diploma', ok: 'MBO' }, { label: 'VCA', q: 'VCA', ok: '^Ja' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }] }
   ];
   var budget = [
     { id: 'b1', organization_id: 'org-walsem', vacancy_id: 'vac-walsem', amount_cents: 60000, type: 'toegekend', status: 'actief', created_at: iso(now - 23 * DAY) },
@@ -115,8 +115,8 @@
     a.candidate.consent_network = a.stage === 'afgewezen' && rnd() > 0.35;
     a.network_status = null;
   });
-  function fitOf(r) { return /bediening|kok/i.test(r) ? 'Horeca' : /verkoop|winkel/i.test(r) ? 'Retail' : /sales|recruiter/i.test(r) ? 'Sales' : 'Techniek'; }
-  var wf = ['Servicemonteur', 'Allround monteur', 'Medewerker bediening', 'Binnendienst sales', 'Installateur', 'Chauffeur', 'Kok', 'Magazijnmedewerker'];
+  function fitOf(r) { return /sales|recruiter/i.test(r) ? 'Sales' : 'Techniek'; }
+  var wf = ['Servicemonteur', 'Allround monteur', 'Elektromonteur', 'Binnendienst sales', 'Installateur', 'Storingsmonteur', 'Servicetechnicus', 'Magazijnmedewerker'];
   var pool = apps.filter(function (a) { return a.candidate.consent_network; }).map(function (a) {
     return { id: 'pool-' + a.id, app_id: a.id, initials: a.candidate.first_name.charAt(0) + '. ' + a.candidate.last_name.charAt(0) + '.',
       role: vacancies.find(function (v) { return v.id === a.vacancy_id; }).title, region: a.candidate.city, experience: pick(['1 tot 3 jaar', '3 tot 5 jaar', 'Starter', '5+ jaar']),
@@ -133,7 +133,7 @@
       { name: 'Van Walsem Kachelspecialist', plan: 'Jaarmodel', mrr: 60000, vacancies: 1, cpq: 8200, speed_h: 6, health: 'op koers' },
       { name: 'YoungDedicated (eigen)', plan: 'Vacature', mrr: 0, vacancies: 1, cpq: 9100, speed_h: 9, health: 'op koers' },
       { name: 'Demo Installatietechniek', plan: 'Jaarmodel', mrr: 120000, vacancies: 2, cpq: 7400, speed_h: 4, health: 'op koers' },
-      { name: 'Demo Horeca Groep', plan: 'Jaarmodel', mrr: 60000, vacancies: 1, cpq: 5100, speed_h: 31, health: 'let op: belt traag' },
+      { name: 'Demo Installatietechniek', plan: 'Jaarmodel', mrr: 60000, vacancies: 1, cpq: 5100, speed_h: 31, health: 'let op: belt traag' },
       { name: 'Demo Servicebedrijf', plan: 'Vacature', mrr: 0, vacancies: 1, cpq: 12600, speed_h: 12, health: 'let op: weinig geschikt' }
     ],
     mrr_trend: [60000, 60000, 120000, 120000, 180000, 240000],
