@@ -1,7 +1,7 @@
 /* Prijsconfigurator en bestelflow. Prijzen excl. btw. */
 (function () {
-  var P = { dertig: 1650, beeld: 3000, termijn: 250, selectie: 495 };
-  function perMaand(n) { return 995; }
+  var P = { dertig: 1750, media: 750, jaar: 1200, jaarMedia: 600, beeld: 3000, termijn: 250, selectie: 495 };
+  function perMaand(n) { return P.jaar; }
   function eur(v) { return '€' + v.toLocaleString('nl-NL'); }
 
   window.ydPrijs = function (k) {
@@ -9,16 +9,17 @@
     var door = k.looptijd === 'doorlopend';
     var lines = [], once = 0, month = 0;
     if (door) {
-      var pm = perMaand(n), jaar = k.contract === '12';
-      lines.push([n + (n > 1 ? ' doorlopende vacatures' : ' doorlopende vacature') + ' à ' + eur(pm), eur(n * pm) + ' p/m']);
-      if (jaar) { var korting = Math.round(n * pm * 2 / 12); pm = pm - Math.round(pm * 2 / 12); lines.push(['Jaarcontract: 2 maanden gratis', '−' + eur(korting) + ' p/m']); }
+      var pm = perMaand(n);
+      lines.push([n + (n > 1 ? ' doorlopende vacatures' : ' doorlopende vacature') + ', jaarmodel à ' + eur(pm), eur(n * pm) + ' p/m']);
+      lines.push(['Waarvan mediabudget, 1 op 1 naar je advertenties', eur(n * P.jaarMedia) + ' p/m']);
       month += n * pm;
     } else {
       once += n * P.dertig;
       lines.push([n + (n > 1 ? ' vacatures' : ' vacature') + ', 30 dagen', eur(n * P.dertig)]);
+      lines.push(['Waarvan mediabudget, 1 op 1 naar je advertenties', eur(n * P.media)]);
     }
     lines.push(['Vacaturepagina, tekst en advertenties', 'inbegrepen']);
-    lines.push(['Campagne en mediabudget', 'inbegrepen']);
+    lines.push(['Campagne op Instagram en Facebook', 'inbegrepen']);
     lines.push(['Tracking, monitoring en bijsturen', 'inbegrepen']);
     lines.push(['Kandidatensysteem en automatische opvolging', 'inbegrepen']);
     if (k.beeld === 'wij') {
@@ -31,8 +32,8 @@
     }
     lines.push(['Aannemen zoveel je wilt', 'geen extra kosten']);
     if (k.ontvangst === 'eigen-systeem') lines.push(['Koppeling met je eigen systeem', 'niet inbegrepen']);
-    else lines.push(['Sollicitanten ' + (k.ontvangst === 'ons-systeem' ? 'in ons systeem' : 'in je mailbox'), 'inbegrepen']);
-    return { n: n, door: door, jaar: door && k.contract === '12', lines: lines, once: once, month: month, eur: eur };
+    else lines.push([k.ontvangst === 'mailbox' ? 'Sollicitanten in je mailbox' : 'Kandidatensysteem met eigen inlog', 'inbegrepen']);
+    return { n: n, door: door, jaar: door, lines: lines, once: once, month: month, eur: eur };
   };
 
   window.ydRender = function (r, linesEl, totalsEl) {
@@ -40,16 +41,15 @@
     var t = '';
     if (r.month) t += '<p><span>Per maand</span><strong>' + r.eur(r.month) + '</strong></p>';
     if (r.once) t += '<p><span>' + (r.month ? 'Eenmalig' : 'Totaal') + '</span><strong>' + r.eur(r.once) + '</strong></p>';
-    if (r.jaar) t += '<p class="wg-summary__note">Jaarcontract van 12 maanden. Je betaalt 10 maanden.</p>';
-    else if (r.door) t += '<p class="wg-summary__note">Eerste 6 maanden vast, daarna per maand opzegbaar.</p>';
-    else t += '<p class="wg-summary__note">Met garantie: 30 dagen extra gratis, daarna €500 terug.</p>';
+    if (r.door) t += '<p class="wg-summary__note">' + r.eur(r.n * 14400) + ' per jaar, je bespaart ' + r.eur(r.n * 6600) + '.</p>';
+    else t += '<p class="wg-summary__note">Geen resultaat? 30 dagen gratis extra, anders €500 terug.</p>';
     totalsEl.innerHTML = t;
   };
 
   function read(form) {
     var get = function (n) { var el = form.querySelector('[name="' + n + '"]:checked'); return el ? el.value : ''; };
     var t = form.querySelector('[name="termijnen"]');
-    return { looptijd: get('looptijd'), aantal: form.querySelector('[name="aantal"]').value, beeld: get('beeld'), termijnen: t && t.checked, selectie: get('selectie'), ontvangst: get('ontvangst'), contract: get('contract') || '4' };
+    return { looptijd: get('looptijd'), aantal: form.querySelector('[name="aantal"]').value, beeld: get('beeld'), termijnen: t && t.checked, selectie: get('selectie'), ontvangst: get('ontvangst'), contract: '12' };
   }
   function sync(form) {
     var k = read(form), door = k.looptijd === 'doorlopend';

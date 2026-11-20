@@ -25,15 +25,10 @@ bodyClass: "page wg-page"
           <legend><span>1</span> Je keuzes</legend>
           <div class="wg-mini">
             <p class="wg-mini__label">Looptijd</p>
-            <label class="wg-option wg-option--small"><input type="radio" name="looptijd" value="30" checked><span class="wg-option__body"><strong>30 dagen</strong></span><span class="wg-option__price">&euro;1.650 per vacature</span></label>
-            <label class="wg-option wg-option--small"><input type="radio" name="looptijd" value="doorlopend"><span class="wg-option__body"><strong>Doorlopend</strong></span><span class="wg-option__price">&euro;995 p/m</span></label>
+            <label class="wg-option wg-option--small"><input type="radio" name="looptijd" value="30" checked><span class="wg-option__body"><strong>Vacature, 30 dagen</strong></span><span class="wg-option__price">&euro;1.750 per vacature</span></label>
+            <label class="wg-option wg-option--small"><input type="radio" name="looptijd" value="doorlopend"><span class="wg-option__body"><strong>Jaarmodel, doorlopend</strong></span><span class="wg-option__price">&euro;1.200 p/m</span></label>
             <div class="wg-qty"><label for="aantal">Aantal vacatures</label>
               <div class="wg-qty__ctrl"><button type="button" data-step="-1" aria-label="Minder">&minus;</button><input id="aantal" name="aantal" type="number" min="1" max="20" value="1" inputmode="numeric"><button type="button" data-step="1" aria-label="Meer">+</button></div></div>
-            <div id="contract-wrap" class="wg-mini" hidden style="margin-top:14px">
-            <p class="wg-mini__label">Contract</p>
-            <label class="wg-option wg-option--small"><input type="radio" name="contract" value="4" checked><span class="wg-option__body"><strong>Maandelijks</strong> <span>eerste 6 maanden vast, daarna per maand opzegbaar</span></span><span class="wg-option__price">&euro;995 p/m</span></label>
-            <label class="wg-option wg-option--small"><input type="radio" name="contract" value="12"><span class="wg-option__body"><strong>Jaarcontract</strong> <span>2 maanden gratis</span></span><span class="wg-option__price">&euro;829 p/m</span></label>
-          </div>
           </div>
           <div class="wg-mini">
             <p class="wg-mini__label">Beeld</p>
@@ -66,9 +61,9 @@ bodyClass: "page wg-page"
 
         <fieldset class="wg-step">
           <legend><span>3</span> Waar wil je de sollicitanten?</legend>
-          <label class="wg-option wg-option--small"><input type="radio" name="ontvangst" value="mailbox" checked><span class="wg-option__body"><strong>In mijn mailbox</strong></span></label>
-          <label class="wg-option wg-option--small"><input type="radio" name="ontvangst" value="eigen-systeem"><span class="wg-option__body"><strong>In ons eigen sollicitatiesysteem</strong></span></label>
-          <label class="wg-option wg-option--small"><input type="radio" name="ontvangst" value="ons-systeem"><span class="wg-option__body"><strong>In het systeem van YoungDedicated</strong></span></label>
+          <label class="wg-option wg-option--small"><input type="radio" name="ontvangst" value="ons-systeem" checked><span class="wg-option__body"><strong>In het systeem van YoungDedicated, met eigen inlog</strong> <span>Aanbevolen. Alles op één plek, met opvolging en cijfers.</span></span><span class="wg-option__price">Inbegrepen</span></label>
+          <label class="wg-option wg-option--small"><input type="radio" name="ontvangst" value="mailbox"><span class="wg-option__body"><strong>In mijn mailbox</strong></span><span class="wg-option__price">Inbegrepen</span></label>
+          <label class="wg-option wg-option--small"><input type="radio" name="ontvangst" value="eigen-systeem"><span class="wg-option__body"><strong>In ons eigen sollicitatiesysteem</strong></span><span class="wg-option__price">Koppeling niet inbegrepen</span></label>
           <div id="systeem-wrap" class="wg-fields" hidden><label class="wg-fields__wide">Welk systeem? <small>We koppelen via het e-mailadres van de vacature of een koppeling</small><input name="systeem" placeholder="Bijvoorbeeld Recruitee, Homerun, AFAS"></label></div>
         </fieldset>
 
