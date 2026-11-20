@@ -32,7 +32,7 @@
     }
     lines.push(['Aannemen zoveel je wilt', 'geen extra kosten']);
     if (k.ontvangst === 'eigen-systeem') lines.push(['Koppeling met je eigen systeem', 'niet inbegrepen']);
-    else lines.push(['Sollicitanten ' + (k.ontvangst === 'ons-systeem' ? 'in ons systeem' : 'in je mailbox'), 'inbegrepen']);
+    else lines.push([k.ontvangst === 'mailbox' ? 'Sollicitanten in je mailbox' : 'Kandidatensysteem met eigen inlog', 'inbegrepen']);
     return { n: n, door: door, jaar: door, lines: lines, once: once, month: month, eur: eur };
   };
 
