@@ -311,7 +311,7 @@
   }
   var PLANS = [
     { key: 'vacature', name: 'Vacature', price: PRICE.vacature, unit: 'eenmalig', yd: PRICE.vacYd, media: PRICE.vacMedia, note: '30 dagen vol gas, plus 30 dagen garantie', mediaNote: 'Mediabudget: 1 op 1 naar je advertenties, over max. 60 dagen' },
-    { key: 'jaar', name: 'Jaarmodel', price: PRICE.jaar, unit: 'p/m', yd: PRICE.jaarYd, media: PRICE.jaarMedia, note: '€14.400 per jaar in plaats van 12 x €1.750 = €21.000. Je bespaart €6.600', mediaNote: 'Mediabudget per maand: 1 op 1 naar je advertenties' }
+    { key: 'jaar', name: 'Jaarmodel', price: PRICE.jaar, unit: 'p/m', yd: PRICE.jaarYd, media: PRICE.jaarMedia, note: '€14.400 per jaar, je bespaart €6.600', mediaNote: 'Mediabudget per maand: 1 op 1 naar je advertenties' }
   ];
   function planOf(key) { return PLANS.find(function (x) { return x.key === key; }) || PLANS[0]; }
   function modalWizard() {
@@ -321,7 +321,7 @@
     if (step === 2) h += '<h2>Hoe lang?</h2><div class="packs">' +
       PLANS.map(function (pl) { return '<button class="pack" data-action="wset" data-k="plan" data-v="' + pl.key + '" aria-pressed="' + (w.plan === pl.key) + '"><span><b>' + pl.name + '</b><small>' + pl.note + '</small></span><span>' + eur(pl.price) + ' ' + pl.unit + '</span></button>'; }).join('') + '</div>' +
       '<div class="money-row"><span>Platform: pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>' + eur(planOf(w.plan).yd) + '</b></div><div class="money-row"><span>' + planOf(w.plan).mediaNote + '</span><b>' + eur(planOf(w.plan).media) + '</b></div>' +
-      (w.plan === 'vacature' ? '<p class="hint"><b>Waarom deze prijs?</b> Wij staan onder druk. Na 30 dagen geen geschikte sollicitanten? Dan werken we 30 dagen gratis door. Lukt het dan nog niet, dan krijg je ' + eur(50000) + ' terug. Dus gaan we vanaf dag 1 vol gas.</p>' : '<p class="hint"><b>Waarom goedkoper?</b> De eerste maanden bouwen we op en testen we volop. Daarna neemt het tempo af en draait het vooral om beheer. Minder werk voor ons, dus een lagere vaste prijs voor jou.</p><p class="hint"><b>Wat het oplevert:</b> het hele jaar zichtbaar op de arbeidsmarkt, ook bij wie nu nog niet zoekt. En een vaste instroom van kandidaten, dus structureel mensen aannemen. Vertrekt er iemand, dan begin je niet bij nul.</p>');
+      (w.plan === 'vacature' ? '<p class="hint">Geen resultaat? 30 dagen gratis extra, anders ' + eur(50000) + ' terug.</p>' : '<p class="hint">Altijd zichtbaar, vaste instroom. Na de opbouw vooral beheer, daarom goedkoper.</p>');
     if (step === 3) {
       var once = (w.selection ? PRICE.selectie : 0) + (w.beeld ? PRICE.beeld : 0);
       h += '<h2>Wat mogen wij nog doen?</h2><div class="packs">' +
