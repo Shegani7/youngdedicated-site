@@ -42,7 +42,7 @@
     if (r.month) t += '<p><span>Per maand</span><strong>' + r.eur(r.month) + '</strong></p>';
     if (r.once) t += '<p><span>' + (r.month ? 'Eenmalig' : 'Totaal') + '</span><strong>' + r.eur(r.once) + '</strong></p>';
     if (r.door) t += '<p class="wg-summary__note">Jaarmodel van 12 maanden: ' + r.eur(r.n * 14400) + ' per jaar. Losse vacatures kosten 12 x €1.750 = ' + r.eur(r.n * 21000) + '. Je bespaart ' + r.eur(r.n * 6600) + '.</p>';
-    else t += '<p class="wg-summary__note">Met garantie: geen resultaat na 30 dagen, dan 30 dagen extra gratis. Lukt het dan nog niet, dan krijg je €750 terug.</p>';
+    else t += '<p class="wg-summary__note">Met garantie: geen resultaat na 30 dagen, dan 30 dagen extra gratis. Lukt het dan nog niet, dan krijg je €500 terug.</p>';
     totalsEl.innerHTML = t;
   };
 
