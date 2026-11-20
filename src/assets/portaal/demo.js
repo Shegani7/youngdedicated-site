@@ -9,27 +9,41 @@
 
   var orgs = [
     { id: 'org-walsem', name: 'Van Walsem Kachelspecialist' },
-    { id: 'org-yd', name: 'YoungDedicated' }
+    { id: 'org-yd', name: 'YoungDedicated' },
+    { id: 'org-horeca', name: 'Demo Installatietechniek' },
+    { id: 'org-retail', name: 'Demo Elektrotechniek' }
   ];
   var vacancies = [
     { id: 'vac-walsem', organization_id: 'org-walsem', title: 'Montagemonteur kachels', location: 'Rhenen', status: 'live', plan: 'jaar',
-      start_date: dateOnly(now - 23 * DAY), end_date: null, page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 5,
+      start_date: dateOnly(now - 23 * DAY), end_date: null, page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 5, branch: 'Montage', contact: 'Erik van Walsem',
+      qa: { 'Ervaring met montage': ['Ja, meer dan 3 jaar', 'Ja, 1 tot 3 jaar', 'Een beetje', 'Nee, wel handig'], 'Rijbewijs B': ['Ja', 'Ja', 'Nee'], 'Wanneer kun je starten': ['Direct', 'Binnen een maand', 'Na opzegtermijn'] },
       must: [{ label: 'Rijbewijs B', q: 'Rijbewijs B', ok: '^Ja' }, { label: 'Ervaring met montage', q: 'Ervaring met montage', ok: '^Ja' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }] },
     { id: 'vac-yd', organization_id: 'org-yd', title: 'Sales recruiter', location: 'Bunnik', status: 'live', plan: 'vacature',
-      start_date: dateOnly(now - 12 * DAY), end_date: dateOnly(now + 18 * DAY), page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 3,
-      must: [{ label: 'Sales-ervaring', q: 'Ervaring in sales', ok: '^Ja' }, { label: 'Minimaal 32 uur', q: 'Uren per week', ok: '32 tot 40|^40' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }] }
+      start_date: dateOnly(now - 12 * DAY), end_date: dateOnly(now + 18 * DAY), page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 3, branch: 'Sales', contact: 'Ransder',
+      qa: { 'Ervaring in sales': ['Ja, meer dan 2 jaar', 'Ja, bijbaan', 'Nee'], 'Uren per week': ['32 tot 40', '24 tot 32', '40'], 'Wanneer kun je starten': ['Direct', 'Binnen een maand'] },
+      must: [{ label: 'Sales-ervaring', q: 'Ervaring in sales', ok: '^Ja' }, { label: 'Minimaal 32 uur', q: 'Uren per week', ok: '32 tot 40|^40' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }] },
+    { id: 'vac-horeca', organization_id: 'org-horeca', title: 'Servicemonteur warmtepompen', location: 'Utrecht', status: 'live', plan: 'jaar', branch: 'Installatie', contact: 'Sanne de Wit',
+      start_date: dateOnly(now - 27 * DAY), end_date: null, page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 6,
+      qa: { 'Ervaring met warmtepompen of cv': ['Ja, meer dan 2 jaar', 'Ja, minder dan 2 jaar', 'Nee, wil het leren'], 'Diploma': ['MBO 3 installatietechniek', 'MBO 2 installatietechniek', 'Geen'], 'Rijbewijs B': ['Ja', 'Ja', 'Nee'] },
+      must: [{ label: 'Rijbewijs B', q: 'Rijbewijs B', ok: '^Ja' }, { label: 'Ervaring warmtepomp of cv', q: 'Ervaring met warmtepompen of cv', ok: '^Ja' }, { label: 'MBO installatietechniek', q: 'Diploma', ok: 'MBO' }] },
+    { id: 'vac-retail', organization_id: 'org-retail', title: 'Elektromonteur', location: 'Amersfoort', status: 'live', plan: 'vacature', branch: 'Elektro', contact: 'Mark Jansen',
+      start_date: dateOnly(now - 9 * DAY), end_date: dateOnly(now + 21 * DAY), page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 4,
+      qa: { 'Diploma': ['MBO 3 elektrotechniek', 'MBO 2 elektrotechniek', 'Geen'], 'VCA': ['Ja', 'Ja', 'Nee'], 'Wanneer kun je starten': ['Direct', 'Binnen een maand'] },
+      must: [{ label: 'MBO elektro', q: 'Diploma', ok: 'MBO' }, { label: 'VCA', q: 'VCA', ok: '^Ja' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }] }
   ];
   var budget = [
     { id: 'b1', organization_id: 'org-walsem', vacancy_id: 'vac-walsem', amount_cents: 60000, type: 'toegekend', status: 'actief', created_at: iso(now - 23 * DAY) },
     { id: 'b2', organization_id: 'org-walsem', vacancy_id: 'vac-walsem', amount_cents: 25000, type: 'bijgekocht', status: 'actief', created_at: iso(now - 6 * DAY) },
-    { id: 'b3', organization_id: 'org-yd', vacancy_id: 'vac-yd', amount_cents: 30000, type: 'toegekend', status: 'actief', created_at: iso(now - 12 * DAY) }
+    { id: 'b3', organization_id: 'org-yd', vacancy_id: 'vac-yd', amount_cents: 30000, type: 'toegekend', status: 'actief', created_at: iso(now - 12 * DAY) },
+    { id: 'b4', organization_id: 'org-horeca', vacancy_id: 'vac-horeca', amount_cents: 60000, type: 'toegekend', status: 'actief', created_at: iso(now - 27 * DAY) },
+    { id: 'b5', organization_id: 'org-retail', vacancy_id: 'vac-retail', amount_cents: 75000, type: 'toegekend', status: 'actief', created_at: iso(now - 9 * DAY) }
   ];
 
   var stats = [];
   vacancies.forEach(function (v) {
     var days = Math.round((now - new Date(v.start_date)) / DAY);
     for (var i = days; i >= 0; i--) {
-      var spend = Math.round((v.id === 'vac-walsem' ? 2600 : 1900) * (0.75 + rnd() * 0.5));
+      var spend = Math.round(({ 'vac-walsem': 2600, 'vac-yd': 1900, 'vac-horeca': 2100, 'vac-retail': 3600 }[v.id] || 2000) * (0.75 + rnd() * 0.5));
       var imp = Math.round(spend * (0.9 + rnd() * 0.4));
       stats.push({ organization_id: v.organization_id, vacancy_id: v.id, date: dateOnly(now - i * DAY), channel: 'meta',
         impressions: imp, reach: Math.round(imp * 0.62), clicks: Math.round(imp * (0.012 + rnd() * 0.01)), spend_cents: spend, leads: 0 });
@@ -42,7 +56,9 @@
   var sources = ['Meta instant form', 'Website youngdedicated.nl', 'Meta instant form', 'Website youngdedicated.nl', 'Google for Jobs'];
   var apps = [], events = [];
   var plan = { 'vac-walsem': [['nieuw', 4], ['gebeld', 5], ['gesprek', 3], ['aangenomen', 1], ['afgewezen', 7]],
-               'vac-yd': [['nieuw', 3], ['gebeld', 2], ['gesprek', 2], ['afgewezen', 3]] };
+               'vac-yd': [['nieuw', 3], ['gebeld', 2], ['gesprek', 2], ['afgewezen', 3]],
+               'vac-horeca': [['nieuw', 6], ['gebeld', 6], ['gesprek', 3], ['aangenomen', 2], ['afgewezen', 9]],
+               'vac-retail': [['nieuw', 5], ['gebeld', 3], ['gesprek', 2], ['afgewezen', 4]] };
   var n = 0;
   vacancies.forEach(function (v) {
     var span = Math.round((now - new Date(v.start_date)) / DAY);
@@ -58,16 +74,14 @@
           id: 'app-' + n, organization_id: v.organization_id, vacancy_id: v.id, stage: stage, qualified: q, rating: null,
           source: pick(sources), created_at: iso(created), stage_changed_at: iso(created + (stage === 'nieuw' ? 0 : 20 * 36e5)),
           first_contact_at: stage === 'nieuw' ? null : iso(created + 5 * 36e5),
-          answers: v.id === 'vac-walsem'
-            ? { 'Ervaring met montage': pick(['Ja, meer dan 3 jaar', 'Ja, 1 tot 3 jaar', 'Een beetje', 'Nee, wel handig']), 'Rijbewijs B': pick(['Ja', 'Ja', 'Nee']), 'Wanneer kun je starten': pick(['Direct', 'Binnen een maand', 'Na opzegtermijn']) }
-            : { 'Ervaring in sales': pick(['Ja, meer dan 2 jaar', 'Ja, bijbaan', 'Nee']), 'Uren per week': pick(['32 tot 40', '24 tot 32', '40']), 'Wanneer kun je starten': pick(['Direct', 'Binnen een maand']) },
+          answers: (function () { var o = {}; Object.keys(v.qa).forEach(function (k) { o[k] = pick(v.qa[k]); }); return o; })(),
           candidate: { first_name: fn, last_name: ln, email: (fn + '.' + ln.replace(/ /g, '')).toLowerCase() + '@voorbeeld.nl',
             phone: '0612' + String(100000 + Math.floor(rnd() * 899999)), city: pick(cities), cv_path: rnd() > 0.35 ? 'demo.pdf' : null }
         };
         apps.push(a);
         events.push({ application_id: a.id, type: 'systeem', body: 'Gesolliciteerd via ' + a.source, created_at: a.created_at, actor_name: 'Systeem' });
-        if (stage !== 'nieuw') events.push({ application_id: a.id, type: 'fase', from_stage: 'nieuw', to_stage: stage === 'afgewezen' ? 'afgewezen' : 'gebeld', created_at: a.first_contact_at, actor_name: v.id === 'vac-walsem' ? 'Erik van Walsem' : 'Ransder' });
-        if (stage === 'gesprek' || stage === 'aangenomen') events.push({ application_id: a.id, type: 'notitie', body: pick(['Goed gesprek, enthousiast, kan snel starten.', 'Sterke ervaring. Uitgenodigd voor proefdag.', 'Klikte direct. Vraagt naar bus van de zaak.']), created_at: a.stage_changed_at, actor_name: v.id === 'vac-walsem' ? 'Erik van Walsem' : 'Ransder' });
+        if (stage !== 'nieuw') events.push({ application_id: a.id, type: 'fase', from_stage: 'nieuw', to_stage: stage === 'afgewezen' ? 'afgewezen' : 'gebeld', created_at: a.first_contact_at, actor_name: v.contact });
+        if (stage === 'gesprek' || stage === 'aangenomen') events.push({ application_id: a.id, type: 'notitie', body: pick(['Goed gesprek, enthousiast, kan snel starten.', 'Sterke ervaring. Uitgenodigd voor proefdag.', 'Klikte direct. Vraagt naar bus van de zaak.']), created_at: a.stage_changed_at, actor_name: v.contact });
       }
     });
   });
@@ -101,8 +115,8 @@
     a.candidate.consent_network = a.stage === 'afgewezen' && rnd() > 0.35;
     a.network_status = null;
   });
-  function fitOf(r) { return /bediening|kok/i.test(r) ? 'Horeca' : /sales|recruiter/i.test(r) ? 'Sales' : 'Techniek'; }
-  var wf = ['Servicemonteur', 'Allround monteur', 'Medewerker bediening', 'Binnendienst sales', 'Installateur', 'Chauffeur', 'Kok', 'Magazijnmedewerker'];
+  function fitOf(r) { return /sales|recruiter/i.test(r) ? 'Sales' : 'Techniek'; }
+  var wf = ['Servicemonteur', 'Allround monteur', 'Elektromonteur', 'Binnendienst sales', 'Installateur', 'Storingsmonteur', 'Servicetechnicus', 'Magazijnmedewerker'];
   var pool = apps.filter(function (a) { return a.candidate.consent_network; }).map(function (a) {
     return { id: 'pool-' + a.id, app_id: a.id, initials: a.candidate.first_name.charAt(0) + '. ' + a.candidate.last_name.charAt(0) + '.',
       role: vacancies.find(function (v) { return v.id === a.vacancy_id; }).title, region: a.candidate.city, experience: pick(['1 tot 3 jaar', '3 tot 5 jaar', 'Starter', '5+ jaar']),
@@ -119,7 +133,7 @@
       { name: 'Van Walsem Kachelspecialist', plan: 'Jaarmodel', mrr: 60000, vacancies: 1, cpq: 8200, speed_h: 6, health: 'op koers' },
       { name: 'YoungDedicated (eigen)', plan: 'Vacature', mrr: 0, vacancies: 1, cpq: 9100, speed_h: 9, health: 'op koers' },
       { name: 'Demo Installatietechniek', plan: 'Jaarmodel', mrr: 120000, vacancies: 2, cpq: 7400, speed_h: 4, health: 'op koers' },
-      { name: 'Demo Horeca Groep', plan: 'Jaarmodel', mrr: 60000, vacancies: 1, cpq: 5100, speed_h: 31, health: 'let op: belt traag' },
+      { name: 'Demo Installatietechniek', plan: 'Jaarmodel', mrr: 60000, vacancies: 1, cpq: 5100, speed_h: 31, health: 'let op: belt traag' },
       { name: 'Demo Servicebedrijf', plan: 'Vacature', mrr: 0, vacancies: 1, cpq: 12600, speed_h: 12, health: 'let op: weinig geschikt' }
     ],
     mrr_trend: [60000, 60000, 120000, 120000, 180000, 240000],
@@ -130,6 +144,6 @@
     nrr: 112
   };
 
-  window.YD_DEMO = { orgs: orgs, vacancies: vacancies, budget: budget, stats: stats, apps: apps, events: events, pool: pool, placements: placements, cockpit: cockpit,
+  window.YD_DEMO = { names: { first: first, last: last, cities: cities, sources: sources }, orgs: orgs, vacancies: vacancies, budget: budget, stats: stats, apps: apps, events: events, pool: pool, placements: placements, cockpit: cockpit,
     profile: { full_name: 'Ransder', role: 'yd_admin', organization_id: null } };
 })();

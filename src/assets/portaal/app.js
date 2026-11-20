@@ -13,7 +13,7 @@
 
   var demo = /[?&]demo\b/.test(location.search) || sessionStorage.getItem('yd-demo') === '1';
   var sb = !demo && window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
-  var S = { profile: null, orgs: [], orgId: null, vacancies: [], apps: [], stats: [], budget: [], vacFilter: 'all', mStage: 'nieuw', open: null, events: [], as: 'klant', wiz: null, poolFit: 'all', claim: null };
+  var S = { seenAt: Date.now() - 864e5, tour: null, profile: null, orgs: [], orgId: null, vacancies: [], apps: [], stats: [], budget: [], vacFilter: 'all', mStage: 'nieuw', open: null, events: [], as: 'klant', wiz: null, poolFit: 'all', claim: null };
   var PRICE = { vacature: 175000, vacYd: 100000, vacMedia: 75000, jaar: 120000, jaarYd: 60000, jaarMedia: 60000, selectie: 49500, beeld: 300000 };
   var app = document.getElementById('app');
 
@@ -48,6 +48,7 @@
     home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>',
     people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/></svg>',
     chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>',
     brief: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>'
   };
 
@@ -138,14 +139,14 @@
   function shell(inner) {
     var r = route(), NAV = navItems();
     var roleSel = demo ? '<select class="org-select role-select" data-action="role" aria-label="Bekijk als">' + [['klant', 'Bekijk als klant'], ['yd', 'Bekijk als YoungDedicated'], ['recruiter', 'Bekijk als recruiter']].map(function (o) { return '<option value="' + o[0] + '"' + (S.as === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' : '';
-    var orgSel = S.as === 'recruiter' ? '<span class="hint">Demo Techniek Recruitment</span>' : (S.profile.role === 'yd_admin' && S.as !== 'klant' || !demo && S.profile.role === 'yd_admin') && S.orgs.length > 1
+    var orgSel = S.as === 'recruiter' ? '<span class="hint">Demo Techniek Recruitment</span>' : demo && S.as === 'klant' ? '<select class="org-select" data-action="org" aria-label="Kies demoklant">' + S.orgs.filter(function (o) { return o.id !== 'org-yd'; }).map(function (o) { var v0 = window.YD_DEMO.vacancies.find(function (v) { return v.organization_id === o.id; }) || {}; return '<option value="' + o.id + '"' + (o.id === S.orgId ? ' selected' : '') + '>' + esc((v0.branch ? v0.branch + ' · ' : '') + o.name) + '</option>'; }).join('') + '</select>' : (S.profile.role === 'yd_admin' && S.as !== 'klant' || !demo && S.profile.role === 'yd_admin') && S.orgs.length > 1
       ? '<select class="org-select" data-action="org" aria-label="Kies klant">' + S.orgs.map(function (o) { return '<option value="' + o.id + '"' + (o.id === S.orgId ? ' selected' : '') + '>' + esc(o.name) + '</option>'; }).join('') + '</select>'
       : '<span class="hint">' + esc((S.orgs.find(function (o) { return o.id === S.orgId; }) || {}).name || '') + '</span>';
     return '<header class="top"><div class="top__in"><a href="#/vandaag"><img class="top__logo" src="' + LOGO + '" alt="YoungDedicated"></a>' +
       '<nav class="nav">' + NAV.map(function (n) { return '<a href="#/' + n[0] + '"' + (r === n[0] ? ' aria-current="page"' : '') + '>' + n[1] + '</a>'; }).join('') + '</nav>' +
-      '<div class="top__right">' + (demo ? '<span class="demo-flag">Demo</span>' : '') + roleSel + orgSel +
+      '<div class="top__right">' + (demo ? '<button class="demo-flag" data-action="tour" title="Rondleiding">Demo</button>' : '') + roleSel + orgSel + bellBtn() +
       '<button class="avatar" data-action="logout" title="Uitloggen">' + esc((S.profile.full_name || '?').charAt(0).toUpperCase()) + '</button></div></div>' + (route() !== 'cockpit' ? kpiBar() : '') + '</header>' +
-      '<main>' + inner + '</main>' +
+      '<main>' + inner + '</main>' + (demo && S.as !== 'recruiter' && route() !== 'rapport' ? '<div class="demo-live no-print"><button class="btn btn--sm" data-action="sim">+ Nieuwe sollicitant</button><button class="btn btn--ghost btn--sm" data-action="tour">Rondleiding</button></div>' : '') +
       '<nav class="tabs" style="grid-template-columns:repeat(' + NAV.length + ',1fr)">' + NAV.map(function (n) { return '<a href="#/' + n[0] + '"' + (r === n[0] ? ' aria-current="page"' : '') + '>' + n[2] + n[1] + '</a>'; }).join('') + '</nav>';
   }
   function vacChips(withAll) {
@@ -241,7 +242,7 @@
     var m = metrics(S.vacFilter);
     var left = Math.max(0, m.budget - m.spend);
     var perDay = m.days ? Math.round(m.spend / m.days) : 0;
-    var h = '<h1>Resultaten</h1><p class="sub">Live. Je ziet precies waar je geld heen gaat en wat het oplevert.</p>' + vacChips(S.vacancies.length > 1);
+    var h = '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>Resultaten</h1><p class="sub">Live. Waar je geld heen gaat en wat het oplevert.</p></div><a class="btn btn--ghost" href="#/rapport">Maandrapport (pdf)</a></div>' + vacChips(S.vacancies.length > 1);
     h += '<div class="kpis">' +
       '<div class="kpi"><span>Besteed</span><b>' + eur(m.spend) + '</b></div>' +
       '<div class="kpi"><span>Sollicitanten</span><b>' + m.apps + '</b></div>' +
@@ -301,7 +302,7 @@
     var steps = v.milestones || [{ label: 'Aanvraag', done: true }, { label: 'Kick-off', done: v.status !== 'concept' }, { label: 'Betaald', done: v.status !== 'concept' }, { label: 'Live', done: v.status === 'live' || v.status === 'vervuld' }, { label: 'Vervuld', done: v.status === 'vervuld' }];
     var h = '<p><a class="hint" href="#/vacatures">&lsaquo; Alle vacatures</a></p><h1>' + esc(v.title) + '</h1><p class="sub">' + esc(v.location || '') + ' · ' + (day ? 'Dag ' + day + ' van 60, garantiecheck op dag 30' : v.plan === 'jaar' ? 'Jaarmodel, doorlopend' : '') + '</p>';
     h += '<div class="card"><ol class="stepper">' + steps.map(function (st, i) { var cur = !st.done && (i === 0 || steps[i - 1].done); return '<li class="' + (st.done ? 'done' : cur ? 'cur' : '') + '"><span>' + (st.done ? '&#10003;' : i + 1) + '</span>' + st.label + '</li>'; }).join('') + '</ol>' +
-      (v.status === 'concept' ? '<p class="hint" style="margin-top:12px">We bellen je binnen 1 werkdag voor de kick-off. Na je akkoord en betaling staat je vacature binnen 5 werkdagen live.</p>' : '') + '</div>';
+      journeyHint(v, steps) + '</div>' + (v.status === 'live' ? guarantee(v, m, day) : '');
     h += '<div class="kpis section"><div class="kpi"><span>Sollicitanten</span><b>' + m.apps + '</b></div><div class="kpi"><span>Geschikt</span><b>' + m.qual + '</b></div><div class="kpi"><span>Aangenomen</span><b>' + m.hired + '</b></div><div class="kpi"><span>Besteed</span><b>' + eur(m.spend) + '</b></div><div class="kpi kpi--hl"><span>Per geschikte kandidaat</span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b></div></div>';
     var ch = v.channels || [];
     if (ch.length) {
@@ -314,6 +315,88 @@
       (demo ? '<p><button class="btn ' + (v.selection_by_yd ? 'btn--ghost' : 'btn--gold') + ' btn--sm" data-action="togglesel" data-id="' + v.id + '">' + (v.selection_by_yd ? 'Zelf selecteren' : 'Selectie uitbesteden, €495') + '</button></p>' : '') + '</div>' +
       '<div class="card"><p class="card__label">Snel naar</p><div class="row"><button class="btn btn--sm" data-action="tovac" data-id="' + v.id + '">Kandidaten</button><button class="btn btn--ghost btn--sm" data-action="tores" data-id="' + v.id + '">Resultaten</button>' + (v.page_url ? '<a class="btn btn--ghost btn--sm" href="' + esc(v.page_url) + '" target="_blank" rel="noopener">Vacaturepagina</a>' : '') + '</div></div></div>';
     return h;
+  }
+  var JOURNEY = {
+    'Kick-off': ['Kick-off gedaan', 'Opdrachtbevestiging en factuur zijn verstuurd.'],
+    'Betaald': ['Betaald', 'We bouwen je pagina en advertenties. Voorbeeld binnen 3 werkdagen.'],
+    'Live': ['Live', 'Je vacature staat op Instagram, Facebook en 6 vacaturesites.'],
+    'Vervuld': ['Vervuld', 'Gefeliciteerd. De campagne stopt en je rapport staat klaar.']
+  };
+  function journeyHint(v, steps) {
+    var nx = steps.find(function (x) { return !x.done; });
+    var txt = v.status === 'concept' ? 'We bellen je binnen 1 werkdag voor de kick-off.' : !nx ? 'Klaar. Deze vacature is vervuld.' : nx.label === 'Live' ? 'We bouwen je pagina en advertenties.' : '';
+    return (txt ? '<p class="hint" style="margin-top:12px">' + txt + '</p>' : '') + (demo && nx ? '<p><button class="btn btn--gold btn--sm" data-action="advance" data-id="' + v.id + '">Demo: ' + esc(nx.label) + ' &rsaquo;</button></p>' : '');
+  }
+  function guarantee(v, m, day) {
+    var tgt = v.target_qualified || 5, q = Math.min(m.qual, tgt), pq = Math.round(q / tgt * 100);
+    if (v.plan !== 'vacature') return '<div class="card section"><p class="card__label">Doel</p><p class="big">' + m.qual + ' <small>van ' + tgt + ' geschikt</small></p><div class="bar bar--green"><span style="width:' + pq + '%"></span></div><p class="hint" style="margin-top:8px">Jaarmodel: we sturen elke maand bij op dit doel.</p></div>';
+    var d = day || 1, status = m.qual >= tgt ? ['ok', 'Doel gehaald. Garantie niet nodig.'] : d <= 30 ? ['run', 'Op koers. Check op dag 30, nog ' + (30 - d) + ' dagen.'] : d <= 60 ? ['act', 'Garantie actief: 30 dagen gratis extra.'] : ['end', 'Niet gehaald: je krijgt €500 terug.'];
+    return '<div class="card section gmeter gmeter--' + status[0] + '"><p class="card__label">Garantiemeter</p><div class="gm"><div><span>Geschikt</span><b>' + m.qual + ' / ' + tgt + '</b><div class="bar bar--green"><span style="width:' + pq + '%"></span></div></div>' +
+      '<div><span>Dag</span><b>' + d + ' / ' + (d > 30 ? 60 : 30) + '</b><div class="bar"><span style="width:' + Math.min(100, Math.round(d / (d > 30 ? 60 : 30) * 100)) + '%"></span></div></div></div><p class="gm__status">' + status[1] + '</p></div>';
+  }
+  /* ---------- meldingen ---------- */
+  function notes() {
+    var out = [];
+    S.apps.forEach(function (a) {
+      var h = hoursSince(a.created_at), mm = match(a);
+      if (a.stage === 'nieuw' && h <= 24) out.push({ at: a.created_at, id: a.id, t: 'Nieuwe sollicitant: ' + name(a), s: (mm.of ? mm.n + '/' + mm.of + ' match · ' : '') + ago(a.created_at), k: 'new' });
+      else if (a.stage === 'nieuw') out.push({ at: new Date(new Date(a.created_at).getTime() + 864e5).toISOString(), id: a.id, t: name(a) + ' wacht op je belletje', s: 'Langer dan 24 uur', k: 'late' });
+    });
+    S.vacancies.forEach(function (v) {
+      var m = metrics(v.id), d = vacDay(v);
+      if (m.budget && m.spend / m.budget >= 0.8) out.push({ at: new Date(Date.now() - 3 * 36e5).toISOString(), act: 'buy', t: 'Budget bijna op: ' + v.title, s: Math.round(m.spend / m.budget * 100) + '% besteed', k: 'budget' });
+      if (d && d >= 20 && d <= 30 && m.qual < (v.target_qualified || 5)) out.push({ at: new Date(Date.now() - 5 * 36e5).toISOString(), href: '#/vacatures/' + v.id, t: 'Garantiecheck over ' + (30 - d) + ' dagen', s: v.title, k: 'guar' });
+    });
+    return out.sort(function (a, b) { return new Date(b.at) - new Date(a.at); }).slice(0, 12);
+  }
+  function bellBtn() {
+    if (S.as === 'recruiter') return '';
+    var n = notes().filter(function (x) { return new Date(x.at) > S.seenAt; }).length;
+    return '<button class="bell" data-action="notif" aria-label="Meldingen">' + I.bell + (n ? '<span class="bell__n">' + n + '</span>' : '') + '</button>';
+  }
+  function panelNotif() {
+    var l = notes();
+    return '<div class="scrim scrim--clear" data-action="close"></div><div class="notif" role="dialog" aria-label="Meldingen"><p class="card__label">Meldingen</p>' +
+      (l.length ? l.map(function (x) {
+        var attr = x.id ? 'data-action="open" data-id="' + x.id + '"' : x.act ? 'data-action="' + x.act + '"' : 'data-action="go" data-href="' + x.href + '"';
+        return '<button class="notif__i notif__i--' + x.k + '" ' + attr + '><b>' + esc(x.t) + '</b><small>' + esc(x.s) + '</small></button>';
+      }).join('') : '<p class="hint">Niets nieuws. Lekker rustig.</p>') + '</div>';
+  }
+  /* ---------- maandrapport ---------- */
+  function viewReport() {
+    var m = metrics('all'), org = (S.orgs.find(function (o) { return o.id === S.orgId; }) || {}).name || '';
+    var month = new Date().toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
+    var late = S.apps.filter(function (a) { return a.stage === 'nieuw' && hoursSince(a.created_at) > 24; }).length;
+    var hires = S.apps.filter(function (a) { return a.stage === 'aangenomen'; });
+    var src = {}; S.apps.forEach(function (a) { src[a.source || 'Onbekend'] = (src[a.source || 'Onbekend'] || 0) + 1; });
+    var next = ['Budget naar de advertentie die nu de meeste geschikte mensen oplevert.'];
+    if (late) next.unshift('Sneller bellen: ' + late + (late === 1 ? ' persoon wacht' : ' mensen wachten') + ' langer dan 24 uur.');
+    if (m.qual < S.vacancies.reduce(function (t, v) { return t + (v.target_qualified || 0); }, 0)) next.push('Twee nieuwe advertenties testen met echte beelden van de werkvloer.');
+    else next.push('Doel gehaald. We houden de instroom op peil.');
+    return '<div class="report"><div class="report__bar no-print"><a class="hint" href="#/resultaten">&lsaquo; Resultaten</a><button class="btn btn--gold" data-action="print">Download als pdf</button></div>' +
+      '<div class="report__head"><img src="' + LOGO + '" alt="YoungDedicated"><div><p class="card__label">Maandrapport</p><h1>' + esc(org) + '</h1><p class="sub">' + month + ' · ' + S.vacancies.map(function (v) { return esc(v.title); }).join(', ') + '</p></div></div>' +
+      '<div class="kpis"><div class="kpi"><span>Sollicitanten</span><b>' + m.apps + '</b></div><div class="kpi"><span>Geschikt</span><b>' + m.qual + '</b></div><div class="kpi"><span>Aangenomen</span><b>' + m.hired + '</b></div><div class="kpi"><span>Besteed</span><b>' + eur(m.spend) + '</b></div><div class="kpi kpi--hl"><span>Per geschikte</span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b></div></div>' +
+      '<div class="card section"><p class="card__label">In het kort</p><p>' + m.apps + ' mensen solliciteerden, ' + m.qual + ' zijn geschikt en ' + m.hired + (m.hired === 1 ? ' is' : ' zijn') + ' aangenomen. Elke geschikte kandidaat kostte ' + (m.qual ? eur(m.cpq) : '–') + ' aan media.</p></div>' +
+      '<div class="card section"><p class="card__label">Per dag</p>' + chart('all') + '</div>' +
+      '<div class="grid grid-2 section"><div class="card"><p class="card__label">Van bereik naar aanname</p><div class="funnel">' + funnelRows(m) + '</div></div>' +
+      '<div class="card"><p class="card__label">Bronnen</p>' + Object.keys(src).sort(function (a, b) { return src[b] - src[a]; }).map(function (k) { return '<div class="money-row"><span>' + esc(k) + '</span><b>' + src[k] + '</b></div>'; }).join('') +
+      '<div class="money-row"><span>Mediabudget</span><b>' + eur(m.budget) + '</b></div><div class="money-row"><span>Besteed</span><b>' + eur(m.spend) + '</b></div></div></div>' +
+      (hires.length ? '<div class="card section"><p class="card__label">Aangenomen</p>' + hires.map(function (a) { return '<div class="money-row"><span>' + esc(name(a)) + '</span><b>' + esc(vac(a.vacancy_id).title || '') + '</b></div>'; }).join('') + '</div>' : '') +
+      '<div class="card card--dark section"><p class="card__label">Volgende maand</p><ul class="must must--dark">' + next.map(function (x) { return '<li class="ok">' + esc(x) + '</li>'; }).join('') + '</ul></div>' +
+      '<p class="hint section">YoungDedicated · team@youngdedicated.nl · Cijfers uit Meta en het kandidatensysteem.</p></div>';
+  }
+  /* ---------- rondleiding ---------- */
+  var TOUR = [
+    ['vandaag', 'Welkom.', 'Je werving op één scherm. Elke ochtend zie je wie je moet bellen. Beste match bovenaan.'],
+    ['kandidaten', 'Iedereen op één bord.', 'Tik of sleep. Bevestiging, herinnering en afwijzing gaan automatisch.'],
+    ['vandaag', 'Beslissen in één minuut.', 'Na het gesprek: Niet, Later of Aannemen. Meta leert welk profiel werkt.'],
+    ['resultaten', 'Elke euro zichtbaar.', 'Live cijfers, meer reacties met één klik en elke maand een rapport als pdf.'],
+    ['vacatures', 'Nieuwe vacature in 3 stappen.', 'Probeer ook "+ Nieuwe sollicitant" rechtsonder. Zo voelt het als het live is.']
+  ];
+  function tourCard() {
+    var i = S.tour, t = TOUR[i];
+    return '<div class="tour" role="dialog" aria-label="Rondleiding"><p class="card__label">' + (i + 1) + ' van ' + TOUR.length + '</p><h2>' + t[1] + '</h2><p>' + t[2] + '</p>' +
+      '<div class="row"><button class="btn btn--ghost btn--sm" data-action="tour-end">Overslaan</button><button class="btn btn--gold btn--sm" data-action="tour-next">' + (i === TOUR.length - 1 ? 'Aan de slag' : 'Volgende') + '</button></div></div>';
   }
   var PLANS = [
     { key: 'vacature', name: 'Vacature', price: PRICE.vacature, unit: 'eenmalig', yd: PRICE.vacYd, media: PRICE.vacMedia, note: '30 dagen vol gas, plus 30 dagen garantie', mediaNote: 'Mediabudget: 1 op 1 naar je advertenties, over max. 60 dagen' },
@@ -367,7 +450,7 @@
     return h;
   }
   function viewPool() {
-    var D = window.YD_DEMO, fits = ['all', 'Techniek', 'Sales', 'Horeca'];
+    var D = window.YD_DEMO, fits = ['all', 'Techniek', 'Sales'];
     var list = D.pool.filter(function (p) { return p.status === 'beschikbaar' && (S.poolFit === 'all' || p.fit === S.poolFit); });
     var h = '<h1>Kandidatenpool</h1><p class="sub">Gescreende kandidaten die toestemming gaven om gedeeld te worden. Je betaalt alleen bij een plaatsing.</p>';
     h += '<div class="card card--dark" style="margin-bottom:16px"><p class="card__label">Zo werkt het</p><div class="how"><div><b>1</b>Claim een kandidaat. Je krijgt direct de contactgegevens.</div><div><b>2</b>Plaats hem bij jouw opdrachtgever, tegen jouw eigen fee.</div><div><b>3</b>Je deelt 50% van de fee met YoungDedicated. Meer niet.</div></div></div>';
@@ -479,12 +562,48 @@
     return '<div class="scrim" data-action="close"></div><div class="modal" role="dialog" aria-modal="true" aria-label="Meer reacties">' +
       '<h2>Meer reacties voor ' + esc(vac(vacId).title || '') + '</h2><p class="hint">Kies een extra budget. Wij zetten het in op de advertenties die nu het best werken.</p>' +
       '<div class="packs">' + PACKS.map(function (p, i) {
-        var est = m.cpa ? Math.round(p / m.cpa) : null;
-        return '<button class="pack" data-action="pack" data-v="' + p + '" aria-pressed="' + (i === 1) + '"><span><b>' + eur(p) + '</b><small>' + (est ? 'Ongeveer ' + est + ' extra sollicitanten' : 'Extra bereik') + '</small></span><span>' + (i === 1 ? 'Meest gekozen' : '') + '</span></button>';
+        var est = m.cpa ? Math.round(p / m.cpa) : null, eq = est && m.apps ? Math.round(est * m.qual / m.apps) : null;
+        return '<button class="pack" data-action="pack" data-v="' + p + '" aria-pressed="' + (i === 1) + '"><span><b>' + eur(p) + '</b><small>' + (est ? '≈ ' + est + ' sollicitanten' + (eq ? ', ≈ ' + eq + ' geschikt' : '') : 'Extra bereik') + '</small></span><span>' + (i === 1 ? 'Meest gekozen' : '') + '</span></button>';
       }).join('') + '</div>' +
       (m.cpa ? '<p class="hint">Schatting op basis van je huidige ' + eur(m.cpa) + ' per sollicitant. Geen garantie op aantallen.</p>' : '') +
       '<div class="row" style="margin-top:12px"><button class="btn btn--gold" data-action="confirm-buy" data-vac="' + vacId + '">Bestellen</button><button class="btn btn--ghost" data-action="close">Annuleren</button></div>' +
       '<p class="hint">Je krijgt een betaallink per mail. Na betaling staat het budget binnen 1 werkdag live. Bedragen excl. btw.</p></div>';
+  }
+
+  /* ---------- demo: live en klantreis ---------- */
+  function simulate() {
+    var D = window.YD_DEMO, N = D.names;
+    var v = (S.vacFilter !== 'all' && vac(S.vacFilter).status === 'live') ? vac(S.vacFilter) : S.vacancies.filter(function (x) { return x.status === 'live'; }).pop();
+    if (!v) { toast('Zet eerst een vacature live.'); return; }
+    function pk(a) { return a[Math.floor(Math.random() * a.length)]; }
+    var ans = {}; Object.keys(v.qa || {}).forEach(function (k) { ans[k] = Math.random() < 0.7 ? v.qa[k][0] : pk(v.qa[k]); });
+    var fn = pk(N.first), ln = pk(N.last), now = new Date().toISOString();
+    var a = { id: 'app-live-' + Date.now(), organization_id: v.organization_id, vacancy_id: v.id, stage: 'nieuw', qualified: null, source: pk(N.sources), created_at: now, stage_changed_at: now, first_contact_at: null, answers: ans,
+      candidate: { first_name: fn, last_name: ln, email: (fn + '.' + ln.replace(/ /g, '')).toLowerCase() + '@voorbeeld.nl', phone: '0612' + String(100000 + Math.floor(Math.random() * 899999)), city: pk(N.cities), cv_path: 'demo.pdf', consent_network: false } };
+    D.apps.unshift(a); S.apps.unshift(a);
+    D.events.push({ application_id: a.id, type: 'systeem', body: 'Gesolliciteerd via ' + a.source + '. Bevestiging verstuurd.', created_at: now, actor_name: 'Systeem' });
+    var today = now.slice(0, 10), st = S.stats.find(function (x) { return x.vacancy_id === v.id && x.date === today; });
+    if (st) st.leads++;
+    var mm = match(a); toast('Nieuwe sollicitant: ' + name(a) + (mm.of ? ' · ' + mm.n + '/' + mm.of : ''));
+    render();
+  }
+  function advance(v) {
+    var D = window.YD_DEMO;
+    if (!v.milestones) v.milestones = [{ label: 'Aanvraag', done: true }, { label: 'Kick-off', done: true }, { label: 'Betaald', done: true }, { label: 'Live', done: v.status === 'live' }, { label: 'Vervuld', done: false }];
+    var nx = v.milestones.find(function (x) { return !x.done; }); if (!nx) return;
+    nx.done = true;
+    if (nx.label === 'Kick-off') v.status = 'concept';
+    if (nx.label === 'Live') {
+      v.status = 'live'; v.start_date = new Date().toISOString().slice(0, 10);
+      var b = { id: 'b' + Date.now(), organization_id: v.organization_id, vacancy_id: v.id, amount_cents: v.plan === 'jaar' ? PRICE.jaarMedia : PRICE.vacMedia, type: 'toegekend', status: 'actief', created_at: new Date().toISOString() };
+      D.budget.push(b); S.budget.push(b);
+      var st = { organization_id: v.organization_id, vacancy_id: v.id, date: v.start_date, channel: 'meta', impressions: 1800, reach: 1150, clicks: 31, spend_cents: 2400, leads: 0 };
+      D.stats.push(st); S.stats.push(st);
+      v.channels = [['Instagram en Facebook', 'Betaald'], ['Google for Jobs', 'Gratis'], ['werk.nl', 'Gratis'], ['Adzuna', 'Gratis'], ['Jooble', 'Gratis'], ['Careerjet', 'Gratis'], ['Indeed', 'Gratis']].map(function (c, i) { return { key: 'c' + i, name: c[0], kind: c[1], status: i === 6 ? 'in test' : 'live', clicks: i ? Math.round(2 + Math.random() * 8) : 31 }; });
+    }
+    if (nx.label === 'Vervuld') v.status = 'vervuld';
+    toast(JOURNEY[nx.label][0] + '. ' + JOURNEY[nx.label][1]);
+    render();
   }
 
   /* ---------- render ---------- */
@@ -495,9 +614,11 @@
     if (S.as === 'recruiter' && r !== 'pool' && r !== 'plaatsingen') r = 'pool';
     if (S.as !== 'recruiter' && (r === 'pool' || r === 'plaatsingen')) r = 'vandaag';
     if (r === 'cockpit' && !(demo && S.as === 'yd')) r = 'vandaag';
-    var body = r === 'kandidaten' ? viewCandidates() : r === 'resultaten' ? viewResults() : r === 'vacatures' ? (parts[1] ? viewVacancy(parts[1]) : viewVacancies()) :
+    if (S.as === 'recruiter') S.tour = null;
+    var body = r === 'rapport' ? viewReport() : r === 'kandidaten' ? viewCandidates() : r === 'resultaten' ? viewResults() : r === 'vacatures' ? (parts[1] ? viewVacancy(parts[1]) : viewVacancies()) :
       r === 'cockpit' ? viewCockpit() : r === 'pool' ? viewPool() : r === 'plaatsingen' ? viewPlacements() : viewToday();
-    app.innerHTML = shell(body) + (S.open ? drawer() : '') + (modal === 'buy' ? modalBuy() : modal === 'wiz' ? modalWizard() : modal === 'claim' ? modalClaim() : modal === 'decide' ? modalDecide() : '');
+    app.innerHTML = shell(body) + (S.open ? drawer() : '') + (modal === 'buy' ? modalBuy() : modal === 'wiz' ? modalWizard() : modal === 'claim' ? modalClaim() : modal === 'decide' ? modalDecide() : modal === 'notif' ? panelNotif() : '') + (S.tour != null ? tourCard() : '');
+    document.body.classList.toggle('is-report', r === 'rapport');
     bindDnD();
   }
   function openApp(id) {
@@ -536,7 +657,15 @@
       if (ca) api.addEvent(ca, 'contact', t.href.indexOf('wa.me') > -1 ? 'WhatsApp gestuurd' : 'Gebeld').catch(function () {});
       return;
     }
-    if (act === 'open') return openApp(t.dataset.id);
+    if (act === 'open') { modal = null; return openApp(t.dataset.id); }
+    if (act === 'notif') { modal = modal === 'notif' ? null : 'notif'; S.seenAt = Date.now(); return render(); }
+    if (act === 'go') { modal = null; location.hash = t.dataset.href; return; }
+    if (act === 'print') return window.print();
+    if (act === 'tour') { S.tour = 0; modal = null; S.open = null; location.hash = '#/' + TOUR[0][0]; return render(); }
+    if (act === 'tour-next') { if (S.tour >= TOUR.length - 1) { S.tour = null; tourDone(); return render(); } S.tour++; location.hash = '#/' + TOUR[S.tour][0]; return render(); }
+    if (act === 'tour-end') { S.tour = null; tourDone(); return render(); }
+    if (act === 'sim') return simulate();
+    if (act === 'advance') return advance(vac(t.dataset.id));
     if (act === 'close') { S.open = null; modal = null; return render(); }
     if (act === 'vac') { S.vacFilter = t.dataset.id; return render(); }
     if (act === 'mstage') { S.mStage = t.dataset.id; return render(); }
@@ -565,7 +694,7 @@
       return api.addEvent(a, 'notitie', txt).then(function () { return api.events(a); }).then(function (ev) { S.events = ev; toast('Notitie opgeslagen'); render(); }).catch(function () { toast('Opslaan mislukt.'); });
     }
     if (act === 'cv' && a) { var w = demo ? null : window.open('', '_blank'); return api.cv(a.candidate.cv_path).then(function (u) { if (u && w) w.location = u; else if (w) w.close(); }); }
-    if (act === 'buy') { modal = 'buy'; return render(); }
+    if (act === 'buy') { modal = 'buy'; S.open = null; return render(); }
     if (act === 'pack') { app.querySelectorAll('.pack').forEach(function (p) { p.setAttribute('aria-pressed', p === t); }); return; }
     if (act === 'confirm-buy') {
       var sel = app.querySelector('.pack[aria-pressed=true]'); var cents = +sel.dataset.v;
@@ -578,14 +707,17 @@
     if (act === 'wnext') {
       if (S.wiz.step === 1) { S.wiz.title = document.getElementById('w-title').value.trim(); S.wiz.location = document.getElementById('w-loc').value.trim(); if (!S.wiz.title) { toast('Vul een functie in.'); return; } }
       if (S.wiz.step < 3) { S.wiz.step++; return render(); }
-      var nv = { id: 'vac-' + Date.now(), organization_id: S.orgId, title: S.wiz.title, location: S.wiz.location, status: 'concept', plan: S.wiz.plan, selection_by_yd: S.wiz.selection, target_qualified: 5, channels: [] };
+      var nv = { id: 'vac-' + Date.now(), organization_id: S.orgId, title: S.wiz.title, location: S.wiz.location, status: 'concept', plan: S.wiz.plan, selection_by_yd: S.wiz.selection, target_qualified: 5, channels: [], branch: (S.vacancies[0] || {}).branch,
+        milestones: [{ label: 'Aanvraag', done: true }, { label: 'Kick-off', done: false }, { label: 'Betaald', done: false }, { label: 'Live', done: false }, { label: 'Vervuld', done: false }],
+        qa: { 'Relevante ervaring': ['Ja, meer dan 2 jaar', 'Ja, 1 tot 2 jaar', 'Nee'], 'Wanneer kun je starten': ['Direct', 'Binnen een maand', 'Na opzegtermijn'], 'Uren per week': ['32 tot 40', '24 tot 32', '12 tot 24'] },
+        must: [{ label: 'Relevante ervaring', q: 'Relevante ervaring', ok: '^Ja' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }, { label: 'Minimaal 24 uur', q: 'Uren per week', ok: '^24|^32' }] };
       window.YD_DEMO.vacancies.push(nv); S.vacancies.push(nv); modal = null; S.wiz = null;
       toast('Aanvraag verstuurd. We bellen je binnen 1 werkdag.'); location.hash = '#/vacatures/' + nv.id; return render();
     }
     if (act === 'togglesel') { var tv = vac(t.dataset.id); tv.selection_by_yd = !tv.selection_by_yd; toast(tv.selection_by_yd ? 'Selectie uitbesteed. Wij bellen binnen 24 uur.' : 'Je selecteert weer zelf.'); return render(); }
     if (act === 'network' && a) {
       a.network_status = 'aangeboden';
-      window.YD_DEMO.pool.unshift({ id: 'pool-' + a.id, app_id: a.id, initials: a.candidate.first_name.charAt(0) + '. ' + a.candidate.last_name.charAt(0) + '.', role: vac(a.vacancy_id).title, region: a.candidate.city, experience: '1 tot 3 jaar', available: 'Direct', fit: 'Techniek', status: 'beschikbaar', from_org: a.organization_id });
+      window.YD_DEMO.pool.unshift({ id: 'pool-' + a.id, app_id: a.id, initials: a.candidate.first_name.charAt(0) + '. ' + a.candidate.last_name.charAt(0) + '.', role: vac(a.vacancy_id).title, region: a.candidate.city, experience: '1 tot 3 jaar', available: 'Direct', fit: vac(a.vacancy_id).branch || 'Techniek', status: 'beschikbaar', from_org: a.organization_id });
       api.addEvent(a, 'notitie', 'Aangeboden aan het recruitersnetwerk').then(function () { return api.events(a); }).then(function (ev) { S.events = ev; render(); });
       toast('Aangeboden aan het netwerk'); return;
     }
@@ -607,7 +739,7 @@
   });
   document.addEventListener('change', function (e) {
     if (e.target.dataset.action === 'org') { S.orgId = e.target.value; S.vacFilter = 'all'; loadOrg(); }
-    if (e.target.dataset.action === 'role') { S.as = e.target.value; S.open = null; modal = null; if (S.as === 'klant' && S.orgId !== 'org-walsem') { S.orgId = 'org-walsem'; S.vacFilter = 'all'; loadOrg(); } location.hash = S.as === 'recruiter' ? '#/pool' : S.as === 'yd' ? '#/cockpit' : '#/vandaag'; render(); }
+    if (e.target.dataset.action === 'role') { S.as = e.target.value; S.open = null; modal = null; if (S.as === 'klant' && S.orgId === 'org-yd') { S.orgId = 'org-walsem'; S.vacFilter = 'all'; loadOrg(); } location.hash = S.as === 'recruiter' ? '#/pool' : S.as === 'yd' ? '#/cockpit' : '#/vandaag'; render(); }
   });
   document.addEventListener('input', function (e) { if (e.target.dataset.action === 'fee') { var el = document.getElementById('c-split'); if (el) el.innerHTML = splitHtml(split(Math.round((+e.target.value || 0) * 100))); } });
   document.addEventListener('keydown', function (e) {
@@ -615,6 +747,7 @@
     if (e.key === 'Enter' && e.target.matches('.person')) openApp(e.target.dataset.id);
   });
   window.addEventListener('hashchange', function () { S.open = null; modal = null; render(); window.scrollTo(0, 0); });
+  function tourDone() { try { localStorage.setItem('yd-tour-v1', '1'); } catch (e) {} }
 
   /* ---------- login ---------- */
   function viewLogin(sent) {
@@ -635,7 +768,11 @@
 
   /* ---------- boot ---------- */
   function loadOrg() {
-    return api.load(S.orgId).then(function (d) { Object.assign(S, d); render(); });
+    return api.load(S.orgId).then(function (d) {
+      Object.assign(S, d);
+      if (demo && S.tour == null && !S.tourChecked) { S.tourChecked = true; var seen = '1'; try { seen = localStorage.getItem('yd-tour-v1'); } catch (e) {} if (!seen) { S.tour = 0; location.hash = '#/vandaag'; } }
+      render();
+    });
   }
   function boot() {
     api.session().then(function (p) {
