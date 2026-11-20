@@ -32,6 +32,12 @@
   function name(a) { return ((a.candidate.first_name || '') + ' ' + (a.candidate.last_name || '')).trim() || 'Onbekend'; }
   function ini(a) { return ((a.candidate.first_name || '?')[0] + (a.candidate.last_name || '').replace(/^(van|de|der|den)\s+/g, '').charAt(0)).toUpperCase(); }
   function vac(id) { return S.vacancies.find(function (v) { return v.id === id; }) || {}; }
+  function match(a) {
+    var must = vac(a.vacancy_id).must || [];
+    var items = must.map(function (m) { var ans = (a.answers || {})[m.q]; return { label: m.label, ok: ans != null && new RegExp(m.ok, 'i').test(ans) }; });
+    return { n: items.filter(function (i) { return i.ok; }).length, of: items.length, items: items };
+  }
+  function matchBadge(a) { var m = match(a); if (!m.of) return ''; return '<span class="match' + (m.n === m.of ? ' match--full' : m.n === 0 ? ' match--none' : '') + '" title="Harde eisen">' + m.n + '/' + m.of + '</span>'; }
   function intlPhone(p) { p = String(p || '').replace(/\D/g, ''); return p.charAt(0) === '0' ? '31' + p.slice(1) : p; }
   function toast(msg) { document.querySelectorAll('.toast').forEach(function (x) { x.remove(); }); var t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2600); }
   var I = {
@@ -138,7 +144,7 @@
     return '<header class="top"><div class="top__in"><a href="#/vandaag"><img class="top__logo" src="' + LOGO + '" alt="YoungDedicated"></a>' +
       '<nav class="nav">' + NAV.map(function (n) { return '<a href="#/' + n[0] + '"' + (r === n[0] ? ' aria-current="page"' : '') + '>' + n[1] + '</a>'; }).join('') + '</nav>' +
       '<div class="top__right">' + (demo ? '<span class="demo-flag">Demo</span>' : '') + roleSel + orgSel +
-      '<button class="avatar" data-action="logout" title="Uitloggen">' + esc((S.profile.full_name || '?').charAt(0).toUpperCase()) + '</button></div></div></header>' +
+      '<button class="avatar" data-action="logout" title="Uitloggen">' + esc((S.profile.full_name || '?').charAt(0).toUpperCase()) + '</button></div></div>' + (route() !== 'cockpit' ? kpiBar() : '') + '</header>' +
       '<main>' + inner + '</main>' +
       '<nav class="tabs" style="grid-template-columns:repeat(' + NAV.length + ',1fr)">' + NAV.map(function (n) { return '<a href="#/' + n[0] + '"' + (r === n[0] ? ' aria-current="page"' : '') + '>' + n[2] + n[1] + '</a>'; }).join('') + '</nav>';
   }
@@ -158,14 +164,14 @@
     return '<div class="person" role="button" tabindex="0" data-action="open" data-id="' + a.id + '">' +
       '<span class="person__ini">' + esc(ini(a)) + '</span>' +
       '<span class="person__main"><p class="person__name">' + esc(name(a)) + '</p><p class="person__meta">' + esc(v.title || '') + ' · ' + esc(a.candidate.city || '') + ' · ' + ago(a.created_at) + '</p></span>' +
-      (withTimer ? timer(a) : '') +
+      matchBadge(a) + (withTimer ? timer(a) : '') +
       '<span class="person__act">' + (a.candidate.phone ? '<a class="icon-btn icon-btn--green" href="tel:' + esc(a.candidate.phone) + '" data-action="called" data-id="' + a.id + '" aria-label="Bel ' + esc(name(a)) + '">' + I.phone + '</a>' : '') + '</span></div>';
   }
 
   /* ---------- views ---------- */
   function viewToday() {
     var hour = new Date().getHours(), greet = hour < 12 ? 'Goedemorgen' : hour < 18 ? 'Goedemiddag' : 'Goedenavond';
-    var fresh = S.apps.filter(function (a) { return a.stage === 'nieuw'; }).sort(function (a, b) { return new Date(a.created_at) - new Date(b.created_at); });
+    var fresh = S.apps.filter(function (a) { return a.stage === 'nieuw'; }).sort(function (a, b) { return (match(b).n - match(a).n) || (new Date(a.created_at) - new Date(b.created_at)); });
     var late = fresh.filter(function (a) { return hoursSince(a.created_at) > 24; });
     var talks = S.apps.filter(function (a) { return a.stage === 'gesprek'; });
     var selYD = S.vacancies.some(function (v) { return v.selection_by_yd; });
@@ -190,7 +196,7 @@
       '</div>';
     if (cr.credit) h += '<div class="card section cashback"><div><p class="card__label">Cashback</p><b>' + eur(cr.credit) + ' tegoed</b><p class="hint">Een kandidaat die niet bij jou paste, is via ons netwerk elders aangenomen. Je tegoed gaat automatisch van je volgende vacature af.</p></div></div>';
     h += '<div class="section"><h2>' + (selYD ? 'Deze mensen bellen wij' : 'Bel deze mensen') + '</h2>' + (fresh.length ? '<div class="list">' + fresh.map(function (a) { return personRow(a, true); }).join('') + '</div>' : '<div class="card empty"><strong>Lekker bezig.</strong>Nieuwe sollicitanten verschijnen hier direct.</div>') + '</div>';
-    if (talks.length) h += '<div class="section"><h2>Neem een besluit</h2><p class="hint" style="margin:-6px 0 12px">Deze mensen hadden een gesprek. Aannemen of niet?</p><div class="list">' + talks.map(function (a) { return personRow(a, false); }).join('') + '</div></div>';
+    if (talks.length) h += '<div class="section"><h2>Neem een besluit</h2><p class="hint" style="margin:-6px 0 12px">Gesprek gehad. Aannemen of niet?</p><p><button class="btn btn--gold" data-action="decide-start">Beslis nu, één voor één</button></p><div class="list">' + talks.map(function (a) { return personRow(a, false); }).join('') + '</div></div>';
     return h;
   }
 
@@ -200,7 +206,7 @@
     h += '<div class="board">' + STAGES.map(function (s) {
       var c = list.filter(function (a) { return a.stage === s.key; });
       return '<div class="col" data-stage="' + s.key + '"><h3>' + s.label + ' <span>' + c.length + '</span></h3>' + c.map(function (a) {
-        return '<button class="kcard" draggable="true" data-action="open" data-id="' + a.id + '"><b>' + esc(name(a)) + '</b><small>' + esc(vac(a.vacancy_id).title || '') + ' · ' + ago(a.created_at) + '</small>' +
+        return '<button class="kcard" draggable="true" data-action="open" data-id="' + a.id + '"><b>' + esc(name(a)) + '</b> ' + matchBadge(a) + '<small>' + esc(vac(a.vacancy_id).title || '') + ' · ' + ago(a.created_at) + '</small>' +
           (a.qualified ? '<br><span class="badge">Geschikt</span>' : '') + (s.key === 'nieuw' && hoursSince(a.created_at) > 24 ? '<br><span class="badge badge--gold">Wacht &gt; 24 uur</span>' : '') + '</button>';
       }).join('') + '</div>';
     }).join('') + '</div>';
@@ -404,9 +410,9 @@
     var a = S.apps.find(function (x) { return x.id === S.open; }); if (!a) return '';
     var v = vac(a.vacancy_id), idx = STAGES.findIndex(function (s) { return s.key === a.stage; });
     var bar = STAGES.slice(0, 4).map(function (s, i) { var cls = a.stage === 'afgewezen' ? 'rej' : a.stage === 'aangenomen' ? 'hired' : i <= idx ? 'on' : ''; return '<span class="' + cls + '"></span>'; }).join('');
-    var next = { nieuw: ['gebeld', 'Gebeld, past goed'], gebeld: ['gesprek', 'Uitnodigen voor gesprek'], gesprek: ['aangenomen', 'Aannemen'] }[a.stage];
+    var next = { nieuw: ['gebeld', 'Gebeld, past goed'], gebeld: ['invite', 'Uitnodigen'], gesprek: ['aangenomen', 'Aannemen'] }[a.stage];
     var decide = next
-      ? '<div class="decide"><button class="btn ' + (next[0] === 'aangenomen' ? 'btn--green' : '') + '" data-action="stage" data-stage="' + next[0] + '">' + next[1] + '</button><button class="btn btn--red" data-action="stage" data-stage="afgewezen">Afwijzen</button></div>'
+      ? '<div class="decide"><button class="btn ' + (next[0] === 'aangenomen' ? 'btn--green' : '') + '" data-action="' + (next[0] === 'invite' ? 'invite' : 'stage') + '" data-stage="' + next[0] + '">' + next[1] + '</button><button class="btn btn--red" data-action="stage" data-stage="afgewezen">Afwijzen</button></div>'
       : '<div class="card" style="text-align:center"><b>' + (a.stage === 'aangenomen' ? 'Aangenomen. Gefeliciteerd!' : 'Afgewezen') + '</b><p><button class="btn btn--ghost btn--sm" data-action="stage" data-stage="gebeld">Terugzetten</button></p></div>';
     var qa = Object.keys(a.answers || {}).map(function (k) { return '<dt>' + esc(k) + '</dt><dd>' + esc(a.answers[k]) + '</dd>'; }).join('');
     var tl = S.events.slice().reverse().map(function (e) {
@@ -420,7 +426,9 @@
       '<div class="drawer__body">' +
         '<div class="row">' + (c.phone ? '<a class="btn btn--green" href="tel:' + esc(c.phone) + '" data-action="called" data-id="' + a.id + '">' + I.phone + 'Bel</a><a class="btn" style="background:#25d366" href="https://wa.me/' + intlPhone(c.phone) + '" target="_blank" rel="noopener" data-action="called" data-id="' + a.id + '">' + I.wa + 'WhatsApp</a>' : '') +
           (c.email ? '<a class="btn btn--ghost" href="mailto:' + esc(c.email) + '">' + I.mail + 'Mail</a>' : '') + '</div>' +
-        decide +
+        decide + (S.inviting ? invitePicker(a) : '') +
+        (match(a).of ? '<div class="card"><p class="card__label">Harde eisen</p><ul class="must">' + match(a).items.map(function (i) { return '<li class="' + (i.ok ? 'ok' : 'no') + '">' + esc(i.label) + '</li>'; }).join('') + '</ul></div>' : '') +
+        autoCard(a) +
         '<div class="card"><p class="card__label">Geschikte kandidaat?</p><div class="row"><button class="chip" data-action="qual" data-v="true" aria-pressed="' + (a.qualified === true) + '">Ja, geschikt</button><button class="chip" data-action="qual" data-v="false" aria-pressed="' + (a.qualified === false) + '">Nee</button></div><p class="hint">Telt mee voor je garantie en leert de campagne wie je zoekt.</p></div>' +
         (a.stage === 'afgewezen' && demo ? '<div class="card"><p class="card__label">Netwerk</p>' + (a.candidate.consent_network
             ? (a.network_status ? '<p><b>Aangeboden aan het recruitersnetwerk.</b> Wordt deze kandidaat elders aangenomen, dan krijg jij cashback als tegoed.</p>' : '<p>Past niet bij jou, maar misschien wel ergens anders. De kandidaat gaf toestemming om gedeeld te worden.</p><p><button class="btn btn--gold btn--sm" data-action="network">Doorplaatsen via netwerk</button></p>')
@@ -430,6 +438,40 @@
         '<div class="card"><p class="card__label">Notitie</p><textarea id="note" placeholder="Wat viel op in het gesprek?"></textarea><p><button class="btn btn--sm" data-action="note">Opslaan</button></p></div>' +
         '<div class="card"><p class="card__label">Tijdlijn</p><ul class="timeline">' + (tl || '<li>Nog niets gebeurd.</li>') + '</ul></div>' +
       '</div></aside>';
+  }
+  var SLOTS = (function () {
+    var out = [], d = new Date(); var days = ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'];
+    while (out.length < 3) { d = new Date(d.getTime() + 864e5); if (d.getDay() === 0 || d.getDay() === 6) continue; out.push(days[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + ' ' + (out.length === 1 ? '14:00' : '10:00')); }
+    return out;
+  })();
+  function invitePicker(a) {
+    return '<div class="card"><p class="card__label">Kies een moment</p><div class="row">' + SLOTS.map(function (sl, i) { return '<button class="chip" data-action="slot" data-v="' + i + '" aria-pressed="' + (S.slot === i) + '">' + sl + '</button>'; }).join('') + '</div>' +
+      '<p><button class="btn btn--green" data-action="send-invite">Stuur uitnodiging</button></p><p class="hint">Kandidaat bevestigt met één tik. Herinnering gaat automatisch.</p></div>';
+  }
+  function autoCard(a) {
+    var l = [['Bevestiging gestuurd', 1]];
+    if (a.stage === 'nieuw') l.push(hoursSince(a.created_at) > 48 ? ['Herinnering aan jou gestuurd', 1] : ['Herinnering aan jou na 48 uur', 0]);
+    if (a.stage === 'gesprek') l.push(['Herinnering gesprek, dag van tevoren', 0]);
+    if (a.stage === 'afgewezen') l.push(['Nette afwijzing verstuurd', 1]);
+    if (a.stage === 'aangenomen') l.push(['Meta leert: dit profiel werkt', 1]);
+    return '<div class="card"><p class="card__label">Automatisch</p><ul class="must">' + l.map(function (x) { return '<li class="' + (x[1] ? 'ok' : 'wait') + '">' + x[0] + '</li>'; }).join('') + '</ul></div>';
+  }
+  function modalDecide() {
+    var q = S.dq || [], a = S.apps.find(function (x) { return x.id === q[S.di]; });
+    var h = '<div class="scrim" data-action="dclose"></div><div class="modal decide-modal" role="dialog" aria-modal="true" aria-label="Beslissen">';
+    if (!a) return h + '<h2>Klaar.</h2><p class="sub">' + (S.dhired ? S.dhired + ' aangenomen. Meta leert welk profiel werkt.' : 'Alles beslist.') + '</p><button class="btn" data-action="dclose">Sluiten</button></div>';
+    var m = match(a), note = (S.devents || []).filter(function (e) { return e.type === 'notitie'; }).pop();
+    return h + '<p class="card__label">' + (S.di + 1) + ' van ' + q.length + '</p>' +
+      '<div class="dcard"><span class="person__ini">' + esc(ini(a)) + '</span><h2>' + esc(name(a)) + '</h2><p class="hint">' + esc(vac(a.vacancy_id).title || '') + ' · ' + esc(a.candidate.city || '') + '</p>' +
+      (m.of ? '<ul class="must must--inline">' + m.items.map(function (i) { return '<li class="' + (i.ok ? 'ok' : 'no') + '">' + esc(i.label) + '</li>'; }).join('') + '</ul>' : '') +
+      (note ? '<p class="dnote">&ldquo;' + esc(note.body) + '&rdquo;</p>' : '') + '</div>' +
+      '<div class="decide decide--3"><button class="btn btn--red" data-action="dpick" data-v="afgewezen">Niet</button><button class="btn btn--ghost" data-action="dpick" data-v="later">Later</button><button class="btn btn--green" data-action="dpick" data-v="aangenomen">Aannemen</button></div></div>';
+  }
+  function loadDecide() { var a = S.apps.find(function (x) { return x.id === (S.dq || [])[S.di]; }); S.devents = []; if (a) api.events(a).then(function (e) { S.devents = e; if (modal === 'decide') render(); }); }
+  function kpiBar() {
+    if (S.as === 'recruiter') return '';
+    var m = metrics('all');
+    return '<a class="kpibar" href="#/resultaten"><span><b>' + m.apps + '</b> sollicitanten</span><span><b>' + m.qual + '</b> geschikt</span><span><b>' + m.hired + '</b> aangenomen</span><span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b> per geschikte</span><span><b>' + eur(m.spend) + '</b> van ' + eur(m.budget) + ' besteed</span></a>';
   }
   function modalBuy() {
     var vacId = S.vacFilter === 'all' ? (S.vacancies[0] || {}).id : S.vacFilter;
@@ -455,11 +497,11 @@
     if (r === 'cockpit' && !(demo && S.as === 'yd')) r = 'vandaag';
     var body = r === 'kandidaten' ? viewCandidates() : r === 'resultaten' ? viewResults() : r === 'vacatures' ? (parts[1] ? viewVacancy(parts[1]) : viewVacancies()) :
       r === 'cockpit' ? viewCockpit() : r === 'pool' ? viewPool() : r === 'plaatsingen' ? viewPlacements() : viewToday();
-    app.innerHTML = shell(body) + (S.open ? drawer() : '') + (modal === 'buy' ? modalBuy() : modal === 'wiz' ? modalWizard() : modal === 'claim' ? modalClaim() : '');
+    app.innerHTML = shell(body) + (S.open ? drawer() : '') + (modal === 'buy' ? modalBuy() : modal === 'wiz' ? modalWizard() : modal === 'claim' ? modalClaim() : modal === 'decide' ? modalDecide() : '');
     bindDnD();
   }
   function openApp(id) {
-    S.open = id; S.events = [];
+    S.open = id; S.events = []; S.inviting = false; S.slot = 0;
     var a = S.apps.find(function (x) { return x.id === id; });
     render();
     api.events(a).then(function (e) { S.events = e; if (S.open === id) render(); });
@@ -500,6 +542,23 @@
     if (act === 'mstage') { S.mStage = t.dataset.id; return render(); }
     if (act === 'tovac') { S.vacFilter = t.dataset.id; location.hash = '#/kandidaten'; return; }
     if (act === 'stage' && a) return changeStage(a, t.dataset.stage);
+    if (act === 'invite' && a) { S.inviting = !S.inviting; return render(); }
+    if (act === 'slot') { S.slot = +t.dataset.v; return render(); }
+    if (act === 'send-invite' && a) {
+      var sl = SLOTS[S.slot || 0], msg = 'Hoi ' + (a.candidate.first_name || '') + ', leuk dat je gesolliciteerd hebt als ' + (vac(a.vacancy_id).title || '') + '. Kun je ' + sl + ' langskomen voor een kennismaking?';
+      if (!demo && a.candidate.phone) window.open('https://wa.me/' + intlPhone(a.candidate.phone) + '?text=' + encodeURIComponent(msg), '_blank');
+      S.inviting = false;
+      return api.addEvent(a, 'contact', 'Uitgenodigd voor ' + sl).then(function () { changeStage(a, 'gesprek'); toast('Uitnodiging verstuurd: ' + sl); });
+    }
+    if (act === 'decide-start') { S.dq = S.apps.filter(function (x) { return x.stage === 'gesprek'; }).map(function (x) { return x.id; }); S.di = 0; S.dhired = 0; modal = 'decide'; loadDecide(); return render(); }
+    if (act === 'dclose') { modal = null; return render(); }
+    if (act === 'dpick') {
+      var da = S.apps.find(function (x) { return x.id === S.dq[S.di]; }), dv = t.dataset.v;
+      var go = function () { S.di++; loadDecide(); render(); };
+      if (!da || dv === 'later') return go();
+      if (dv === 'aangenomen') S.dhired++;
+      return api.setStage(da, dv).then(go).catch(function () { toast('Opslaan mislukt.'); });
+    }
     if (act === 'qual' && a) { var q = t.dataset.v === 'true'; return api.setFields(a, { qualified: a.qualified === q ? null : q }).then(render).catch(function () { toast('Opslaan mislukt.'); }); }
     if (act === 'note' && a) {
       var txt = (document.getElementById('note').value || '').trim(); if (!txt) return;

@@ -13,9 +13,11 @@
   ];
   var vacancies = [
     { id: 'vac-walsem', organization_id: 'org-walsem', title: 'Montagemonteur kachels', location: 'Rhenen', status: 'live', plan: 'jaar',
-      start_date: dateOnly(now - 23 * DAY), end_date: null, page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 5 },
+      start_date: dateOnly(now - 23 * DAY), end_date: null, page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 5,
+      must: [{ label: 'Rijbewijs B', q: 'Rijbewijs B', ok: '^Ja' }, { label: 'Ervaring met montage', q: 'Ervaring met montage', ok: '^Ja' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }] },
     { id: 'vac-yd', organization_id: 'org-yd', title: 'Sales recruiter', location: 'Bunnik', status: 'live', plan: 'vacature',
-      start_date: dateOnly(now - 12 * DAY), end_date: dateOnly(now + 18 * DAY), page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 3 }
+      start_date: dateOnly(now - 12 * DAY), end_date: dateOnly(now + 18 * DAY), page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 3,
+      must: [{ label: 'Sales-ervaring', q: 'Ervaring in sales', ok: '^Ja' }, { label: 'Minimaal 32 uur', q: 'Uren per week', ok: '32 tot 40|^40' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }] }
   ];
   var budget = [
     { id: 'b1', organization_id: 'org-walsem', vacancy_id: 'vac-walsem', amount_cents: 60000, type: 'toegekend', status: 'actief', created_at: iso(now - 23 * DAY) },
