@@ -310,8 +310,8 @@
     return h;
   }
   var PLANS = [
-    { key: 'vacature', name: 'Vacature', price: PRICE.vacature, unit: 'eenmalig', yd: PRICE.vacYd, media: PRICE.vacMedia, note: 'Snel invullen. Media over max. 60 dagen, met garantie', mediaNote: 'Mediabudget: 1 op 1 naar je advertenties, over max. 60 dagen' },
-    { key: 'jaar', name: 'Jaarmodel', price: PRICE.jaar, unit: 'p/m', yd: PRICE.jaarYd, media: PRICE.jaarMedia, note: 'Voor doorlopende vacatures. €14.400 per jaar', mediaNote: 'Mediabudget per maand: 1 op 1 naar je advertenties' }
+    { key: 'vacature', name: 'Vacature', price: PRICE.vacature, unit: 'eenmalig', yd: PRICE.vacYd, media: PRICE.vacMedia, note: '30 dagen vol gas, plus 30 dagen garantie', mediaNote: 'Mediabudget: 1 op 1 naar je advertenties, over max. 60 dagen' },
+    { key: 'jaar', name: 'Jaarmodel', price: PRICE.jaar, unit: 'p/m', yd: PRICE.jaarYd, media: PRICE.jaarMedia, note: '€14.400 per jaar in plaats van 12 x €1.750 = €21.000. Je bespaart €6.600', mediaNote: 'Mediabudget per maand: 1 op 1 naar je advertenties' }
   ];
   function planOf(key) { return PLANS.find(function (x) { return x.key === key; }) || PLANS[0]; }
   function modalWizard() {
