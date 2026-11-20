@@ -1,6 +1,6 @@
 /* Prijsconfigurator en bestelflow. Prijzen excl. btw. */
 (function () {
-  var P = { dertig: 1750, media: 750, jaar: 1200, jaarMedia: 600, beeld: 3000, termijn: 250, selectie: 495 };
+  var P = { dertig: 1750, jaar: 1200, beeld: 3000, termijn: 250, selectie: 495 };
   function perMaand(n) { return P.jaar; }
   function eur(v) { return '€' + v.toLocaleString('nl-NL'); }
 
@@ -11,12 +11,12 @@
     if (door) {
       var pm = perMaand(n);
       lines.push([n + (n > 1 ? ' doorlopende vacatures' : ' doorlopende vacature') + ', jaarmodel à ' + eur(pm), eur(n * pm) + ' p/m']);
-      lines.push(['Waarvan mediabudget, 1 op 1 naar je advertenties', eur(n * P.jaarMedia) + ' p/m']);
+      lines.push(['Mediabudget', 'inbegrepen']);
       month += n * pm;
     } else {
       once += n * P.dertig;
       lines.push([n + (n > 1 ? ' vacatures' : ' vacature') + ', 30 dagen', eur(n * P.dertig)]);
-      lines.push(['Waarvan mediabudget, 1 op 1 naar je advertenties', eur(n * P.media)]);
+      lines.push(['Mediabudget', 'inbegrepen']);
     }
     lines.push(['Vacaturepagina, tekst en advertenties', 'inbegrepen']);
     lines.push(['Campagne op Instagram en Facebook', 'inbegrepen']);

@@ -14,7 +14,7 @@
   var demo = /[?&]demo\b/.test(location.search) || sessionStorage.getItem('yd-demo') === '1';
   var sb = !demo && window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
   var S = { seenAt: Date.now() - 864e5, tour: null, profile: null, orgs: [], orgId: null, vacancies: [], apps: [], stats: [], budget: [], vacFilter: 'all', mStage: 'nieuw', open: null, events: [], as: 'klant', wiz: null, poolFit: 'all', claim: null };
-  var PRICE = { vacature: 175000, vacYd: 100000, vacMedia: 75000, jaar: 120000, jaarYd: 60000, jaarMedia: 60000, selectie: 49500, beeld: 300000 };
+  var PRICE = { vacature: 175000, jaar: 120000, budgetVac: 75000, budgetJaar: 60000, selectie: 49500, beeld: 300000 };
   var app = document.getElementById('app');
 
   /* ---------- helpers ---------- */
@@ -189,8 +189,8 @@
         '<div class="card card--dark"><p class="card__label">Bel vandaag</p><p class="big">' + fresh.length + ' <small>nieuw</small></p>' +
           (selYD ? '<p class="muted">Selectie uitbesteed. YoungDedicated belt iedereen binnen 24 uur en zet geschikte mensen klaar voor jou.</p>' : '<p class="muted">Bel binnen 24 uur. Dan is de sollicitant nog warm.</p>') +
           (late.length && !selYD ? '<p style="margin-top:14px"><a class="btn btn--gold btn--sm" href="mailto:team@youngdedicated.nl?subject=' + encodeURIComponent('Selectie uitbesteden: wil YoungDedicated onze sollicitanten bellen?') + '">Geen tijd? Wij doen de selectie</a></p>' : '') + '</div>' +
-        '<div class="card"><p class="card__label">Mediabudget</p><p class="big">' + eur(m.spend) + ' <small>van ' + eur(m.budget) + '</small></p>' +
-          '<div class="bar"><span style="width:' + pct + '%"></span></div><div class="bar-legend"><span>' + pct + '% besteed</span><span>' + eur(m.cpa) + ' per sollicitant</span></div></div>' +
+        '<div class="card"><p class="card__label">Campagne</p><p class="big">' + eur(m.cpa) + ' <small>per sollicitant</small></p>' +
+          '<div class="bar-legend"><span>Mediabudget inbegrepen</span><span>' + m.apps + ' sollicitanten</span></div></div>' +
         '<div class="card"><p class="card__label">Garantie</p><p class="big">' + m.qual + ' <small>van ' + target + ' geschikt</small></p>' +
           '<div class="bar bar--green"><span style="width:' + Math.min(100, Math.round(m.qual / target * 100)) + '%"></span></div>' +
           '<div class="bar-legend"><span>' + (m.qual >= target ? 'Doel gehaald' : 'Nog ' + (target - m.qual) + ' te gaan') + '</span><span>' + (day ? (day <= 30 ? 'Garantiecheck dag 30, nu dag ' + day : 'Dag ' + day + ' van 60') : 'Jaarmodel') + '</span></div></div>' +
@@ -253,18 +253,13 @@
       '<div class="card"><p class="card__label">Waar gaat je geld heen</p>' +
         (S.vacancies.some(function (v) { return v.plan === 'jaar'; }) ?
           '<div class="money-row"><span>Jaarmodel per vacature</span><b>' + eur(PRICE.jaar) + ' p/m</b></div>' +
-          '<div class="money-row"><span>&nbsp;&nbsp;waarvan platform en begeleiding</span><b>' + eur(PRICE.jaarYd) + '</b></div>' +
-          '<div class="money-row"><span>&nbsp;&nbsp;waarvan mediabudget</span><b>' + eur(PRICE.jaarMedia) + '</b></div>' : '') +
+          '' : '') +
         (S.vacancies.some(function (v) { return v.plan === 'vacature'; }) ?
           '<div class="money-row"><span>Vacature, eenmalig</span><b>' + eur(PRICE.vacature) + '</b></div>' +
-          '<div class="money-row"><span>&nbsp;&nbsp;waarvan platform en begeleiding</span><b>' + eur(PRICE.vacYd) + '</b></div>' +
-          '<div class="money-row"><span>&nbsp;&nbsp;waarvan mediabudget, over max. 60 dagen</span><b>' + eur(PRICE.vacMedia) + '</b></div>' : '') +
-        '<div class="money-row"><span>Mediabudget totaal, incl. bijgekocht</span><b>' + eur(m.budget) + '</b></div>' +
-        '<div class="money-row"><span>Besteed in Meta (Facebook en Instagram)</span><b>' + eur(m.spend) + '</b></div>' +
-        '<div class="money-row"><span>Nog te besteden</span><b>' + eur(left) + '</b></div>' +
-        '<div class="money-row"><span>Gemiddeld per dag</span><b>' + eur(perDay) + '</b></div>' +
-        (m.pending ? '<div class="money-row"><span>Bijgekocht, wacht op betaling</span><b>' + eur(m.pending) + '</b></div>' : '') +
-        '<div class="bar"><span style="width:' + (m.budget ? Math.min(100, Math.round(m.spend / m.budget * 100)) : 0) + '%"></span></div>' +
+          '' : '') +
+        '<div class="money-row"><span>Mediabudget</span><b>inbegrepen</b></div>' +
+        '<div class="money-row"><span>Ingezet in advertenties (Facebook en Instagram)</span><b>' + eur(m.spend) + '</b></div>' +
+        (m.pending ? '<div class="money-row"><span>Extra budget, wacht op betaling</span><b>' + eur(m.pending) + '</b></div>' : '') +
         '<p style="margin-top:16px"><button class="btn btn--gold btn--block" data-action="buy">Meer reacties? Verhoog je budget</button></p></div>' +
       '<div class="card"><p class="card__label">Van bereik naar aanname</p><div class="funnel">' + funnelRows(m) + '</div>' +
         '<p class="hint" style="margin-top:12px">Een klik betekent: iemand opende je vacaturepagina of formulier.</p></div>' +
@@ -380,7 +375,7 @@
       '<div class="card section"><p class="card__label">Per dag</p>' + chart('all') + '</div>' +
       '<div class="grid grid-2 section"><div class="card"><p class="card__label">Van bereik naar aanname</p><div class="funnel">' + funnelRows(m) + '</div></div>' +
       '<div class="card"><p class="card__label">Bronnen</p>' + Object.keys(src).sort(function (a, b) { return src[b] - src[a]; }).map(function (k) { return '<div class="money-row"><span>' + esc(k) + '</span><b>' + src[k] + '</b></div>'; }).join('') +
-      '<div class="money-row"><span>Mediabudget</span><b>' + eur(m.budget) + '</b></div><div class="money-row"><span>Besteed</span><b>' + eur(m.spend) + '</b></div></div></div>' +
+      '<div class="money-row"><span>Mediabudget</span><b>inbegrepen</b></div><div class="money-row"><span>Besteed</span><b>' + eur(m.spend) + '</b></div></div></div>' +
       (hires.length ? '<div class="card section"><p class="card__label">Aangenomen</p>' + hires.map(function (a) { return '<div class="money-row"><span>' + esc(name(a)) + '</span><b>' + esc(vac(a.vacancy_id).title || '') + '</b></div>'; }).join('') + '</div>' : '') +
       '<div class="card card--dark section"><p class="card__label">Volgende maand</p><ul class="must must--dark">' + next.map(function (x) { return '<li class="ok">' + esc(x) + '</li>'; }).join('') + '</ul></div>' +
       '<p class="hint section">YoungDedicated · team@youngdedicated.nl · Cijfers uit Meta en het kandidatensysteem.</p></div>';
@@ -399,8 +394,8 @@
       '<div class="row"><button class="btn btn--ghost btn--sm" data-action="tour-end">Overslaan</button><button class="btn btn--gold btn--sm" data-action="tour-next">' + (i === TOUR.length - 1 ? 'Aan de slag' : 'Volgende') + '</button></div></div>';
   }
   var PLANS = [
-    { key: 'vacature', name: 'Vacature', price: PRICE.vacature, unit: 'eenmalig', yd: PRICE.vacYd, media: PRICE.vacMedia, note: '30 dagen vol gas, plus 30 dagen garantie', mediaNote: 'Mediabudget: 1 op 1 naar je advertenties, over max. 60 dagen' },
-    { key: 'jaar', name: 'Jaarmodel', price: PRICE.jaar, unit: 'p/m', yd: PRICE.jaarYd, media: PRICE.jaarMedia, note: '€14.400 per jaar, je bespaart €6.600', mediaNote: 'Mediabudget per maand: 1 op 1 naar je advertenties' }
+    { key: 'vacature', name: 'Vacature', price: PRICE.vacature, unit: 'eenmalig', note: '30 dagen vol gas, plus 30 dagen garantie' },
+    { key: 'jaar', name: 'Jaarmodel', price: PRICE.jaar, unit: 'p/m', note: '€14.400 per jaar, je bespaart €6.600' }
   ];
   function planOf(key) { return PLANS.find(function (x) { return x.key === key; }) || PLANS[0]; }
   function modalWizard() {
@@ -409,7 +404,7 @@
     if (step === 1) h += '<h2>Wie zoek je?</h2><label for="w-title">Functie</label><input id="w-title" type="text" value="' + esc(w.title) + '" placeholder="Bijvoorbeeld: servicemonteur"><label for="w-loc">Plaats</label><input id="w-loc" type="text" value="' + esc(w.location) + '" placeholder="Bijvoorbeeld: Utrecht">';
     if (step === 2) h += '<h2>Hoe lang?</h2><div class="packs">' +
       PLANS.map(function (pl) { return '<button class="pack" data-action="wset" data-k="plan" data-v="' + pl.key + '" aria-pressed="' + (w.plan === pl.key) + '"><span><b>' + pl.name + '</b><small>' + pl.note + '</small></span><span>' + eur(pl.price) + ' ' + pl.unit + '</span></button>'; }).join('') + '</div>' +
-      '<div class="money-row"><span>Platform: pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>' + eur(planOf(w.plan).yd) + '</b></div><div class="money-row"><span>' + planOf(w.plan).mediaNote + '</span><b>' + eur(planOf(w.plan).media) + '</b></div>' +
+      '<div class="money-row"><span>Pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>inbegrepen</b></div><div class="money-row"><span>Mediabudget</span><b>inbegrepen</b></div>' +
       (w.plan === 'vacature' ? '<p class="hint">Geen resultaat? 30 dagen gratis extra, anders ' + eur(50000) + ' terug.</p>' : '<p class="hint">Altijd zichtbaar, vaste instroom. Na de opbouw vooral beheer, daarom goedkoper.</p>');
     if (step === 3) {
       var once = (w.selection ? PRICE.selectie : 0) + (w.beeld ? PRICE.beeld : 0);
@@ -436,7 +431,7 @@
     var act = C.clients.reduce(function (t, c) { return t + c.vacancies; }, 0);
     var speed = C.clients.map(function (c) { return c.speed_h; }).sort(function (a, b) { return a - b; })[Math.floor(C.clients.length / 2)];
     var cpq = Math.round(C.clients.reduce(function (t, c) { return t + c.cpq; }, 0) / C.clients.length);
-    var mix = [['Jaarmodel, platformdeel', mrr, '#111'], ['Vacatures (YD-deel) en selectie', C.once_month_cents, '#d1b75c'], ['Fee op extra budget', C.media_fee_month_cents, '#9c8740'], ['Recruitersnetwerk', C.network_month_cents, '#02daac']];
+    var mix = [['Jaarmodel', mrr, '#111'], ['Vacatures en selectie', C.once_month_cents, '#d1b75c'], ['Fee op extra budget', C.media_fee_month_cents, '#9c8740'], ['Recruitersnetwerk', C.network_month_cents, '#02daac']];
     var tot = mix.reduce(function (t, x) { return t + x[1]; }, 0);
     var maxT = Math.max.apply(null, C.mrr_trend);
     var h = '<h1>Cockpit</h1><p class="sub">De cijfers waar een koper naar kijkt. Demo met verzonnen klanten.</p>';
@@ -554,7 +549,7 @@
   function kpiBar() {
     if (S.as === 'recruiter') return '';
     var m = metrics('all');
-    return '<a class="kpibar" href="#/resultaten"><span><b>' + m.apps + '</b> sollicitanten</span><span><b>' + m.qual + '</b> geschikt</span><span><b>' + m.hired + '</b> aangenomen</span><span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b> per geschikte</span><span><b>' + eur(m.spend) + '</b> van ' + eur(m.budget) + ' besteed</span></a>';
+    return '<a class="kpibar" href="#/resultaten"><span><b>' + m.apps + '</b> sollicitanten</span><span><b>' + m.qual + '</b> geschikt</span><span><b>' + m.hired + '</b> aangenomen</span><span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b> per geschikte</span><span><b>' + eur(m.spend) + '</b> ingezet</span></a>';
   }
   function modalBuy() {
     var vacId = S.vacFilter === 'all' ? (S.vacancies[0] || {}).id : S.vacFilter;
@@ -595,7 +590,7 @@
     if (nx.label === 'Kick-off') v.status = 'concept';
     if (nx.label === 'Live') {
       v.status = 'live'; v.start_date = new Date().toISOString().slice(0, 10);
-      var b = { id: 'b' + Date.now(), organization_id: v.organization_id, vacancy_id: v.id, amount_cents: v.plan === 'jaar' ? PRICE.jaarMedia : PRICE.vacMedia, type: 'toegekend', status: 'actief', created_at: new Date().toISOString() };
+      var b = { id: 'b' + Date.now(), organization_id: v.organization_id, vacancy_id: v.id, amount_cents: v.plan === 'jaar' ? PRICE.budgetJaar : PRICE.budgetVac, type: 'toegekend', status: 'actief', created_at: new Date().toISOString() };
       D.budget.push(b); S.budget.push(b);
       var st = { organization_id: v.organization_id, vacancy_id: v.id, date: v.start_date, channel: 'meta', impressions: 1800, reach: 1150, clicks: 31, spend_cents: 2400, leads: 0 };
       D.stats.push(st); S.stats.push(st);
