@@ -321,7 +321,7 @@
     if (step === 2) h += '<h2>Hoe lang?</h2><div class="packs">' +
       PLANS.map(function (pl) { return '<button class="pack" data-action="wset" data-k="plan" data-v="' + pl.key + '" aria-pressed="' + (w.plan === pl.key) + '"><span><b>' + pl.name + '</b><small>' + pl.note + '</small></span><span>' + eur(pl.price) + ' ' + pl.unit + '</span></button>'; }).join('') + '</div>' +
       '<div class="money-row"><span>Platform: pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>' + eur(planOf(w.plan).yd) + '</b></div><div class="money-row"><span>' + planOf(w.plan).mediaNote + '</span><b>' + eur(planOf(w.plan).media) + '</b></div>' +
-      (w.plan === 'vacature' ? '<p class="hint">Garantie: na 30 dagen geen geschikte sollicitanten? Dan 30 dagen gratis extra. Lukt het dan nog niet, dan krijg je ' + eur(PRICE.vacMedia) + ' terug.</p>' : '');
+      (w.plan === 'vacature' ? '<p class="hint"><b>Waarom deze prijs?</b> Wij staan onder druk. Na 30 dagen geen geschikte sollicitanten? Dan werken we 30 dagen gratis door. Lukt het dan nog niet, dan krijg je ' + eur(PRICE.vacMedia) + ' terug. Dus gaan we vanaf dag 1 vol gas.</p>' : '<p class="hint"><b>Waarom goedkoper?</b> De eerste maanden bouwen we op en testen we volop. Daarna neemt het tempo af en draait het vooral om beheer. Minder werk voor ons, dus een lagere vaste prijs voor jou.</p>');
     if (step === 3) {
       var once = (w.selection ? PRICE.selectie : 0) + (w.beeld ? PRICE.beeld : 0);
       h += '<h2>Wat mogen wij nog doen?</h2><div class="packs">' +
