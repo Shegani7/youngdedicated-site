@@ -1,15 +1,15 @@
 ---
 layout: "base.njk"
 title: "Plaats je vacature | YoungDedicated"
-description: "Plaats je vacature in tien minuten. Binnen 3 werkdagen een voorbeeld, binnen 5 werkdagen live."
+description: "Kies je pakket en plan je kick-off. Binnen 5 werkdagen live en kiezen monteurs jou."
 permalink: "/plaats-je-vacature/"
 bodyClass: "page wg-page"
 ---
 <section class="wg-section wg-pagehead">
   <div class="container">
     <p class="wg-eyebrow">Plaats je vacature</p>
-    <h1>Tien minuten. Daarna doen wij het werk.</h1>
-    <p class="wg-lead">Vraag je vacature aan. Binnen 1 werkdag bellen we voor een kick-off. Pas als we samen zeker weten dat het werkt, wordt het een opdracht.</p>
+    <h1>Kies je pakket. Daarna kiezen monteurs jou.</h1>
+    <p class="wg-lead">Vraag je vacature aan. Binnen 1 werkdag bellen we voor de kick-off. Daar leggen we de afspraak vast. Pas als we samen zeker weten dat het werkt, wordt het een opdracht.</p>
   </div>
 </section>
 
@@ -24,9 +24,16 @@ bodyClass: "page wg-page"
         <fieldset class="wg-step">
           <legend><span>1</span> Je keuzes</legend>
           <div class="wg-mini">
-            <p class="wg-mini__label">Looptijd</p>
-            <label class="wg-option wg-option--small"><input type="radio" name="looptijd" value="30" checked><span class="wg-option__body"><strong>Vacature, 30 dagen</strong></span><span class="wg-option__price">&euro;1.750 per vacature</span></label>
-            <label class="wg-option wg-option--small"><input type="radio" name="looptijd" value="doorlopend"><span class="wg-option__body"><strong>Jaarmodel, doorlopend</strong></span><span class="wg-option__price">&euro;1.200 p/m</span></label>
+            <p class="wg-mini__label">Pakket <small>per vacature per maand, bereik inbegrepen</small></p>
+            <label class="wg-option wg-option--small"><input type="radio" name="pakket" value="gezien"><span class="wg-option__body"><strong>Gezien</strong> <span>Monteurs die zoeken, komen jou tegen.</span></span><span class="wg-option__price" data-p="gezien">&euro;99 p/m</span></label>
+            <label class="wg-option wg-option--small"><input type="radio" name="pakket" value="basis"><span class="wg-option__body"><strong>Kandidaten</strong> <span>Reacties met video, jij kiest.</span></span><span class="wg-option__price" data-p="basis">&euro;499 p/m</span></label>
+            <label class="wg-option wg-option--small"><input type="radio" name="pakket" value="versneld" checked><span class="wg-option__body"><strong>Voorgeselecteerd</strong> <span>Aanbevolen. Voorselectie via WhatsApp, gesprek in je agenda.</span></span><span class="wg-option__price" data-p="versneld">&euro;999 p/m</span></label>
+            <label class="wg-option wg-option--small"><input type="radio" name="pakket" value="moeilijk"><span class="wg-option__body"><strong>Ontzorgd</strong> <span>Wij begeleiden tot de handtekening. Alleen per maand.</span></span><span class="wg-option__price" data-p="moeilijk">&euro;1.500 p/m</span></label>
+          </div>
+          <div class="wg-mini" id="betaling-wrap">
+            <p class="wg-mini__label">Betalen</p>
+            <label class="wg-option wg-option--small"><input type="radio" name="betaling" value="maand" checked><span class="wg-option__body"><strong>Per maand</strong> <span>Eerste 2 maanden vast, daarna maandelijks opzegbaar.</span></span><span class="wg-option__price">Standaard</span></label>
+            <label class="wg-option wg-option--small" id="jaar-optie"><input type="radio" name="betaling" value="jaar"><span class="wg-option__body"><strong>Per jaar</strong> <span>12 maanden.</span></span><span class="wg-option__price">10% korting</span></label>
             <div class="wg-qty"><label for="aantal">Aantal vacatures</label>
               <div class="wg-qty__ctrl"><button type="button" data-step="-1" aria-label="Minder">&minus;</button><input id="aantal" name="aantal" type="number" min="1" max="20" value="1" inputmode="numeric"><button type="button" data-step="1" aria-label="Meer">+</button></div></div>
           </div>
@@ -34,13 +41,7 @@ bodyClass: "page wg-page"
             <p class="wg-mini__label">Beeld</p>
             <label class="wg-option wg-option--small"><input type="radio" name="beeld" value="eigen" checked><span class="wg-option__body"><strong>Eigen beeld</strong></span><span class="wg-option__price">Inbegrepen</span></label>
             <label class="wg-option wg-option--small"><input type="radio" name="beeld" value="wij"><span class="wg-option__body"><strong>Wij maken het, op locatie</strong></span><span class="wg-option__price">&euro;3.000</span></label>
-            <label class="wg-check" id="termijnen-wrap" hidden><input type="checkbox" name="termijnen" value="ja"> In 12 maanden van &euro;250</label>
-          </div>
-          <div class="wg-mini">
-            <p class="wg-mini__label">Eerste selectie</p>
-            <label class="wg-option wg-option--small"><input type="radio" name="selectie" value="zelf" checked><span class="wg-option__body"><strong>Ik zelf</strong></span><span class="wg-option__price">Inbegrepen</span></label>
-            <label class="wg-option wg-option--small"><input type="radio" name="selectie" value="wij"><span class="wg-option__body"><strong>YoungDedicated</strong></span><span class="wg-option__price" id="selectie-prijs">&euro;495 per vacature</span></label>
-          </div>
+                      </div>
         </fieldset>
 
         <fieldset class="wg-step">
@@ -50,7 +51,7 @@ bodyClass: "page wg-page"
             <label>Werkplaats of regio<input name="plaats" required placeholder="Bijvoorbeeld Utrecht"></label>
             <label>Salaris per maand<input name="salaris" required placeholder="Bijvoorbeeld &euro;3.000 tot &euro;3.800"></label>
             <label>Uren per week<input name="uren" required placeholder="Bijvoorbeeld 32 tot 40"></label>
-            <label class="wg-fields__wide">Drie harde eisen <small>Hierop toetsen we wie gekwalificeerd is</small><input name="eisen" required placeholder="Bijvoorbeeld rijbewijs B, MBO 3 elektro, max 30 km reistijd"></label>
+            <label class="wg-fields__wide">Drie harde eisen <small>Hiermee schrijven we samen op wat een geschikte monteur is</small><input name="eisen" required placeholder="Bijvoorbeeld rijbewijs B, MBO 3 elektro, max 30 km reistijd"></label>
             <label class="wg-fields__wide">Waarom is werken bij jullie goed? <small>Wat zeggen je beste mensen als een vriend het vraagt?</small><textarea name="waarom" rows="4" required></textarea></label>
           </div>
           <div id="upload-wrap" class="wg-fields">
@@ -79,9 +80,9 @@ bodyClass: "page wg-page"
           </div>
           <div class="wg-next">
             <p class="wg-mini__label">Zo gaat het verder</p>
-            <p class="wg-next__step"><b class="wg-next__n">1</b><span><strong>Kick-off van 30 minuten</strong> binnen 1 werkdag. We checken samen of je vacature haalbaar is.</span></p>
+            <p class="wg-next__step"><b class="wg-next__n">1</b><span><strong>Kick-off van 30 minuten</strong> binnen 1 werkdag. We checken of je vacature haalbaar is en leggen de afspraak vast.</span></p>
             <p class="wg-next__step"><b class="wg-next__n">2</b><span><strong>Opdrachtbevestiging en factuur</strong> met betaallink. Hoe sneller je betaalt, hoe sneller je live bent.</span></p>
-            <p class="wg-next__step"><b class="wg-next__n">3</b><span><strong>Binnen 3 werkdagen je voorbeeld.</strong> Na jouw akkoord en je betaling gaan je vacaturepagina en campagne live.</span></p>
+            <p class="wg-next__step"><b class="wg-next__n">3</b><span><strong>Binnen 5 werkdagen live.</strong> Je keurt je werkgeverspagina en advertenties goed. Daarna kiezen monteurs jou.</span></p>
           </div>
           <label class="wg-check"><input type="checkbox" name="akkoord" value="ja" required> <span>Ik vraag mijn vacature aan en ga akkoord met de <a href="/algemene-voorwaarden/" target="_blank">algemene voorwaarden</a> en de <a href="/privacyverklaring/" target="_blank">privacyverklaring</a>.</span></label>
           <button class="button wg-order__submit" type="submit" data-cta="bestelling-verstuur-onder">Vraag mijn vacature aan</button>
@@ -97,7 +98,7 @@ bodyClass: "page wg-page"
           <li>Kick-off binnen 1 werkdag</li>
           <li>Factuur pas na de kick-off</li>
           <li>Geen kosten per aanname</li>
-          <li>Garantie op resultaat</li>
+          <li>Na 2 maanden maandelijks opzegbaar</li>
         </ul>
         <p class="wg-summary__small">Alle prijzen excl. btw. Vragen? Bel <a href="tel:+31850607714">085 0607 714</a>.</p>
       </aside>
