@@ -74,6 +74,14 @@
     addEvent: function (a, type, body) { window.YD_DEMO.events.push({ application_id: a.id, type: type, body: body, created_at: new Date().toISOString(), actor_name: S.profile.full_name }); return Promise.resolve(); },
     buy: function (vacId, cents) { var t = { id: 'b' + Date.now(), organization_id: S.orgId, vacancy_id: vacId, amount_cents: cents, type: 'bijgekocht', status: 'open', created_at: new Date().toISOString() }; window.YD_DEMO.budget.push(t); S.budget.push(t); return Promise.resolve(); },
     cv: function () { toast('Demo: hier opent het cv.'); return Promise.resolve(null); },
+    talent: function () { return Promise.resolve({ list: window.YD_DEMO.talent || [], picks: {} }); },
+    contact: function (t) { return Promise.resolve({ phone: t.phone, email: t.email }); },
+    pick: function (id, on) { return Promise.resolve(); },
+    messages: function (id) { return Promise.resolve(S.chats[id] || []); },
+    send: function (id, text) { var m = { from: 'wg', text: text, at: new Date().toISOString() }; (S.chats[id] = S.chats[id] || []).push(m); return Promise.resolve(m); },
+    interview: function (id, when) { return Promise.resolve(); },
+    pakketStop: function (v, undo) { var st = undo ? null : stopDate(v); v.opgezegd_per = st && st.toISOString(); return Promise.resolve(v.opgezegd_per); },
+    pakketSet: function (v, p) { v.pakket_next = p; return Promise.resolve(); },
     signOut: function () { sessionStorage.removeItem('yd-demo'); location.href = '/portaal/'; }
   } : {
     session: function () {
@@ -89,7 +97,7 @@
         sb.from('applications').select('*, candidate:candidates(first_name,last_name,email,phone,city,cv_path)').eq('organization_id', org).order('created_at', { ascending: false }),
         sb.from('campaign_stats_daily').select('*').eq('organization_id', org).order('date'),
         sb.from('budget_transactions').select('*').eq('organization_id', org)
-      ]).then(function (r) { return { vacancies: r[0].data || [], apps: r[1].data || [], stats: r[2].data || [], budget: r[3].data || [] }; });
+      ]).then(function (r) { (r[0].data || []).forEach(function (v) { v.opgezegd_per = v.pakket_stop; if (v.pakket_start) v.start_date = v.pakket_start; }); return { vacancies: r[0].data || [], apps: r[1].data || [], stats: r[2].data || [], budget: r[3].data || [] }; });
     },
     events: function (a) { return sb.from('application_events').select('*').eq('application_id', a.id).order('created_at').then(function (r) { return r.data || []; }); },
     setStage: function (a, stage) {
@@ -107,6 +115,39 @@
         return sb.from('budget_transactions').insert({ organization_id: S.orgId, vacancy_id: vacId, amount_cents: cents, type: 'bijgekocht', status: 'open', created_by: u.data.user.id }).select().single();
       }).then(function (r) { if (r.error) throw r.error; S.budget.push(r.data); });
     },
+    talent: function () {
+      return Promise.all([sb.rpc('talent_list'), sb.from('badges').select('*'), sb.from('talent_picks').select('talent_id').eq('organization_id', S.orgId)]).then(function (r) {
+        var B = {}; (r[1].data || []).forEach(function (b) { B[b.key] = b; });
+        var picks = {}; (r[2].data || []).forEach(function (x) { picks[x.talent_id] = true; });
+        var list = (r[0].data || []).map(function (t) {
+          return { id: t.id, first_name: t.first_name, last_initial: t.last_initial || '', city: t.city || '', km: null, role: t.role, kind: t.kind, years: t.years_experience || 0,
+            available: t.available || 'In overleg', quote: t.quote || '', video_sec: t.video_seconds || 30, created_at: t.created_at,
+            badges: (t.badges || []).filter(function (k) { return B[k]; }).map(function (k) { return { key: k, name: B[k].name, text: B[k].description }; }) };
+        });
+        return { list: list, picks: picks };
+      });
+    },
+    contact: function (t) { return sb.rpc('talent_contact', { tid: t.id }).then(function (r) { return (r.data && r.data[0]) || null; }); },
+    pick: function (id, on) {
+      return sb.auth.getUser().then(function (u) {
+        return on ? sb.from('talent_picks').insert({ organization_id: S.orgId, talent_id: id, picked_by: u.data.user.id }) : sb.from('talent_picks').delete().eq('organization_id', S.orgId).eq('talent_id', id);
+      }).then(function (r) { if (r.error) throw r.error; });
+    },
+    messages: function (id) {
+      return sb.from('talent_messages').select('*').eq('organization_id', S.orgId).eq('talent_id', id).order('created_at').then(function (r) {
+        return (r.data || []).map(function (m) { return { from: m.from_side === 'werkgever' ? 'wg' : 'm', text: m.body, at: m.created_at }; });
+      });
+    },
+    send: function (id, text) {
+      return sb.auth.getUser().then(function (u) { return sb.from('talent_messages').insert({ organization_id: S.orgId, talent_id: id, from_side: 'werkgever', body: text, sender_id: u.data.user.id }); })
+        .then(function (r) { if (r.error) throw r.error; var m = { from: 'wg', text: text, at: new Date().toISOString() }; (S.chats[id] = S.chats[id] || []).push(m); return m; });
+    },
+    interview: function (id, when) {
+      return sb.auth.getUser().then(function (u) { return sb.from('talent_interviews').insert({ organization_id: S.orgId, talent_id: id, starts_at: when.toISOString(), created_by: u.data.user.id }); })
+        .then(function (r) { if (r.error) throw r.error; });
+    },
+    pakketStop: function (v, undo) { return sb.rpc('pakket_opzeggen', { vid: v.id, undo: !!undo }).then(function (r) { if (r.error) throw r.error; v.pakket_stop = r.data; v.opgezegd_per = r.data; return r.data; }); },
+    pakketSet: function (v, p) { return sb.rpc('pakket_wijzigen', { vid: v.id, p: p }).then(function (r) { if (r.error) throw r.error; v.pakket_next = p; }); },
     cv: function (path) { return sb.storage.from('cvs').createSignedUrl(path, 120).then(function (r) { return r.data && r.data.signedUrl; }); },
     signOut: function () { sb.auth.signOut().then(function () { location.href = '/portaal/'; }); }
   };
@@ -618,19 +659,32 @@
     S.vacancies.forEach(function (v) { var p = pakketOf(v); if (p && v.status === 'live' && !v.opgezegd_per && (!best || p.price > best.price)) best = p; });
     return best;
   }
+  function stopDate(v) { var minTo = addMonths(v.start_date || new Date().toISOString(), 2), n = new Date(), eom = new Date(n.getFullYear(), n.getMonth() + 1, 0); return minTo > eom ? minTo : eom; }
   function addMonths(iso, n) { var d = new Date(iso); d.setMonth(d.getMonth() + n); return d; }
   function dday(d) { return new Date(d).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' }); }
   function tName(t) { return t.first_name + ' ' + t.last_initial + '.'; }
   function tHours(t) { return hoursSince(t.created_at); }
   function tVisible(t, pk) { return tHours(t) >= EARLY_H || (pk && pk.early); }
-  function maskPhone(p) { return String(p).replace(/\d(?=[\d ]{0,9}$)/g, '•').replace(/^06 ••/, '06 ••'); }
   function videoTile(t, big) {
     return '<div class="tvid' + (big ? ' tvid--big' : '') + '" role="img" aria-label="Video van ' + esc(tName(t)) + '"><span class="tvid__ini">' + esc(t.first_name.charAt(0) + t.last_initial) + '</span>' +
       '<span class="tvid__play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span><span class="tvid__len">0:' + t.video_sec + '</span></div>';
   }
+  function openTalent(id) {
+    S.tOpen = id; S.tTab = 'profiel'; S.tSlot = 0; modal = 'talent'; S.tContact = S.tContact || {};
+    var t = (S.talent || []).find(function (x) { return x.id === id; });
+    render();
+    if (!t || !activePakket()) return;
+    api.contact(t).then(function (c) { S.tContact[id] = c || {}; if (modal === 'talent' && S.tOpen === id) render(); });
+    if (!demo) api.messages(id).then(function (m) { S.chats[id] = m; if (modal === 'talent' && S.tOpen === id) render(); });
+  }
+  function slotDate(i) {
+    var d = new Date(), n = 0;
+    while (true) { d = new Date(d.getTime() + 864e5); if (d.getDay() === 0 || d.getDay() === 6) continue; if (n === i) break; n++; }
+    d.setHours(i === 1 ? 14 : 10, 0, 0, 0); return d;
+  }
   function viewTalent() {
-    var D = window.YD_DEMO, pk = activePakket(), kinds = ['all', 'Installatie', 'Elektro', 'Montage'];
-    var all = (D.talent || []).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+    var pk = activePakket(), kinds = ['all', 'Installatie', 'Elektro', 'Montage'];
+    var all = (S.talent || []).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
     var list = all.filter(function (t) { return S.tKind === 'all' ? true : S.tKind === 'gekozen' ? S.picked[t.id] : t.kind === S.tKind; });
     var nPicked = Object.keys(S.picked).filter(function (k) { return S.picked[k]; }).length;
     var h = '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>Monteurs</h1><p class="sub">Hier kiest de monteur. Jij kiest wie je spreekt.</p></div>' +
@@ -652,11 +706,12 @@
     return h;
   }
   function modalTalent() {
-    var t = (window.YD_DEMO.talent || []).find(function (x) { return x.id === S.tOpen; }); if (!t) return '';
+    var t = (S.talent || []).find(function (x) { return x.id === S.tOpen; }); if (!t) return '';
     var pk = activePakket(), chat = S.chats[t.id] || [], tab = S.tTab;
+    var ct = S.tContact && S.tContact[t.id];
     var contact = pk
-      ? '<div class="row"><a class="btn btn--green btn--sm" href="tel:' + esc(t.phone) + '">' + I.phone + esc(t.phone) + '</a><a class="btn btn--ghost btn--sm" href="mailto:' + esc(t.email) + '">' + I.mail + 'Mail</a></div>'
-      : '<div class="tlock"><span>' + esc(maskPhone(t.phone)) + '</span><span>' + esc(t.email.replace(/^[^@]+/, '••••••')) + '</span><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket om contact te zien</a></div>';
+      ? (ct ? '<div class="row">' + (ct.phone ? '<a class="btn btn--green btn--sm" href="tel:' + esc(ct.phone) + '">' + I.phone + esc(ct.phone) + '</a><a class="btn btn--sm" style="background:#25d366" href="https://wa.me/' + intlPhone(ct.phone) + '" target="_blank" rel="noopener">' + I.wa + 'WhatsApp</a>' : '') + (ct.email ? '<a class="btn btn--ghost btn--sm" href="mailto:' + esc(ct.email) + '">' + I.mail + 'Mail</a>' : '') + '</div>' : '<p class="hint">Contactgegevens laden...</p>')
+      : '<div class="tlock"><span>06 •• •• •• ••</span><span>••••••@••••••.nl</span><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket om contact te zien</a></div>';
     var h = '<div class="scrim" data-action="close"></div><div class="modal modal--wide tmodal" role="dialog" aria-modal="true" aria-label="' + esc(tName(t)) + '">' +
       '<button class="icon-btn drawer__close" data-action="close" aria-label="Sluiten">' + I.close + '</button>' + videoTile(t, true) +
       '<h2 style="margin-top:16px">' + esc(tName(t)) + '</h2><p class="hint">' + esc(t.role) + ' · ' + esc(t.city) + ' · ' + t.km + ' km · ' + t.years + ' jaar ervaring · start ' + esc(t.available.toLowerCase()) + '</p>' +
@@ -669,7 +724,7 @@
     } else if (!pk) {
       h += '<div class="card tsub tlock"><p><b>Chat en agenda openen met een pakket.</b> Zo weet de monteur dat er een echte werkgever aan de andere kant zit.</p><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket</a></div>';
     } else if (tab === 'chat') {
-      h += '<div class="card tsub"><div class="tchat">' + (chat.length ? chat.map(function (m) { return '<p class="tmsg tmsg--' + m.from + '">' + esc(m.text) + '<small>' + esc(m.at) + '</small></p>'; }).join('') : '<p class="hint">Stuur ' + esc(t.first_name) + ' een eerste bericht. Kort en eerlijk werkt het best.</p>') + '</div>' +
+      h += '<div class="card tsub"><div class="tchat">' + (chat.length ? chat.map(function (m) { return '<p class="tmsg tmsg--' + m.from + '">' + esc(m.text) + '<small>' + esc(/T/.test(m.at) ? fdate(m.at) : m.at) + '</small></p>'; }).join('') : '<p class="hint">Stuur ' + esc(t.first_name) + ' een eerste bericht. Kort en eerlijk werkt het best.</p>') + '</div>' +
         '<div class="row tchat__in"><input id="tmsg" type="text" placeholder="Hoi ' + esc(t.first_name) + ', ik zag je video..." autocomplete="off"><button class="btn btn--sm" data-action="tsend" data-id="' + t.id + '">Stuur</button></div></div>';
     } else {
       h += '<div class="card tsub"><p class="card__label">Kies een moment</p><div class="row">' + SLOTS.map(function (sl, i) { return '<button class="chip" data-action="tslot" data-v="' + i + '" aria-pressed="' + (S.tSlot === i) + '">' + sl + '</button>'; }).join('') + '</div>' +
@@ -680,13 +735,13 @@
   function pakketCard(v) {
     var pk = pakketOf(v); if (!pk) return '';
     var start = v.start_date || new Date().toISOString(), minTo = addMonths(start, 2), canStop = Date.now() >= minTo.getTime();
-    var stopAt = canStop ? addMonths(new Date(), 1) : minTo;
+    var stopAt = stopDate(v);
     var h = '<div class="card section"><div class="row" style="justify-content:space-between"><p class="card__label" style="margin:0">Pakket</p>' + (v.opgezegd_per ? '<span class="pill pill--gepauzeerd">Opgezegd</span>' : '<span class="pill pill--live">Loopt</span>') + '</div>' +
       '<p class="big" style="margin-top:8px">' + pk.name + ' <small>' + eur(pk.price) + ' per maand, alles inbegrepen</small></p>' +
       '<div class="money-row"><span>Gestart</span><b>' + dday(start) + '</b></div><div class="money-row"><span>Minimaal tot</span><b>' + dday(minTo) + '</b></div>' +
       (v.opgezegd_per ? '<div class="money-row"><span>Stopt op</span><b>' + dday(v.opgezegd_per) + '</b></div><p><button class="btn btn--ghost btn--sm" data-action="pkundo" data-id="' + v.id + '">Toch doorgaan</button></p>'
-        : (demo ? '<p class="hint">Wijzig je pakket per volgende maand:</p><div class="row">' + Object.keys(PAKKETTEN).map(function (k) { return '<button class="chip" data-action="pkset" data-id="' + v.id + '" data-v="' + k + '" aria-pressed="' + (v.pakket === k) + '">' + PAKKETTEN[k].name + ' · ' + eur(PAKKETTEN[k].price) + '</button>'; }).join('') + '</div>' : '') +
-          '<p class="hint">Stoel gevuld? Zeg op met één knop. ' + (canStop ? 'Je pakket stopt dan op ' + dday(stopAt) + '.' : 'Dat kan per ' + dday(minTo) + ', na de eerste 2 maanden.') + '</p><p><button class="btn btn--red btn--sm" data-action="pkstop" data-id="' + v.id + '" data-at="' + stopAt.toISOString() + '">Opzeggen</button></p>') +
+        : ('<p class="hint">Wijzig je pakket per volgende maand' + (v.pakket_next && v.pakket_next !== v.pakket ? ' (gepland: ' + PAKKETTEN[v.pakket_next].name + ')' : '') + ':</p><div class="row">' + Object.keys(PAKKETTEN).map(function (k) { return '<button class="chip" data-action="pkset" data-id="' + v.id + '" data-v="' + k + '" aria-pressed="' + ((v.pakket_next || v.pakket) === k) + '">' + PAKKETTEN[k].name + ' · ' + eur(PAKKETTEN[k].price) + '</button>'; }).join('') + '</div>') +
+          '<p class="hint">Stoel gevuld? Zeg op met één knop. ' + (canStop ? 'Je pakket stopt dan op ' + dday(stopAt) + '.' : 'Dat kan per ' + dday(minTo) + ', na de eerste 2 maanden.') + '</p><p><button class="btn btn--red btn--sm" data-action="pkstop" data-id="' + v.id + '">Opzeggen</button></p>') +
       '</div>';
     return h;
   }
@@ -820,23 +875,30 @@
       toast('Gefeliciteerd. De werkgever krijgt ' + eur(Math.round(pp.fee_cents * 0.2)) + ' tegoed.'); return render();
     }
     if (act === 'tkind') { S.tKind = t.dataset.id; return render(); }
-    if (act === 'topen') { S.tOpen = t.dataset.id; S.tTab = 'profiel'; S.tSlot = 0; modal = 'talent'; return render(); }
+    if (act === 'topen') return openTalent(t.dataset.id);
     if (act === 'ttab') { S.tTab = t.dataset.id; return render(); }
-    if (act === 'tpick') { S.picked[t.dataset.id] = !S.picked[t.dataset.id]; toast(S.picked[t.dataset.id] ? 'Gekozen. Je vindt deze monteur onder Gekozen.' : 'Uit je keuze gehaald.'); return render(); }
+    if (act === 'tpick') {
+      if (!activePakket()) { toast('Kiezen kan met een lopend pakket.'); return; }
+      var on = !S.picked[t.dataset.id];
+      return api.pick(t.dataset.id, on).then(function () { S.picked[t.dataset.id] = on; toast(on ? 'Gekozen. Je vindt deze monteur onder Gekozen.' : 'Uit je keuze gehaald.'); render(); }).catch(function () { toast('Opslaan mislukt.'); });
+    }
     if (act === 'tslot') { S.tSlot = +t.dataset.v; return render(); }
     if (act === 'tsend' || act === 'tinvite') {
-      var tt = window.YD_DEMO.talent.find(function (x) { return x.id === t.dataset.id; }), now = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
-      var txt = act === 'tinvite' ? 'Uitnodiging voor een kennismaking: ' + SLOTS[S.tSlot || 0] + '.' : ((document.getElementById('tmsg') || {}).value || '').trim();
+      var tt = (S.talent || []).find(function (x) { return x.id === t.dataset.id; }); if (!tt) return;
+      var slot = SLOTS[S.tSlot || 0], txt = act === 'tinvite' ? 'Uitnodiging voor een kennismaking: ' + slot + '.' : ((document.getElementById('tmsg') || {}).value || '').trim();
       if (!txt) return;
-      var th = S.chats[tt.id] = S.chats[tt.id] || []; th.push({ from: 'wg', text: txt, at: now }); S.picked[tt.id] = true;
-      if (act === 'tinvite') { S.tTab = 'chat'; toast('Uitnodiging verstuurd aan ' + tt.first_name); }
-      render();
-      setTimeout(function () { th.push({ from: 'm', text: act === 'tinvite' ? 'Bevestigd. Tot dan!' : 'Hoi, dank voor je bericht. Ik bel je vanavond even, past dat?', at: new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) }); if (modal === 'talent') render(); }, 1400);
-      return;
+      var done = function () {
+        if (!S.picked[tt.id]) api.pick(tt.id, true).then(function () { S.picked[tt.id] = true; render(); }).catch(function () {});
+        if (act === 'tinvite') { S.tTab = 'chat'; toast('Uitnodiging verstuurd aan ' + tt.first_name); }
+        render();
+        if (demo) setTimeout(function () { (S.chats[tt.id] = S.chats[tt.id] || []).push({ from: 'm', text: act === 'tinvite' ? 'Bevestigd. Tot dan!' : 'Hoi, dank voor je bericht. Ik bel je vanavond even, past dat?', at: new Date().toISOString() }); if (modal === 'talent') render(); }, 1400);
+      };
+      var pr = act === 'tinvite' ? api.interview(tt.id, slotDate(S.tSlot || 0)).then(function () { return api.send(tt.id, txt); }) : api.send(tt.id, txt);
+      return pr.then(done).catch(function () { toast('Versturen mislukt. Probeer het opnieuw.'); });
     }
-    if (act === 'pkset') { var pv = vac(t.dataset.id); pv.pakket = t.dataset.v; toast('Pakket ' + PAKKETTEN[pv.pakket].name + ' gaat in per volgende maand.'); return render(); }
-    if (act === 'pkstop') { var sv = vac(t.dataset.id); sv.opgezegd_per = t.dataset.at; toast('Opgezegd. Je pakket stopt op ' + dday(sv.opgezegd_per) + '.'); return render(); }
-    if (act === 'pkundo') { vac(t.dataset.id).opgezegd_per = null; toast('Je pakket loopt door.'); return render(); }
+    if (act === 'pkset') { var pv = vac(t.dataset.id), np = t.dataset.v; return api.pakketSet(pv, np).then(function () { toast('Pakket ' + PAKKETTEN[np].name + ' gaat in per volgende maand.'); render(); }).catch(function () { toast('Wijzigen mislukt. Mail team@youngdedicated.nl.'); }); }
+    if (act === 'pkstop') { var sv = vac(t.dataset.id); return api.pakketStop(sv, false).then(function () { toast('Opgezegd. Je pakket stopt op ' + dday(sv.opgezegd_per) + '.'); render(); }).catch(function () { toast('Opzeggen mislukt. Mail team@youngdedicated.nl.'); }); }
+    if (act === 'pkundo') { var uv = vac(t.dataset.id); return api.pakketStop(uv, true).then(function () { uv.opgezegd_per = null; toast('Je pakket loopt door.'); render(); }).catch(function () { toast('Opslaan mislukt.'); }); }
     if (act === 'logout') return api.signOut();
     if (act === 'demo') { sessionStorage.setItem('yd-demo', '1'); location.reload(); }
   });
@@ -849,7 +911,7 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && (S.open || modal)) { S.open = null; modal = null; render(); }
     if (e.key === 'Enter' && e.target.matches('.person')) openApp(e.target.dataset.id);
-    if (e.key === 'Enter' && e.target.matches('.tcard[data-id]')) { S.tOpen = e.target.dataset.id; S.tTab = 'profiel'; modal = 'talent'; render(); }
+    if (e.key === 'Enter' && e.target.matches('.tcard[data-id]')) openTalent(e.target.dataset.id);
     if (e.key === 'Enter' && e.target.id === 'tmsg') { var sb2 = app.querySelector('[data-action=tsend]'); if (sb2) sb2.click(); }
   });
   window.addEventListener('hashchange', function () { S.open = null; modal = null; render(); window.scrollTo(0, 0); });
@@ -876,6 +938,7 @@
   function loadOrg() {
     return api.load(S.orgId).then(function (d) {
       Object.assign(S, d);
+      api.talent().then(function (t) { S.talent = t.list; if (!demo) S.picked = t.picks; if (route() === 'monteurs') render(); }).catch(function () { S.talent = []; });
       if (demo && S.tour == null && !S.tourChecked) { S.tourChecked = true; var seen = '1'; try { seen = localStorage.getItem('yd-tour-v1'); } catch (e) {} if (!seen) { S.tour = 0; location.hash = '#/vandaag'; } }
       render();
     });
