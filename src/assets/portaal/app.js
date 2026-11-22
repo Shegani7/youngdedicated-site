@@ -437,8 +437,8 @@
   }
   var PLANS = [
     { key: 'basis', name: 'Kandidaten', price: 49900, unit: 'p/m', note: 'Reacties met video, jij kiest en belt. Met de afspraak' },
-    { key: 'versneld', name: 'Voorgeselecteerd', price: 75000, unit: 'p/m', note: 'Voorselectie via WhatsApp, wij bellen binnen 5 minuten, gesprek in je agenda' },
-    { key: 'moeilijk', name: 'Ontzorgd', price: 125000, unit: 'p/m', note: 'Wij doen alles tot de handtekening onder het contract' }
+    { key: 'versneld', name: 'Voorgeselecteerd', price: 99900, unit: 'p/m', note: 'Voorselectie via WhatsApp, wij bellen binnen 5 minuten, gesprek in je agenda' },
+    { key: 'moeilijk', name: 'Ontzorgd', price: 150000, unit: 'p/m', note: 'Wij doen alles tot de handtekening onder het contract' }
   ];
   function planOf(key) { return PLANS.find(function (x) { return x.key === key; }) || PLANS[0]; }
   function modalWizard() {
@@ -448,7 +448,7 @@
     if (step === 2) h += '<h2>Welk pakket past bij de functie?</h2><div class="packs">' +
       PLANS.map(function (pl) { return '<button class="pack" data-action="wset" data-k="plan" data-v="' + pl.key + '" aria-pressed="' + (w.plan === pl.key) + '"><span><b>' + pl.name + '</b><small>' + pl.note + '</small></span><span>' + eur(pl.price) + ' ' + pl.unit + '</span></button>'; }).join('') + '</div>' +
       '<div class="money-row"><span>Pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>inbegrepen</b></div><div class="money-row"><span>Bereik</span><b>inbegrepen</b></div>' +
-      '<p class="hint">Eerste 2 maanden vast, daarna maandelijks opzegbaar. Stoel gevuld? Dan stop je.</p>';
+      '<p class="hint">Per maand: eerste 2 maanden vast, daarna maandelijks opzegbaar. Per jaar: 10% korting. Ontzorgd loopt per maand en stopt bij de handtekening. Met de afspraak.</p>';
     if (step === 3) {
       var once = (w.selection ? PRICE.selectie : 0) + (w.beeld ? PRICE.beeld : 0);
       h += '<h2>Wat mogen wij nog doen?</h2><div class="packs">' +
@@ -648,8 +648,8 @@
   /* ---------- monteurs: pakketten en kandidatenbak (fase 1 blauwdruk) ---------- */
   var PAKKETTEN = {
     basis: { key: 'basis', name: 'Kandidaten', price: 49900, note: 'Reacties met video, jij kiest', early: false },
-    versneld: { key: 'versneld', name: 'Voorgeselecteerd', price: 75000, note: 'Wij selecteren voor en plannen het gesprek', early: true },
-    moeilijk: { key: 'moeilijk', name: 'Ontzorgd', price: 125000, note: 'Wij doen alles tot de handtekening', early: true }
+    versneld: { key: 'versneld', name: 'Voorgeselecteerd', price: 99900, note: 'Wij selecteren voor en plannen het gesprek', early: true },
+    moeilijk: { key: 'moeilijk', name: 'Ontzorgd', price: 150000, note: 'Wij doen alles tot de handtekening', early: true }
   };
   var EARLY_H = 48;
   function pakketOf(v) { return v && v.pakket ? PAKKETTEN[v.pakket] : null; }
@@ -694,7 +694,7 @@
       (demo ? '<label class="hint tswitch"><input type="checkbox" data-action="nopack"' + (S.noPack ? ' checked' : '') + '> Bekijk zonder pakket</label>' : '') + '</div>';
     h += pk
       ? '<div class="card card--dark tband"><div><p class="card__label">Pakket ' + pk.name + ' loopt</p><p>Solliciteer bij monteurs die je aanspreken. Zegt de monteur ja, dan zie je het nummer en plan je een gesprek.' + (pk.early ? ' Nieuwe monteurs zie je ' + EARLY_H + ' uur eerder dan bij Kandidaten.' : '') + '</p></div></div>'
-      : '<div class="card tband tband--lock"><div><p class="card__label">Geen pakket actief</p><p>' + all.length + ' monteurs zoeken nu werk. Kijk gerust rond. Met Gezien (&euro;75 p/m) kunnen monteurs bij jou solliciteren. Zelf monteurs benaderen kan vanaf Kandidaten.</p></div><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket</a></div>';
+      : '<div class="card tband tband--lock"><div><p class="card__label">Geen pakket actief</p><p>' + all.length + ' monteurs zoeken nu werk. Kijk gerust rond. Met Gezien (&euro;99 p/m) kunnen monteurs bij jou solliciteren. Zelf monteurs benaderen kan vanaf Kandidaten.</p></div><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket</a></div>';
     h += '<div class="chips">' + kinds.map(function (k) { return '<button class="chip" data-action="tkind" data-id="' + k + '" aria-pressed="' + (S.tKind === k) + '">' + (k === 'all' ? 'Alle monteurs' : k) + '<span class="n">' + all.filter(function (t) { return k === 'all' || t.kind === k; }).length + '</span></button>'; }).join('') +
       '<button class="chip" data-action="tkind" data-id="gekozen" aria-pressed="' + (S.tKind === 'gekozen') + '">Gesolliciteerd<span class="n">' + nPicked + '</span></button></div>';
     h += '<div class="tgrid">' + list.map(function (t) {
@@ -741,7 +741,7 @@
     return h + '</div>';
   }
   function afspraakCard(v) {
-    if (!v || v.pakket !== 'basis') return '';
+    if (!v || !v.pakket || v.pakket === 'gezien') return '';
     var start = new Date(v.start_date || v.created_at || Date.now()), m1 = addMonths(start, 1), apps = S.apps.filter(function (a) { return a.vacancy_id === v.id; });
     var fit = apps.filter(function (a) { return ['geschikt', 'gesprek', 'aanbod', 'aangenomen'].indexOf(a.stage) > -1; }).length;
     var rt = demo ? 3 : null, ok = function (b) { return b ? '<b style="color:var(--green-d,#0a8f6a)">&#10003;</b>' : '<b style="color:var(--gold-d,#8a7430)">&bull;</b>'; };
