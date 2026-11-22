@@ -13,7 +13,7 @@
 
   var demo = /[?&]demo\b/.test(location.search) || sessionStorage.getItem('yd-demo') === '1';
   var sb = !demo && window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
-  var S = { seenAt: Date.now() - 864e5, tour: null, profile: null, orgs: [], orgId: null, vacancies: [], apps: [], stats: [], budget: [], vacFilter: 'all', mStage: 'nieuw', open: null, events: [], as: 'klant', wiz: null, poolFit: 'all', claim: null };
+  var S = { seenAt: Date.now() - 864e5, tour: null, profile: null, orgs: [], orgId: null, vacancies: [], apps: [], stats: [], budget: [], vacFilter: 'all', mStage: 'nieuw', open: null, events: [], as: 'klant', wiz: null, poolFit: 'all', claim: null, tKind: 'all', tOpen: null, tTab: 'profiel', tSlot: 0, picked: {}, chats: {}, noPack: false };
   var PRICE = { vacature: 175000, jaar: 120000, budgetVac: 75000, budgetJaar: 60000, selectie: 49500, beeld: 300000 };
   var app = document.getElementById('app');
 
@@ -49,6 +49,7 @@
     people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/></svg>',
     chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>',
     bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>',
+    spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg>',
     brief: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>'
   };
 
@@ -130,10 +131,10 @@
   /* ---------- shell ---------- */
   function routeParts() { return (location.hash.replace('#/', '') || '').split('/'); }
   function route() { return routeParts()[0] || (S.as === 'recruiter' ? 'pool' : 'vandaag'); }
-  var NAV_KLANT = [['vandaag', 'Vandaag', I.home], ['kandidaten', 'Kandidaten', I.people], ['resultaten', 'Resultaten', I.chart], ['vacatures', 'Vacatures', I.brief]];
+  var NAV_KLANT = [['vandaag', 'Vandaag', I.home], ['monteurs', 'Monteurs', I.spark], ['kandidaten', 'Kandidaten', I.people], ['resultaten', 'Resultaten', I.chart], ['vacatures', 'Vacatures', I.brief]];
   function navItems() {
     if (S.as === 'recruiter') return [['pool', 'Kandidatenpool', I.people], ['plaatsingen', 'Mijn plaatsingen', I.brief]];
-    if (S.as === 'yd') return [['cockpit', 'Cockpit', I.chart]].concat(NAV_KLANT.slice(0, 3));
+    if (S.as === 'yd') return [['cockpit', 'Cockpit', I.chart]].concat(NAV_KLANT.slice(0, 4));
     return NAV_KLANT;
   }
   function shell(inner) {
@@ -190,7 +191,7 @@
           (selYD ? '<p class="muted">Selectie uitbesteed. YoungDedicated belt iedereen binnen 24 uur en zet geschikte mensen klaar voor jou.</p>' : '<p class="muted">Bel binnen 24 uur. Dan is de sollicitant nog warm.</p>') +
           (late.length && !selYD ? '<p style="margin-top:14px"><a class="btn btn--gold btn--sm" href="mailto:team@youngdedicated.nl?subject=' + encodeURIComponent('Selectie uitbesteden: wil YoungDedicated onze sollicitanten bellen?') + '">Geen tijd? Wij doen de selectie</a></p>' : '') + '</div>' +
         '<div class="card"><p class="card__label">Campagne</p><p class="big">' + eur(m.cpa) + ' <small>per sollicitant</small></p>' +
-          '<div class="bar-legend"><span>Mediabudget inbegrepen</span><span>' + m.apps + ' sollicitanten</span></div></div>' +
+          '<div class="bar-legend"><span>Bereik inbegrepen</span><span>' + m.apps + ' sollicitanten</span></div></div>' +
         '<div class="card"><p class="card__label">Garantie</p><p class="big">' + m.qual + ' <small>van ' + target + ' geschikt</small></p>' +
           '<div class="bar bar--green"><span style="width:' + Math.min(100, Math.round(m.qual / target * 100)) + '%"></span></div>' +
           '<div class="bar-legend"><span>' + (m.qual >= target ? 'Doel gehaald' : 'Nog ' + (target - m.qual) + ' te gaan') + '</span><span>' + (day ? (day <= 30 ? 'Garantiecheck dag 30, nu dag ' + day : 'Dag ' + day + ' van 60') : 'Jaarmodel') + '</span></div></div>' +
@@ -257,7 +258,7 @@
         (S.vacancies.some(function (v) { return v.plan === 'vacature'; }) ?
           '<div class="money-row"><span>Vacature, eenmalig</span><b>' + eur(PRICE.vacature) + '</b></div>' +
           '' : '') +
-        '<div class="money-row"><span>Mediabudget</span><b>inbegrepen</b></div>' +
+        '<div class="money-row"><span>Bereik</span><b>inbegrepen</b></div>' +
         '<div class="money-row"><span>Ingezet in advertenties (Facebook en Instagram)</span><b>' + eur(m.spend) + '</b></div>' +
         (m.pending ? '<div class="money-row"><span>Extra budget, wacht op betaling</span><b>' + eur(m.pending) + '</b></div>' : '') +
         '<p style="margin-top:16px"><button class="btn btn--gold btn--block" data-action="buy">Meer reacties? Verhoog je budget</button></p></div>' +
@@ -285,7 +286,7 @@
     h += S.vacancies.map(function (v) {
       var m = metrics(v.id), day = vacDay(v);
       return '<a class="card vac vac--link" href="#/vacatures/' + v.id + '"><div class="vac__main"><span class="pill pill--' + v.status + '">' + esc(v.status) + '</span>' +
-        '<p class="vac__title" style="margin-top:8px">' + esc(v.title) + '</p><p class="hint" style="margin:2px 0 0">' + esc(v.location || '') + ' · ' + (v.status === 'concept' ? 'Aanvraag ingediend' : day ? 'Dag ' + day + ' van 60' : 'Jaarmodel') + (v.selection_by_yd ? ' · Selectie door ons' : '') + '</p></div>' +
+        '<p class="vac__title" style="margin-top:8px">' + esc(v.title) + '</p><p class="hint" style="margin:2px 0 0">' + esc(v.location || '') + ' · ' + (v.status === 'concept' ? 'Aanvraag ingediend' : pakketOf(v) ? 'Pakket ' + pakketOf(v).name + (v.opgezegd_per ? ', opgezegd' : '') : day ? 'Dag ' + day + ' van 60' : 'Jaarmodel') + (v.selection_by_yd ? ' · Selectie door ons' : '') + '</p></div>' +
         '<div class="row"><div class="kpi"><span>Sollicitanten</span><b>' + m.apps + '</b></div><div class="kpi"><span>Geschikt</span><b>' + m.qual + '</b></div><div class="kpi"><span>Besteed</span><b>' + eur(m.spend) + '</b></div></div>' +
         '<span class="vac__go" aria-hidden="true">&rsaquo;</span></a>';
     }).join('');
@@ -295,9 +296,9 @@
     var v = vac(id); if (!v.id) return viewVacancies();
     var m = metrics(id), day = vacDay(v);
     var steps = v.milestones || [{ label: 'Aanvraag', done: true }, { label: 'Kick-off', done: v.status !== 'concept' }, { label: 'Betaald', done: v.status !== 'concept' }, { label: 'Live', done: v.status === 'live' || v.status === 'vervuld' }, { label: 'Vervuld', done: v.status === 'vervuld' }];
-    var h = '<p><a class="hint" href="#/vacatures">&lsaquo; Alle vacatures</a></p><h1>' + esc(v.title) + '</h1><p class="sub">' + esc(v.location || '') + ' · ' + (day ? 'Dag ' + day + ' van 60, garantiecheck op dag 30' : v.plan === 'jaar' ? 'Jaarmodel, doorlopend' : '') + '</p>';
+    var h = '<p><a class="hint" href="#/vacatures">&lsaquo; Alle vacatures</a></p><h1>' + esc(v.title) + '</h1><p class="sub">' + esc(v.location || '') + ' · ' + (pakketOf(v) ? 'Pakket ' + pakketOf(v).name + ', ' + eur(pakketOf(v).price) + ' per maand' : day ? 'Dag ' + day + ' van 60, garantiecheck op dag 30' : v.plan === 'jaar' ? 'Jaarmodel, doorlopend' : '') + '</p>';
     h += '<div class="card"><ol class="stepper">' + steps.map(function (st, i) { var cur = !st.done && (i === 0 || steps[i - 1].done); return '<li class="' + (st.done ? 'done' : cur ? 'cur' : '') + '"><span>' + (st.done ? '&#10003;' : i + 1) + '</span>' + st.label + '</li>'; }).join('') + '</ol>' +
-      journeyHint(v, steps) + '</div>' + (v.status === 'live' ? guarantee(v, m, day) : '');
+      journeyHint(v, steps) + '</div>' + (pakketOf(v) ? pakketCard(v) : v.status === 'live' ? guarantee(v, m, day) : '');
     h += '<div class="kpis section"><div class="kpi"><span>Sollicitanten</span><b>' + m.apps + '</b></div><div class="kpi"><span>Geschikt</span><b>' + m.qual + '</b></div><div class="kpi"><span>Aangenomen</span><b>' + m.hired + '</b></div><div class="kpi"><span>Besteed</span><b>' + eur(m.spend) + '</b></div><div class="kpi kpi--hl"><span>Per geschikte kandidaat</span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b></div></div>';
     var ch = v.channels || [];
     if (ch.length) {
@@ -375,7 +376,7 @@
       '<div class="card section"><p class="card__label">Per dag</p>' + chart('all') + '</div>' +
       '<div class="grid grid-2 section"><div class="card"><p class="card__label">Van bereik naar aanname</p><div class="funnel">' + funnelRows(m) + '</div></div>' +
       '<div class="card"><p class="card__label">Bronnen</p>' + Object.keys(src).sort(function (a, b) { return src[b] - src[a]; }).map(function (k) { return '<div class="money-row"><span>' + esc(k) + '</span><b>' + src[k] + '</b></div>'; }).join('') +
-      '<div class="money-row"><span>Mediabudget</span><b>inbegrepen</b></div><div class="money-row"><span>Besteed</span><b>' + eur(m.spend) + '</b></div></div></div>' +
+      '<div class="money-row"><span>Bereik</span><b>inbegrepen</b></div><div class="money-row"><span>Besteed</span><b>' + eur(m.spend) + '</b></div></div></div>' +
       (hires.length ? '<div class="card section"><p class="card__label">Aangenomen</p>' + hires.map(function (a) { return '<div class="money-row"><span>' + esc(name(a)) + '</span><b>' + esc(vac(a.vacancy_id).title || '') + '</b></div>'; }).join('') + '</div>' : '') +
       '<div class="card card--dark section"><p class="card__label">Volgende maand</p><ul class="must must--dark">' + next.map(function (x) { return '<li class="ok">' + esc(x) + '</li>'; }).join('') + '</ul></div>' +
       '<p class="hint section">YoungDedicated · team@youngdedicated.nl · Cijfers uit Meta en het kandidatensysteem.</p></div>';
@@ -394,24 +395,25 @@
       '<div class="row"><button class="btn btn--ghost btn--sm" data-action="tour-end">Overslaan</button><button class="btn btn--gold btn--sm" data-action="tour-next">' + (i === TOUR.length - 1 ? 'Aan de slag' : 'Volgende') + '</button></div></div>';
   }
   var PLANS = [
-    { key: 'vacature', name: 'Vacature', price: PRICE.vacature, unit: 'eenmalig', note: '30 dagen vol gas, plus 30 dagen garantie' },
-    { key: 'jaar', name: 'Jaarmodel', price: PRICE.jaar, unit: 'p/m', note: '€14.400 per jaar, je bespaart €6.600' }
+    { key: 'basis', name: 'Basis', price: 49900, unit: 'p/m', note: 'Monteur of servicetechnicus in de regio' },
+    { key: 'versneld', name: 'Versneld', price: 75000, unit: 'p/m', note: 'Krappe functie of haast. Nieuwe monteurs 48 uur eerder zien' },
+    { key: 'moeilijk', name: 'Moeilijk', price: 100000, unit: 'p/m', note: 'Schaarse vakman. Wij benaderen actief uit de pool' }
   ];
   function planOf(key) { return PLANS.find(function (x) { return x.key === key; }) || PLANS[0]; }
   function modalWizard() {
     var w = S.wiz, step = w.step;
     var h = '<div class="scrim" data-action="close"></div><div class="modal modal--wide" role="dialog" aria-modal="true" aria-label="Nieuwe vacature"><p class="card__label">Stap ' + step + ' van 3</p>';
     if (step === 1) h += '<h2>Wie zoek je?</h2><label for="w-title">Functie</label><input id="w-title" type="text" value="' + esc(w.title) + '" placeholder="Bijvoorbeeld: servicemonteur"><label for="w-loc">Plaats</label><input id="w-loc" type="text" value="' + esc(w.location) + '" placeholder="Bijvoorbeeld: Utrecht">';
-    if (step === 2) h += '<h2>Hoe lang?</h2><div class="packs">' +
+    if (step === 2) h += '<h2>Welk pakket past bij de functie?</h2><div class="packs">' +
       PLANS.map(function (pl) { return '<button class="pack" data-action="wset" data-k="plan" data-v="' + pl.key + '" aria-pressed="' + (w.plan === pl.key) + '"><span><b>' + pl.name + '</b><small>' + pl.note + '</small></span><span>' + eur(pl.price) + ' ' + pl.unit + '</span></button>'; }).join('') + '</div>' +
-      '<div class="money-row"><span>Pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>inbegrepen</b></div><div class="money-row"><span>Mediabudget</span><b>inbegrepen</b></div>' +
-      (w.plan === 'vacature' ? '<p class="hint">Geen resultaat? 30 dagen gratis extra, anders ' + eur(50000) + ' terug.</p>' : '<p class="hint">Altijd zichtbaar, vaste instroom. Na de opbouw vooral beheer, daarom goedkoper.</p>');
+      '<div class="money-row"><span>Pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>inbegrepen</b></div><div class="money-row"><span>Bereik</span><b>inbegrepen</b></div>' +
+      '<p class="hint">Eerste 2 maanden vast, daarna maandelijks opzegbaar. Stoel gevuld? Dan stop je.</p>';
     if (step === 3) {
       var once = (w.selection ? PRICE.selectie : 0) + (w.beeld ? PRICE.beeld : 0);
       h += '<h2>Wat mogen wij nog doen?</h2><div class="packs">' +
         '<button class="pack" data-action="wset" data-k="selection" aria-pressed="' + !!w.selection + '"><span><b>Selectie door ons</b><small>Wij bellen iedereen binnen 24 uur</small></span><span>+ ' + eur(PRICE.selectie) + '</span></button>' +
         '<button class="pack" data-action="wset" data-k="beeld" aria-pressed="' + !!w.beeld + '"><span><b>Foto en video door ons</b><small>Anders gebruiken we jullie eigen beeld</small></span><span>+ ' + eur(PRICE.beeld) + '</span></button></div>' +
-        '<div class="money-row"><span>' + (w.plan === 'jaar' ? 'Per maand, per vacature' : 'Per vacature, eenmalig') + '</span><b>' + eur(planOf(w.plan).price) + '</b></div>' + (once ? '<div class="money-row"><span>Eenmalig</span><b>' + eur(once) + '</b></div>' : '') +
+        '<div class="money-row"><span>' + 'Per maand, per vacature' + '</span><b>' + eur(planOf(w.plan).price) + '</b></div>' + (once ? '<div class="money-row"><span>Eenmalig</span><b>' + eur(once) + '</b></div>' : '') +
         '<p class="hint">Inclusief vacaturepagina, campagnes, portaal, opvolging en plaatsing op gratis vacaturesites. Bedragen excl. btw. Je betaalt pas na de kick-off.</p>';
     }
     h += '<div class="row" style="margin-top:16px">' + (step > 1 ? '<button class="btn btn--ghost" data-action="wback">Terug</button>' : '') +
@@ -601,6 +603,94 @@
     render();
   }
 
+
+  /* ---------- monteurs: pakketten en kandidatenbak (fase 1 blauwdruk) ---------- */
+  var PAKKETTEN = {
+    basis: { key: 'basis', name: 'Basis', price: 49900, note: 'Monteur of servicetechnicus in de regio', early: false },
+    versneld: { key: 'versneld', name: 'Versneld', price: 75000, note: 'Krappe functie of je hebt haast', early: true },
+    moeilijk: { key: 'moeilijk', name: 'Moeilijk', price: 100000, note: 'Schaarse, ervaren vakman', early: true }
+  };
+  var EARLY_H = 48;
+  function pakketOf(v) { return v && v.pakket ? PAKKETTEN[v.pakket] : null; }
+  function activePakket() {
+    if (S.noPack) return null;
+    var best = null;
+    S.vacancies.forEach(function (v) { var p = pakketOf(v); if (p && v.status === 'live' && !v.opgezegd_per && (!best || p.price > best.price)) best = p; });
+    return best;
+  }
+  function addMonths(iso, n) { var d = new Date(iso); d.setMonth(d.getMonth() + n); return d; }
+  function dday(d) { return new Date(d).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' }); }
+  function tName(t) { return t.first_name + ' ' + t.last_initial + '.'; }
+  function tHours(t) { return hoursSince(t.created_at); }
+  function tVisible(t, pk) { return tHours(t) >= EARLY_H || (pk && pk.early); }
+  function maskPhone(p) { return String(p).replace(/\d(?=[\d ]{0,9}$)/g, '•').replace(/^06 ••/, '06 ••'); }
+  function videoTile(t, big) {
+    return '<div class="tvid' + (big ? ' tvid--big' : '') + '" role="img" aria-label="Video van ' + esc(tName(t)) + '"><span class="tvid__ini">' + esc(t.first_name.charAt(0) + t.last_initial) + '</span>' +
+      '<span class="tvid__play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span><span class="tvid__len">0:' + t.video_sec + '</span></div>';
+  }
+  function viewTalent() {
+    var D = window.YD_DEMO, pk = activePakket(), kinds = ['all', 'Installatie', 'Elektro', 'Montage'];
+    var all = (D.talent || []).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+    var list = all.filter(function (t) { return S.tKind === 'all' ? true : S.tKind === 'gekozen' ? S.picked[t.id] : t.kind === S.tKind; });
+    var nPicked = Object.keys(S.picked).filter(function (k) { return S.picked[k]; }).length;
+    var h = '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>Monteurs</h1><p class="sub">Hier kiest de monteur. Jij kiest wie je spreekt.</p></div>' +
+      (demo ? '<label class="hint tswitch"><input type="checkbox" data-action="nopack"' + (S.noPack ? ' checked' : '') + '> Bekijk zonder pakket</label>' : '') + '</div>';
+    h += pk
+      ? '<div class="card card--dark tband"><div><p class="card__label">Pakket ' + pk.name + ' loopt</p><p>Je ziet contactgegevens, chat en agenda van iedereen hieronder.' + (pk.early ? ' Nieuwe monteurs zie je ' + EARLY_H + ' uur eerder dan bij Basis.' : '') + '</p></div></div>'
+      : '<div class="card tband tband--lock"><div><p class="card__label">Geen pakket actief</p><p>Je ziet profielen en video. Contactgegevens, chat en gesprekken plannen openen zodra een pakket loopt.</p></div><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket</a></div>';
+    h += '<div class="chips">' + kinds.map(function (k) { return '<button class="chip" data-action="tkind" data-id="' + k + '" aria-pressed="' + (S.tKind === k) + '">' + (k === 'all' ? 'Alle monteurs' : k) + '<span class="n">' + all.filter(function (t) { return k === 'all' || t.kind === k; }).length + '</span></button>'; }).join('') +
+      '<button class="chip" data-action="tkind" data-id="gekozen" aria-pressed="' + (S.tKind === 'gekozen') + '">Gekozen<span class="n">' + nPicked + '</span></button></div>';
+    h += '<div class="tgrid">' + list.map(function (t) {
+      var fresh = tHours(t) < EARLY_H, vis = tVisible(t, pk);
+      if (!vis) return '<div class="card tcard tcard--wait"><div class="tvid"><span class="tvid__ini">?</span></div><p class="vac__title">' + esc(t.role) + '</p><p class="hint">' + esc(t.city) + '. Nieuw profiel, zichtbaar over ' + Math.ceil(EARLY_H - tHours(t)) + ' uur.</p><p class="hint"><b>Versneld en Moeilijk zien dit nu al.</b></p></div>';
+      return '<div class="card tcard" role="button" tabindex="0" data-action="topen" data-id="' + t.id + '">' + videoTile(t) +
+        '<div class="row tcard__top"><p class="vac__title">' + esc(tName(t)) + '</p>' + (S.picked[t.id] ? '<span class="pill pill--live">Gekozen</span>' : fresh ? '<span class="pill tpill--new">Nieuw</span>' : '') + '</div>' +
+        '<p class="hint tcard__role">' + esc(t.role) + '</p><p class="hint">' + esc(t.city) + ' · ' + t.km + ' km · ' + t.years + ' jaar ervaring · ' + esc(t.available.toLowerCase()) + '</p>' +
+        '<div class="tbadges">' + t.badges.map(function (b) { return '<span class="tbadge" title="' + esc(b.text) + '">' + esc(b.name) + '</span>'; }).join('') + '</div></div>';
+    }).join('') + '</div>';
+    if (!list.length) h += '<div class="card empty">' + (S.tKind === 'gekozen' ? '<strong>Nog niemand gekozen.</strong>Open een profiel en tik op Kies.' : 'Geen monteurs in deze categorie.') + '</div>';
+    return h;
+  }
+  function modalTalent() {
+    var t = (window.YD_DEMO.talent || []).find(function (x) { return x.id === S.tOpen; }); if (!t) return '';
+    var pk = activePakket(), chat = S.chats[t.id] || [], tab = S.tTab;
+    var contact = pk
+      ? '<div class="row"><a class="btn btn--green btn--sm" href="tel:' + esc(t.phone) + '">' + I.phone + esc(t.phone) + '</a><a class="btn btn--ghost btn--sm" href="mailto:' + esc(t.email) + '">' + I.mail + 'Mail</a></div>'
+      : '<div class="tlock"><span>' + esc(maskPhone(t.phone)) + '</span><span>' + esc(t.email.replace(/^[^@]+/, '••••••')) + '</span><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket om contact te zien</a></div>';
+    var h = '<div class="scrim" data-action="close"></div><div class="modal modal--wide tmodal" role="dialog" aria-modal="true" aria-label="' + esc(tName(t)) + '">' +
+      '<button class="icon-btn drawer__close" data-action="close" aria-label="Sluiten">' + I.close + '</button>' + videoTile(t, true) +
+      '<h2 style="margin-top:16px">' + esc(tName(t)) + '</h2><p class="hint">' + esc(t.role) + ' · ' + esc(t.city) + ' · ' + t.km + ' km · ' + t.years + ' jaar ervaring · start ' + esc(t.available.toLowerCase()) + '</p>' +
+      '<blockquote class="tquote">"' + esc(t.quote) + '"</blockquote>' +
+      '<div class="row tacts"><button class="btn ' + (S.picked[t.id] ? 'btn--ghost' : 'btn--gold') + '" data-action="tpick" data-id="' + t.id + '">' + (S.picked[t.id] ? 'Gekozen' : 'Kies') + '</button>' +
+      '<button class="chip" data-action="ttab" data-id="profiel" aria-pressed="' + (tab === 'profiel') + '">Profiel</button><button class="chip" data-action="ttab" data-id="chat" aria-pressed="' + (tab === 'chat') + '">Chat' + (chat.length ? '<span class="n">' + chat.length + '</span>' : '') + '</button><button class="chip" data-action="ttab" data-id="plan" aria-pressed="' + (tab === 'plan') + '">Plan gesprek</button></div>';
+    if (tab === 'profiel') {
+      h += '<div class="card tsub"><p class="card__label">Trainingsbadges</p><ul class="tblist">' + t.badges.map(function (b) { return '<li><b>' + esc(b.name) + '</b><span>' + esc(b.text) + '</span></li>'; }).join('') + '</ul></div>' +
+        '<div class="card tsub"><p class="card__label">Contact</p>' + contact + '</div>';
+    } else if (!pk) {
+      h += '<div class="card tsub tlock"><p><b>Chat en agenda openen met een pakket.</b> Zo weet de monteur dat er een echte werkgever aan de andere kant zit.</p><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket</a></div>';
+    } else if (tab === 'chat') {
+      h += '<div class="card tsub"><div class="tchat">' + (chat.length ? chat.map(function (m) { return '<p class="tmsg tmsg--' + m.from + '">' + esc(m.text) + '<small>' + esc(m.at) + '</small></p>'; }).join('') : '<p class="hint">Stuur ' + esc(t.first_name) + ' een eerste bericht. Kort en eerlijk werkt het best.</p>') + '</div>' +
+        '<div class="row tchat__in"><input id="tmsg" type="text" placeholder="Hoi ' + esc(t.first_name) + ', ik zag je video..." autocomplete="off"><button class="btn btn--sm" data-action="tsend" data-id="' + t.id + '">Stuur</button></div></div>';
+    } else {
+      h += '<div class="card tsub"><p class="card__label">Kies een moment</p><div class="row">' + SLOTS.map(function (sl, i) { return '<button class="chip" data-action="tslot" data-v="' + i + '" aria-pressed="' + (S.tSlot === i) + '">' + sl + '</button>'; }).join('') + '</div>' +
+        '<p><button class="btn btn--green" data-action="tinvite" data-id="' + t.id + '">Stuur uitnodiging</button></p><p class="hint">' + esc(t.first_name) + ' bevestigt met één tik. Herinnering gaat automatisch, de dag ervoor en een uur van tevoren.</p></div>';
+    }
+    return h + '</div>';
+  }
+  function pakketCard(v) {
+    var pk = pakketOf(v); if (!pk) return '';
+    var start = v.start_date || new Date().toISOString(), minTo = addMonths(start, 2), canStop = Date.now() >= minTo.getTime();
+    var stopAt = canStop ? addMonths(new Date(), 1) : minTo;
+    var h = '<div class="card section"><div class="row" style="justify-content:space-between"><p class="card__label" style="margin:0">Pakket</p>' + (v.opgezegd_per ? '<span class="pill pill--gepauzeerd">Opgezegd</span>' : '<span class="pill pill--live">Loopt</span>') + '</div>' +
+      '<p class="big" style="margin-top:8px">' + pk.name + ' <small>' + eur(pk.price) + ' per maand, alles inbegrepen</small></p>' +
+      '<div class="money-row"><span>Gestart</span><b>' + dday(start) + '</b></div><div class="money-row"><span>Minimaal tot</span><b>' + dday(minTo) + '</b></div>' +
+      (v.opgezegd_per ? '<div class="money-row"><span>Stopt op</span><b>' + dday(v.opgezegd_per) + '</b></div><p><button class="btn btn--ghost btn--sm" data-action="pkundo" data-id="' + v.id + '">Toch doorgaan</button></p>'
+        : (demo ? '<p class="hint">Wijzig je pakket per volgende maand:</p><div class="row">' + Object.keys(PAKKETTEN).map(function (k) { return '<button class="chip" data-action="pkset" data-id="' + v.id + '" data-v="' + k + '" aria-pressed="' + (v.pakket === k) + '">' + PAKKETTEN[k].name + ' · ' + eur(PAKKETTEN[k].price) + '</button>'; }).join('') + '</div>' : '') +
+          '<p class="hint">Stoel gevuld? Zeg op met één knop. ' + (canStop ? 'Je pakket stopt dan op ' + dday(stopAt) + '.' : 'Dat kan per ' + dday(minTo) + ', na de eerste 2 maanden.') + '</p><p><button class="btn btn--red btn--sm" data-action="pkstop" data-id="' + v.id + '" data-at="' + stopAt.toISOString() + '">Opzeggen</button></p>') +
+      '</div>';
+    return h;
+  }
+
   /* ---------- render ---------- */
   var modal = null;
   function render() {
@@ -611,8 +701,8 @@
     if (r === 'cockpit' && !(demo && S.as === 'yd')) r = 'vandaag';
     if (S.as === 'recruiter') S.tour = null;
     var body = r === 'rapport' ? viewReport() : r === 'kandidaten' ? viewCandidates() : r === 'resultaten' ? viewResults() : r === 'vacatures' ? (parts[1] ? viewVacancy(parts[1]) : viewVacancies()) :
-      r === 'cockpit' ? viewCockpit() : r === 'pool' ? viewPool() : r === 'plaatsingen' ? viewPlacements() : viewToday();
-    app.innerHTML = shell(body) + (S.open ? drawer() : '') + (modal === 'buy' ? modalBuy() : modal === 'wiz' ? modalWizard() : modal === 'claim' ? modalClaim() : modal === 'decide' ? modalDecide() : modal === 'notif' ? panelNotif() : '') + (S.tour != null ? tourCard() : '');
+      r === 'cockpit' ? viewCockpit() : r === 'monteurs' ? viewTalent() : r === 'pool' ? viewPool() : r === 'plaatsingen' ? viewPlacements() : viewToday();
+    app.innerHTML = shell(body) + (S.open ? drawer() : '') + (modal === 'buy' ? modalBuy() : modal === 'wiz' ? modalWizard() : modal === 'claim' ? modalClaim() : modal === 'decide' ? modalDecide() : modal === 'notif' ? panelNotif() : modal === 'talent' ? modalTalent() : '') + (S.tour != null ? tourCard() : '');
     document.body.classList.toggle('is-report', r === 'rapport');
     bindDnD();
   }
@@ -696,13 +786,13 @@
       return api.buy(t.dataset.vac, cents).then(function () { modal = null; render(); toast('Besteld: ' + eur(cents) + '. De betaallink komt per mail.'); }).catch(function () { toast('Bestellen mislukt. Mail team@youngdedicated.nl.'); });
     }
     if (act === 'tores') { S.vacFilter = t.dataset.id; location.hash = '#/resultaten'; return; }
-    if (act === 'newvac') { S.wiz = { step: 1, title: '', location: '', plan: 'vacature', selection: false, beeld: false }; modal = 'wiz'; return render(); }
+    if (act === 'newvac') { S.wiz = { step: 1, title: '', location: '', plan: 'basis', selection: false, beeld: false }; modal = 'wiz'; return render(); }
     if (act === 'wset') { if (t.dataset.v) S.wiz[t.dataset.k] = t.dataset.v; else S.wiz[t.dataset.k] = !S.wiz[t.dataset.k]; return render(); }
     if (act === 'wback') { S.wiz.step--; return render(); }
     if (act === 'wnext') {
       if (S.wiz.step === 1) { S.wiz.title = document.getElementById('w-title').value.trim(); S.wiz.location = document.getElementById('w-loc').value.trim(); if (!S.wiz.title) { toast('Vul een functie in.'); return; } }
       if (S.wiz.step < 3) { S.wiz.step++; return render(); }
-      var nv = { id: 'vac-' + Date.now(), organization_id: S.orgId, title: S.wiz.title, location: S.wiz.location, status: 'concept', plan: S.wiz.plan, selection_by_yd: S.wiz.selection, target_qualified: 5, channels: [], branch: (S.vacancies[0] || {}).branch,
+      var nv = { id: 'vac-' + Date.now(), organization_id: S.orgId, title: S.wiz.title, location: S.wiz.location, status: 'concept', plan: S.wiz.plan, pakket: S.wiz.plan, selection_by_yd: S.wiz.selection, target_qualified: 5, channels: [], branch: (S.vacancies[0] || {}).branch,
         milestones: [{ label: 'Aanvraag', done: true }, { label: 'Kick-off', done: false }, { label: 'Betaald', done: false }, { label: 'Live', done: false }, { label: 'Vervuld', done: false }],
         qa: { 'Relevante ervaring': ['Ja, meer dan 2 jaar', 'Ja, 1 tot 2 jaar', 'Nee'], 'Wanneer kun je starten': ['Direct', 'Binnen een maand', 'Na opzegtermijn'], 'Uren per week': ['32 tot 40', '24 tot 32', '12 tot 24'] },
         must: [{ label: 'Relevante ervaring', q: 'Relevante ervaring', ok: '^Ja' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }, { label: 'Minimaal 24 uur', q: 'Uren per week', ok: '^24|^32' }] };
@@ -729,10 +819,29 @@
       window.YD_DEMO.placements.push({ id: 'pl' + Date.now(), org: pp.from_org, initials: pp.initials, role: pp.role, placed_at: new Date().toISOString(), recruiter: 'Demo Techniek Recruitment', fee_cents: pp.fee_cents, status: 'geplaatst' });
       toast('Gefeliciteerd. De werkgever krijgt ' + eur(Math.round(pp.fee_cents * 0.2)) + ' tegoed.'); return render();
     }
+    if (act === 'tkind') { S.tKind = t.dataset.id; return render(); }
+    if (act === 'topen') { S.tOpen = t.dataset.id; S.tTab = 'profiel'; S.tSlot = 0; modal = 'talent'; return render(); }
+    if (act === 'ttab') { S.tTab = t.dataset.id; return render(); }
+    if (act === 'tpick') { S.picked[t.dataset.id] = !S.picked[t.dataset.id]; toast(S.picked[t.dataset.id] ? 'Gekozen. Je vindt deze monteur onder Gekozen.' : 'Uit je keuze gehaald.'); return render(); }
+    if (act === 'tslot') { S.tSlot = +t.dataset.v; return render(); }
+    if (act === 'tsend' || act === 'tinvite') {
+      var tt = window.YD_DEMO.talent.find(function (x) { return x.id === t.dataset.id; }), now = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+      var txt = act === 'tinvite' ? 'Uitnodiging voor een kennismaking: ' + SLOTS[S.tSlot || 0] + '.' : ((document.getElementById('tmsg') || {}).value || '').trim();
+      if (!txt) return;
+      var th = S.chats[tt.id] = S.chats[tt.id] || []; th.push({ from: 'wg', text: txt, at: now }); S.picked[tt.id] = true;
+      if (act === 'tinvite') { S.tTab = 'chat'; toast('Uitnodiging verstuurd aan ' + tt.first_name); }
+      render();
+      setTimeout(function () { th.push({ from: 'm', text: act === 'tinvite' ? 'Bevestigd. Tot dan!' : 'Hoi, dank voor je bericht. Ik bel je vanavond even, past dat?', at: new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) }); if (modal === 'talent') render(); }, 1400);
+      return;
+    }
+    if (act === 'pkset') { var pv = vac(t.dataset.id); pv.pakket = t.dataset.v; toast('Pakket ' + PAKKETTEN[pv.pakket].name + ' gaat in per volgende maand.'); return render(); }
+    if (act === 'pkstop') { var sv = vac(t.dataset.id); sv.opgezegd_per = t.dataset.at; toast('Opgezegd. Je pakket stopt op ' + dday(sv.opgezegd_per) + '.'); return render(); }
+    if (act === 'pkundo') { vac(t.dataset.id).opgezegd_per = null; toast('Je pakket loopt door.'); return render(); }
     if (act === 'logout') return api.signOut();
     if (act === 'demo') { sessionStorage.setItem('yd-demo', '1'); location.reload(); }
   });
   document.addEventListener('change', function (e) {
+    if (e.target.dataset.action === 'nopack') { S.noPack = e.target.checked; return render(); }
     if (e.target.dataset.action === 'org') { S.orgId = e.target.value; S.vacFilter = 'all'; loadOrg(); }
     if (e.target.dataset.action === 'role') { S.as = e.target.value; S.open = null; modal = null; if (S.as === 'klant' && S.orgId === 'org-yd') { S.orgId = 'org-walsem'; S.vacFilter = 'all'; loadOrg(); } location.hash = S.as === 'recruiter' ? '#/pool' : S.as === 'yd' ? '#/cockpit' : '#/vandaag'; render(); }
   });
@@ -740,6 +849,8 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && (S.open || modal)) { S.open = null; modal = null; render(); }
     if (e.key === 'Enter' && e.target.matches('.person')) openApp(e.target.dataset.id);
+    if (e.key === 'Enter' && e.target.matches('.tcard[data-id]')) { S.tOpen = e.target.dataset.id; S.tTab = 'profiel'; modal = 'talent'; render(); }
+    if (e.key === 'Enter' && e.target.id === 'tmsg') { var sb2 = app.querySelector('[data-action=tsend]'); if (sb2) sb2.click(); }
   });
   window.addEventListener('hashchange', function () { S.open = null; modal = null; render(); window.scrollTo(0, 0); });
   function tourDone() { try { localStorage.setItem('yd-tour-v1', '1'); } catch (e) {} }
