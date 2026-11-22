@@ -116,9 +116,9 @@
       }).then(function (r) { if (r.error) throw r.error; S.budget.push(r.data); });
     },
     talent: function () {
-      return Promise.all([sb.rpc('talent_list'), sb.from('badges').select('*'), sb.from('talent_picks').select('talent_id').eq('organization_id', S.orgId)]).then(function (r) {
+      return Promise.all([sb.rpc('talent_list'), sb.from('badges').select('*'), sb.from('talent_picks').select('talent_id,status').eq('organization_id', S.orgId)]).then(function (r) {
         var B = {}; (r[1].data || []).forEach(function (b) { B[b.key] = b; });
-        var picks = {}; (r[2].data || []).forEach(function (x) { picks[x.talent_id] = true; });
+        var picks = {}; (r[2].data || []).forEach(function (x) { picks[x.talent_id] = x.status || 'uitgenodigd'; });
         var list = (r[0].data || []).map(function (t) {
           return { id: t.id, first_name: t.first_name, last_initial: t.last_initial || '', city: t.city || '', km: null, role: t.role, kind: t.kind, years: t.years_experience || 0,
             available: t.available || 'In overleg', quote: t.quote || '', video_sec: t.video_seconds || 30, created_at: t.created_at,
@@ -662,6 +662,8 @@
   function stopDate(v) { var minTo = addMonths(v.start_date || new Date().toISOString(), 2), n = new Date(), eom = new Date(n.getFullYear(), n.getMonth() + 1, 0); return minTo > eom ? minTo : eom; }
   function addMonths(iso, n) { var d = new Date(iso); d.setMonth(d.getMonth() + n); return d; }
   function dday(d) { return new Date(d).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' }); }
+  function tStat(t) { return S.picked[t.id] || null; }
+  function tPill(t) { var st = tStat(t); return st === 'ja' ? '<span class="pill pill--live">Zegt ja</span>' : st === 'uitgenodigd' ? '<span class="pill">Wacht op antwoord</span>' : st === 'nee' ? '<span class="pill">Past niet</span>' : ''; }
   function tName(t) { return t.first_name + ' ' + t.last_initial + '.'; }
   function tHours(t) { return hoursSince(t.created_at); }
   function tVisible(t, pk) { return tHours(t) >= EARLY_H || (pk && pk.early); }
@@ -673,8 +675,8 @@
     S.tOpen = id; S.tTab = 'profiel'; S.tSlot = 0; modal = 'talent'; S.tContact = S.tContact || {};
     var t = (S.talent || []).find(function (x) { return x.id === id; });
     render();
-    if (!t || !activePakket()) return;
-    api.contact(t).then(function (c) { S.tContact[id] = c || {}; if (modal === 'talent' && S.tOpen === id) render(); });
+    if (!t || !activePakket() || !tStat(t)) return;
+    if (tStat(t) === 'ja') api.contact(t).then(function (c) { S.tContact[id] = c || {}; if (modal === 'talent' && S.tOpen === id) render(); });
     if (!demo) api.messages(id).then(function (m) { S.chats[id] = m; if (modal === 'talent' && S.tOpen === id) render(); });
   }
   function slotDate(i) {
@@ -687,42 +689,48 @@
     var all = (S.talent || []).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
     var list = all.filter(function (t) { return S.tKind === 'all' ? true : S.tKind === 'gekozen' ? S.picked[t.id] : t.kind === S.tKind; });
     var nPicked = Object.keys(S.picked).filter(function (k) { return S.picked[k]; }).length;
-    var h = '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>Monteurs</h1><p class="sub">Hier kiest de monteur. Jij kiest wie je spreekt.</p></div>' +
+    var h = '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>Monteurs</h1><p class="sub">Hier kiest de monteur. Jij solliciteert, de monteur zegt ja of nee.</p></div>' +
       (demo ? '<label class="hint tswitch"><input type="checkbox" data-action="nopack"' + (S.noPack ? ' checked' : '') + '> Bekijk zonder pakket</label>' : '') + '</div>';
     h += pk
-      ? '<div class="card card--dark tband"><div><p class="card__label">Pakket ' + pk.name + ' loopt</p><p>Je ziet contactgegevens, chat en agenda van iedereen hieronder.' + (pk.early ? ' Nieuwe monteurs zie je ' + EARLY_H + ' uur eerder dan bij Basis.' : '') + '</p></div></div>'
-      : '<div class="card tband tband--lock"><div><p class="card__label">Geen pakket actief</p><p>Je ziet profielen en video. Contactgegevens, chat en gesprekken plannen openen zodra een pakket loopt.</p></div><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket</a></div>';
+      ? '<div class="card card--dark tband"><div><p class="card__label">Pakket ' + pk.name + ' loopt</p><p>Solliciteer bij monteurs die je aanspreken. Zegt de monteur ja, dan zie je het nummer en plan je een gesprek.' + (pk.early ? ' Nieuwe monteurs zie je ' + EARLY_H + ' uur eerder dan bij Basis.' : '') + '</p></div></div>'
+      : '<div class="card tband tband--lock"><div><p class="card__label">Geen pakket actief</p><p>' + all.length + ' monteurs zoeken nu werk. Profielen, video en solliciteren openen zodra een pakket loopt.</p></div><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket</a></div>';
+    if (!pk) return h + '<div class="tgrid">' + all.slice(0, 8).map(function (t) { return '<div class="card tcard tcard--wait"><div class="tvid"><span class="tvid__ini">?</span></div><p class="vac__title">' + esc(t.role) + '</p><p class="hint">' + esc(t.city) + ' · ' + t.years + ' jaar ervaring</p></div>'; }).join('') + '</div>';
     h += '<div class="chips">' + kinds.map(function (k) { return '<button class="chip" data-action="tkind" data-id="' + k + '" aria-pressed="' + (S.tKind === k) + '">' + (k === 'all' ? 'Alle monteurs' : k) + '<span class="n">' + all.filter(function (t) { return k === 'all' || t.kind === k; }).length + '</span></button>'; }).join('') +
-      '<button class="chip" data-action="tkind" data-id="gekozen" aria-pressed="' + (S.tKind === 'gekozen') + '">Gekozen<span class="n">' + nPicked + '</span></button></div>';
+      '<button class="chip" data-action="tkind" data-id="gekozen" aria-pressed="' + (S.tKind === 'gekozen') + '">Gesolliciteerd<span class="n">' + nPicked + '</span></button></div>';
     h += '<div class="tgrid">' + list.map(function (t) {
       var fresh = tHours(t) < EARLY_H, vis = tVisible(t, pk);
       if (!vis) return '<div class="card tcard tcard--wait"><div class="tvid"><span class="tvid__ini">?</span></div><p class="vac__title">' + esc(t.role) + '</p><p class="hint">' + esc(t.city) + '. Nieuw profiel, zichtbaar over ' + Math.ceil(EARLY_H - tHours(t)) + ' uur.</p><p class="hint"><b>Versneld en Moeilijk zien dit nu al.</b></p></div>';
       return '<div class="card tcard" role="button" tabindex="0" data-action="topen" data-id="' + t.id + '">' + videoTile(t) +
-        '<div class="row tcard__top"><p class="vac__title">' + esc(tName(t)) + '</p>' + (S.picked[t.id] ? '<span class="pill pill--live">Gekozen</span>' : fresh ? '<span class="pill tpill--new">Nieuw</span>' : '') + '</div>' +
+        '<div class="row tcard__top"><p class="vac__title">' + esc(tName(t)) + '</p>' + (tStat(t) ? tPill(t) : fresh ? '<span class="pill tpill--new">Nieuw</span>' : '') + '</div>' +
         '<p class="hint tcard__role">' + esc(t.role) + '</p><p class="hint">' + esc(t.city) + ' · ' + t.km + ' km · ' + t.years + ' jaar ervaring · ' + esc(t.available.toLowerCase()) + '</p>' +
         '<div class="tbadges">' + t.badges.map(function (b) { return '<span class="tbadge" title="' + esc(b.text) + '">' + esc(b.name) + '</span>'; }).join('') + '</div></div>';
     }).join('') + '</div>';
-    if (!list.length) h += '<div class="card empty">' + (S.tKind === 'gekozen' ? '<strong>Nog niemand gekozen.</strong>Open een profiel en tik op Kies.' : 'Geen monteurs in deze categorie.') + '</div>';
+    if (!list.length) h += '<div class="card empty">' + (S.tKind === 'gekozen' ? '<strong>Nog bij niemand gesolliciteerd.</strong>Open een profiel en tik op Solliciteer.' : 'Geen monteurs in deze categorie.') + '</div>';
     return h;
   }
   function modalTalent() {
     var t = (S.talent || []).find(function (x) { return x.id === S.tOpen; }); if (!t) return '';
     var pk = activePakket(), chat = S.chats[t.id] || [], tab = S.tTab;
     var ct = S.tContact && S.tContact[t.id];
-    var contact = pk
+    var st = tStat(t);
+    var contact = pk && st === 'ja'
       ? (ct ? '<div class="row">' + (ct.phone ? '<a class="btn btn--green btn--sm" href="tel:' + esc(ct.phone) + '">' + I.phone + esc(ct.phone) + '</a><a class="btn btn--sm" style="background:#25d366" href="https://wa.me/' + intlPhone(ct.phone) + '" target="_blank" rel="noopener">' + I.wa + 'WhatsApp</a>' : '') + (ct.email ? '<a class="btn btn--ghost btn--sm" href="mailto:' + esc(ct.email) + '">' + I.mail + 'Mail</a>' : '') + '</div>' : '<p class="hint">Contactgegevens laden...</p>')
-      : '<div class="tlock"><span>06 •• •• •• ••</span><span>••••••@••••••.nl</span><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket om contact te zien</a></div>';
+      : '<div class="tlock"><span>06 •• •• •• ••</span><span>••••••@••••••.nl</span>' + (pk ? '<p class="hint">Je ziet het nummer zodra ' + esc(t.first_name) + ' ja zegt.</p>' : '<a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket om contact te zien</a>') + '</div>';
     var h = '<div class="scrim" data-action="close"></div><div class="modal modal--wide tmodal" role="dialog" aria-modal="true" aria-label="' + esc(tName(t)) + '">' +
       '<button class="icon-btn drawer__close" data-action="close" aria-label="Sluiten">' + I.close + '</button>' + videoTile(t, true) +
       '<h2 style="margin-top:16px">' + esc(tName(t)) + '</h2><p class="hint">' + esc(t.role) + ' · ' + esc(t.city) + ' · ' + t.km + ' km · ' + t.years + ' jaar ervaring · start ' + esc(t.available.toLowerCase()) + '</p>' +
       '<blockquote class="tquote">"' + esc(t.quote) + '"</blockquote>' +
-      '<div class="row tacts"><button class="btn ' + (S.picked[t.id] ? 'btn--ghost' : 'btn--gold') + '" data-action="tpick" data-id="' + t.id + '">' + (S.picked[t.id] ? 'Gekozen' : 'Kies') + '</button>' +
+      '<div class="row tacts">' + (st ? tPill(t) : '<button class="btn btn--gold" data-action="tpick" data-id="' + t.id + '">Solliciteer bij ' + esc(t.first_name) + '</button>') +
       '<button class="chip" data-action="ttab" data-id="profiel" aria-pressed="' + (tab === 'profiel') + '">Profiel</button><button class="chip" data-action="ttab" data-id="chat" aria-pressed="' + (tab === 'chat') + '">Chat' + (chat.length ? '<span class="n">' + chat.length + '</span>' : '') + '</button><button class="chip" data-action="ttab" data-id="plan" aria-pressed="' + (tab === 'plan') + '">Plan gesprek</button></div>';
     if (tab === 'profiel') {
       h += '<div class="card tsub"><p class="card__label">Trainingsbadges</p><ul class="tblist">' + t.badges.map(function (b) { return '<li><b>' + esc(b.name) + '</b><span>' + esc(b.text) + '</span></li>'; }).join('') + '</ul></div>' +
         '<div class="card tsub"><p class="card__label">Contact</p>' + contact + '</div>';
     } else if (!pk) {
       h += '<div class="card tsub tlock"><p><b>Chat en agenda openen met een pakket.</b> Zo weet de monteur dat er een echte werkgever aan de andere kant zit.</p><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket</a></div>';
+    } else if (!st || st === 'nee') {
+      h += '<div class="card tsub tlock"><p><b>' + (st === 'nee' ? esc(t.first_name) + ' heeft bedankt.' : 'Solliciteer eerst bij ' + esc(t.first_name) + '.') + '</b> ' + (st === 'nee' ? 'Er zijn er meer. Kijk verder in de lijst.' : 'Daarna kun je berichten sturen. Zegt ' + esc(t.first_name) + ' ja, dan zie je het nummer en plan je een gesprek.') + '</p></div>';
+    } else if (tab === 'plan' && st !== 'ja') {
+      h += '<div class="card tsub tlock"><p><b>Wacht op ' + esc(t.first_name) + '.</b> Een gesprek plannen kan zodra ' + esc(t.first_name) + ' ja zegt. Stuur gerust alvast een bericht.</p></div>';
     } else if (tab === 'chat') {
       h += '<div class="card tsub"><div class="tchat">' + (chat.length ? chat.map(function (m) { return '<p class="tmsg tmsg--' + m.from + '">' + esc(m.text) + '<small>' + esc(/T/.test(m.at) ? fdate(m.at) : m.at) + '</small></p>'; }).join('') : '<p class="hint">Stuur ' + esc(t.first_name) + ' een eerste bericht. Kort en eerlijk werkt het best.</p>') + '</div>' +
         '<div class="row tchat__in"><input id="tmsg" type="text" placeholder="Hoi ' + esc(t.first_name) + ', ik zag je video..." autocomplete="off"><button class="btn btn--sm" data-action="tsend" data-id="' + t.id + '">Stuur</button></div></div>';
@@ -878,9 +886,12 @@
     if (act === 'topen') return openTalent(t.dataset.id);
     if (act === 'ttab') { S.tTab = t.dataset.id; return render(); }
     if (act === 'tpick') {
-      if (!activePakket()) { toast('Kiezen kan met een lopend pakket.'); return; }
-      var on = !S.picked[t.dataset.id];
-      return api.pick(t.dataset.id, on).then(function () { S.picked[t.dataset.id] = on; toast(on ? 'Gekozen. Je vindt deze monteur onder Gekozen.' : 'Uit je keuze gehaald.'); render(); }).catch(function () { toast('Opslaan mislukt.'); });
+      if (!activePakket()) { toast('Solliciteren kan met een lopend pakket.'); return; }
+      var pid = t.dataset.id, pt = (S.talent || []).find(function (x) { return x.id === pid; });
+      return api.pick(pid, true).then(function () {
+        S.picked[pid] = 'uitgenodigd'; toast('Je sollicitatie staat bij ' + pt.first_name + '. Je hoort het zodra er antwoord is.'); render();
+        if (demo) setTimeout(function () { S.picked[pid] = 'ja'; api.contact(pt).then(function (c) { S.tContact[pid] = c; toast(pt.first_name + ' zegt ja. Je ziet nu het nummer.'); render(); }); }, 2500);
+      }).catch(function () { toast('Opslaan mislukt.'); });
     }
     if (act === 'tslot') { S.tSlot = +t.dataset.v; return render(); }
     if (act === 'tsend' || act === 'tinvite') {
@@ -888,7 +899,6 @@
       var slot = SLOTS[S.tSlot || 0], txt = act === 'tinvite' ? 'Uitnodiging voor een kennismaking: ' + slot + '.' : ((document.getElementById('tmsg') || {}).value || '').trim();
       if (!txt) return;
       var done = function () {
-        if (!S.picked[tt.id]) api.pick(tt.id, true).then(function () { S.picked[tt.id] = true; render(); }).catch(function () {});
         if (act === 'tinvite') { S.tTab = 'chat'; toast('Uitnodiging verstuurd aan ' + tt.first_name); }
         render();
         if (demo) setTimeout(function () { (S.chats[tt.id] = S.chats[tt.id] || []).push({ from: 'm', text: act === 'tinvite' ? 'Bevestigd. Tot dan!' : 'Hoi, dank voor je bericht. Ik bel je vanavond even, past dat?', at: new Date().toISOString() }); if (modal === 'talent') render(); }, 1400);
