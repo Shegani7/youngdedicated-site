@@ -1,3 +1,18 @@
+# SEO: oude WordPress-restanten netjes afsluiten (410 = definitief weg, Google haalt ze uit de index)
+/sitemap_index.xml /sitemap.xml 301!
+/ attachment_id=:id /404.html 410!
+/ p=:id /404.html 410!
+/ page_id=:id /404.html 410!
+/category/* /404.html 410
+/tag/* /404.html 410
+/author/* /404.html 410
+/feed/* /404.html 410
+/feed /404.html 410
+/wp-json/* /404.html 410
+/wp-admin/* /404.html 410
+/wp-login.php /404.html 410
+/xmlrpc.php /404.html 410
+
 # Oude WordPress-URL's die niet zijn meegenomen
 /bedankt-partsmedewerker-bergwerff/ / 301
 /bedankt-medewerker-finance-bergwerff/ / 301
