@@ -14,19 +14,19 @@
     { id: 'org-retail', name: 'Demo Elektrotechniek' }
   ];
   var vacancies = [
-    { id: 'vac-walsem', organization_id: 'org-walsem', title: 'Montagemonteur kachels', location: 'Rhenen', status: 'live', plan: 'jaar',
+    { id: 'vac-walsem', pakket: 'versneld', organization_id: 'org-walsem', title: 'Montagemonteur kachels', location: 'Rhenen', status: 'live', plan: 'jaar',
       start_date: dateOnly(now - 23 * DAY), end_date: null, page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 5, branch: 'Montage', contact: 'Erik van Walsem',
       qa: { 'Ervaring met montage': ['Ja, meer dan 3 jaar', 'Ja, 1 tot 3 jaar', 'Een beetje', 'Nee, wel handig'], 'Rijbewijs B': ['Ja', 'Ja', 'Nee'], 'Wanneer kun je starten': ['Direct', 'Binnen een maand', 'Na opzegtermijn'] },
       must: [{ label: 'Rijbewijs B', q: 'Rijbewijs B', ok: '^Ja' }, { label: 'Ervaring met montage', q: 'Ervaring met montage', ok: '^Ja' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }] },
-    { id: 'vac-yd', organization_id: 'org-yd', title: 'Sales recruiter', location: 'Bunnik', status: 'live', plan: 'vacature',
+    { id: 'vac-yd', pakket: 'basis', organization_id: 'org-yd', title: 'Sales recruiter', location: 'Bunnik', status: 'live', plan: 'vacature',
       start_date: dateOnly(now - 12 * DAY), end_date: dateOnly(now + 18 * DAY), page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 3, branch: 'Sales', contact: 'Ransder',
       qa: { 'Ervaring in sales': ['Ja, meer dan 2 jaar', 'Ja, bijbaan', 'Nee'], 'Uren per week': ['32 tot 40', '24 tot 32', '40'], 'Wanneer kun je starten': ['Direct', 'Binnen een maand'] },
       must: [{ label: 'Sales-ervaring', q: 'Ervaring in sales', ok: '^Ja' }, { label: 'Minimaal 32 uur', q: 'Uren per week', ok: '32 tot 40|^40' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }] },
-    { id: 'vac-horeca', organization_id: 'org-horeca', title: 'Servicemonteur warmtepompen', location: 'Utrecht', status: 'live', plan: 'jaar', branch: 'Installatie', contact: 'Sanne de Wit',
+    { id: 'vac-horeca', pakket: 'moeilijk', organization_id: 'org-horeca', title: 'Servicemonteur warmtepompen', location: 'Utrecht', status: 'live', plan: 'jaar', branch: 'Installatie', contact: 'Sanne de Wit',
       start_date: dateOnly(now - 27 * DAY), end_date: null, page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 6,
       qa: { 'Ervaring met warmtepompen of cv': ['Ja, meer dan 2 jaar', 'Ja, minder dan 2 jaar', 'Nee, wil het leren'], 'Diploma': ['MBO 3 installatietechniek', 'MBO 2 installatietechniek', 'Geen'], 'Rijbewijs B': ['Ja', 'Ja', 'Nee'] },
       must: [{ label: 'Rijbewijs B', q: 'Rijbewijs B', ok: '^Ja' }, { label: 'Ervaring warmtepomp of cv', q: 'Ervaring met warmtepompen of cv', ok: '^Ja' }, { label: 'MBO installatietechniek', q: 'Diploma', ok: 'MBO' }] },
-    { id: 'vac-retail', organization_id: 'org-retail', title: 'Elektromonteur', location: 'Amersfoort', status: 'live', plan: 'vacature', branch: 'Elektro', contact: 'Mark Jansen',
+    { id: 'vac-retail', pakket: 'basis', organization_id: 'org-retail', title: 'Elektromonteur', location: 'Amersfoort', status: 'live', plan: 'vacature', branch: 'Elektro', contact: 'Mark Jansen',
       start_date: dateOnly(now - 9 * DAY), end_date: dateOnly(now + 21 * DAY), page_url: 'https://www.youngdedicated.nl/vacatures/', target_qualified: 4,
       qa: { 'Diploma': ['MBO 3 elektrotechniek', 'MBO 2 elektrotechniek', 'Geen'], 'VCA': ['Ja', 'Ja', 'Nee'], 'Wanneer kun je starten': ['Direct', 'Binnen een maand'] },
       must: [{ label: 'MBO elektro', q: 'Diploma', ok: 'MBO' }, { label: 'VCA', q: 'VCA', ok: '^Ja' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }] }
@@ -125,25 +125,53 @@
   for (var x = 0; x < 9; x++) pool.push({ id: 'pool-x' + x, initials: pick(first).charAt(0) + '. ' + pick(last).charAt(0) + '.', role: pick(wf), region: pick(cities),
     experience: pick(['1 tot 3 jaar', '3 tot 5 jaar', 'Starter', '5+ jaar']), available: pick(['Direct', 'Binnen een maand']), fit: null, status: 'beschikbaar', from_org: 'org-other' });
   pool.forEach(function (p) { p.fit = fitOf(p.role); });
+
+  /* Monteurs in de pool (fase 1 blauwdruk). Alle namen zijn verzonnen. */
+  var BADGES = {
+    voordeur: ['Klantcontact aan de voordeur', 'Weet hoe je binnenkomt, uitlegt en afrondt bij de klant thuis.'],
+    storing: ['Storing zoeken', 'Werkt volgens een vaste aanpak van klacht naar oorzaak.'],
+    veilig: ['Veilig werken', 'Voorbereiding op VCA en veilig werken op locatie.'],
+    bus: ['Servicebus en planning', 'Houdt zijn bus op orde en werkt met een digitale planning.'],
+    wp: ['Warmtepompen basis', 'Kent de werking en het onderhoud van warmtepompen.']
+  };
+  var talent = [
+    ['t1', 'Daan', 'V', 'Servicemonteur cv en warmtepomp', 'Installatie', 'Utrecht', 12, 6, 'Direct', ['voordeur', 'storing', 'wp'], 'Ik wil een team waar ik zelf mijn dag mag indelen.', 5],
+    ['t2', 'Youssef', 'B', 'Elektromonteur', 'Elektro', 'Nieuwegein', 18, 4, 'Binnen een maand', ['veilig', 'storing'], 'Ik zoek een werkgever die eerlijk is over het werk en de bus.', 80],
+    ['t3', 'Kevin', 'D', 'Montagemonteur', 'Montage', 'Veenendaal', 22, 3, 'Direct', ['veilig', 'bus'], 'Ik werk graag met mijn handen en wil leren voor storingen.', 60],
+    ['t4', 'Mark', 'H', 'Storingsmonteur', 'Installatie', 'Amersfoort', 25, 11, 'Na opzegtermijn', ['storing', 'voordeur', 'veilig', 'bus'], 'Elf jaar storingen. Ik wil nu een werkgever die investeert in mensen.', 8],
+    ['t5', 'Lisa', 'K', 'Servicetechnicus', 'Installatie', 'Zeist', 9, 2, 'Direct', ['voordeur', 'wp'], 'Twee jaar ervaring en honger naar meer.', 90],
+    ['t6', 'Rachid', 'E', 'Elektromonteur', 'Elektro', 'Houten', 14, 7, 'Binnen een maand', ['veilig', 'storing', 'bus'], 'Ik wil weten waar ik over drie jaar sta.', 72],
+    ['t7', 'Bram', 'S', 'Montagemonteur kachels', 'Montage', 'Rhenen', 6, 5, 'Direct', ['voordeur', 'veilig'], 'Ik wil werken voor een bedrijf waar klanten blij van worden.', 100],
+    ['t8', 'Sem', 'J', 'Servicemonteur', 'Installatie', 'IJsselstein', 16, 1, 'Direct', ['voordeur'], 'Net klaar met MBO 3. Ik wil een vaste plek en een goede begeleider.', 3],
+    ['t9', 'Tom', 'W', 'Installatiemonteur', 'Installatie', 'Bunnik', 8, 9, 'Na opzegtermijn', ['veilig', 'bus', 'wp'], 'Ik zoek rust: vaste uren en een planning die klopt.', 140],
+    ['t10', 'Ahmed', 'R', 'Elektrotechnicus', 'Elektro', 'Utrecht', 11, 12, 'Binnen een maand', ['storing', 'veilig', 'voordeur', 'bus'], 'Twaalf jaar vak. Ik kies voor een werkgever met goede reviews.', 110],
+    ['t11', 'Jesse', 'M', 'Monteur zonnepanelen', 'Elektro', 'De Bilt', 7, 3, 'Direct', ['veilig'], 'Ik wil door naar laadpalen en batterijen.', 150],
+    ['t12', 'Niels', 'P', 'Servicetechnicus', 'Installatie', 'Woerden', 28, 6, 'Direct', ['storing', 'voordeur', 'wp'], 'Bij mijn huidige werkgever word ik niet gehoord.', 52]
+  ].map(function (r) {
+    var phone = '06 ' + (10000000 + Math.floor(rnd() * 89999999)).toString().replace(/(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4');
+    return { id: r[0], first_name: r[1], last_initial: r[2], role: r[3], kind: r[4], city: r[5], km: r[6], years: r[7], available: r[8],
+      badges: r[9].map(function (k) { return { key: k, name: BADGES[k][0], text: BADGES[k][1] }; }), quote: r[10], created_at: iso(now - r[11] * 36e5),
+      phone: phone, email: r[1].toLowerCase() + '.' + r[2].toLowerCase() + '@voorbeeld.nl', video_sec: 25 + Math.floor(rnd() * 10), consent: true };
+  });
   var placements = [
     { id: 'pl1', org: 'org-walsem', initials: 'R. d. W.', role: 'Montagemonteur kachels', placed_at: iso(now - 9 * DAY), recruiter: 'Demo Techniek Recruitment', fee_cents: 300000, status: 'geplaatst' }
   ];
   var cockpit = {
     clients: [
-      { name: 'Van Walsem Kachelspecialist', plan: 'Jaarmodel', mrr: 60000, vacancies: 1, cpq: 8200, speed_h: 6, health: 'op koers' },
-      { name: 'YoungDedicated (eigen)', plan: 'Vacature', mrr: 0, vacancies: 1, cpq: 9100, speed_h: 9, health: 'op koers' },
-      { name: 'Demo Installatietechniek', plan: 'Jaarmodel', mrr: 120000, vacancies: 2, cpq: 7400, speed_h: 4, health: 'op koers' },
-      { name: 'Demo Installatietechniek', plan: 'Jaarmodel', mrr: 60000, vacancies: 1, cpq: 5100, speed_h: 31, health: 'let op: belt traag' },
-      { name: 'Demo Servicebedrijf', plan: 'Vacature', mrr: 0, vacancies: 1, cpq: 12600, speed_h: 12, health: 'let op: weinig geschikt' }
+      { name: 'Van Walsem Kachelspecialist', plan: 'Voorgeselecteerd', mrr: 99900, vacancies: 1, cpq: 8200, speed_h: 6, health: 'op koers' },
+      { name: 'YoungDedicated (eigen)', plan: 'Kandidaten', mrr: 0, vacancies: 1, cpq: 9100, speed_h: 9, health: 'op koers' },
+      { name: 'Demo Installatietechniek', plan: 'Ontzorgd', mrr: 150000, vacancies: 2, cpq: 7400, speed_h: 4, health: 'op koers' },
+      { name: 'Demo Installatietechniek', plan: 'Kandidaten', mrr: 49900, vacancies: 1, cpq: 5100, speed_h: 31, health: 'let op: belt traag' },
+      { name: 'Demo Servicebedrijf', plan: 'Gezien', mrr: 9900, vacancies: 1, cpq: 12600, speed_h: 12, health: 'let op: weinig geschikt' }
     ],
-    mrr_trend: [60000, 60000, 120000, 120000, 180000, 240000],
+    mrr_trend: [49900, 99900, 149800, 199700, 259700, 309700],
     months: ['jun', 'jul', 'aug', 'sep', 'okt', 'nov'],
-    once_month_cents: 100000 * 3 + 49500,
+    once_month_cents: 300000,
     media_fee_month_cents: 41250,
     network_month_cents: 150000,
     nrr: 112
   };
 
-  window.YD_DEMO = { names: { first: first, last: last, cities: cities, sources: sources }, orgs: orgs, vacancies: vacancies, budget: budget, stats: stats, apps: apps, events: events, pool: pool, placements: placements, cockpit: cockpit,
+  window.YD_DEMO = { names: { first: first, last: last, cities: cities, sources: sources }, orgs: orgs, vacancies: vacancies, budget: budget, stats: stats, apps: apps, events: events, pool: pool, talent: talent, placements: placements, cockpit: cockpit,
     profile: { full_name: 'Ransder', role: 'yd_admin', organization_id: null } };
 })();

@@ -1,0 +1,242 @@
+---
+layout: "base.njk"
+title: "Hier kies jij | YoungDedicated"
+description: "Maak in drie minuten je profiel met een korte video. Werkgevers solliciteren bij jou. Jij kiest bij wie je langsgaat."
+permalink: "/monteur/"
+bodyClass: "page wg-page"
+noindex: true
+---
+<style>
+.mt-wrap{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:44px;align-items:start}
+.mt-q{border:0;padding:0;margin:0 0 34px;min-width:0}
+.mt-q legend{font-size:21px;font-weight:800;margin-bottom:12px;display:flex;gap:12px;align-items:center}
+.mt-q legend span{display:inline-flex;flex:0 0 32px;width:32px;height:32px;align-items:center;justify-content:center;background:var(--wg-ink);color:#fff;border-radius:50%;font-size:15px}
+.mt-chips{display:flex;flex-wrap:wrap;gap:8px}
+.mt-chip{display:inline-flex;align-items:center;border:2px solid var(--wg-line);background:#fff;padding:9px 14px;font-size:15px;font-weight:700;cursor:pointer;margin:0;border-radius:999px;transition:border-color .15s,background .15s}
+.mt-chip input{position:absolute;opacity:0;pointer-events:none}
+.mt-chip:has(input:checked){border-color:var(--wg-ink);background:var(--wg-ink);color:#fff}
+.mt-chip:has(input:focus-visible){outline:3px solid var(--wg-gold)}
+.mt-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px}
+.mt-row label,.mt-lbl{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:15px;margin:0}
+.mt-row input,.mt-q textarea{border:2px solid var(--wg-line);padding:10px 12px;font:inherit;font-size:16px;font-weight:400;width:100%;background:#fff}
+.mt-row input:focus,.mt-q textarea:focus{outline:0;border-color:var(--wg-ink)}
+.mt-range{display:flex;align-items:center;gap:14px}
+.mt-range input{flex:1;accent-color:var(--wg-ink)}
+.mt-range output{font-weight:800;min-width:64px}
+.mt-sub{font-size:14px;color:var(--wg-muted);margin:8px 0 0}
+.mt-vid{background:#111;color:#fff;padding:22px;display:grid;gap:14px}
+.mt-vid video{width:100%;aspect-ratio:16/9;background:#000;object-fit:cover;display:block}
+.mt-vid__tips{list-style:none;padding:0;margin:0;font-size:15px;color:#d6d6d6}
+.mt-vid__tips li:before{content:"\2713";color:var(--wg-green);margin-right:8px;font-weight:800}
+.mt-vid__btns{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.mt-btn{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 18px;border:2px solid #fff;background:transparent;color:#fff;font-weight:800;font-size:15px;cursor:pointer}
+.mt-btn--rec{background:#e5484d;border-color:#e5484d}
+.mt-btn:disabled{opacity:.4;cursor:default}
+.mt-vid__t{font-weight:900;font-size:20px;font-variant-numeric:tabular-nums}
+.mt-file{font-size:14px;color:#bdbdbd}
+.mt-file label{color:#fff;text-decoration:underline;cursor:pointer;font-weight:700}
+.mt-check{display:flex;gap:10px;align-items:flex-start;font-size:15px;font-weight:400;margin:14px 0 0}
+.mt-check input{width:18px;height:18px;flex:0 0 18px;margin:3px 0 0;accent-color:var(--wg-ink)}
+/* preview */
+.mt-prev{position:sticky;top:110px}
+.mt-prev__label{font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--wg-muted);margin:0 0 10px}
+.mt-card{background:#fff;box-shadow:0 20px 50px rgba(0,0,0,.1);padding:14px;border-radius:18px}
+.mt-tile{position:relative;aspect-ratio:4/5;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,#2a2a2a,#111 60%,#3a3220);display:flex;align-items:center;justify-content:center}
+.mt-tile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.mt-tile video~.mt-tile__ini{display:none}
+.mt-tile__ini{font-size:56px;font-weight:900;color:#fff;opacity:.9;letter-spacing:-1px}
+.mt-tile__play{position:absolute;left:12px;bottom:12px;width:40px;height:40px;border-radius:50%;background:var(--wg-gold);display:flex;align-items:center;justify-content:center}
+.mt-tile__play svg{width:18px;height:18px;margin-left:2px}
+.mt-tile__len{position:absolute;right:12px;bottom:14px;color:#fff;font-size:12px;font-weight:800;background:rgba(0,0,0,.5);padding:2px 8px;border-radius:999px}
+.mt-card__name{font-size:20px;font-weight:900;margin:14px 2px 0}
+.mt-card__role{font-weight:700;margin:2px 2px 0}
+.mt-card__meta{font-size:14px;color:var(--wg-muted);margin:4px 2px 0}
+.mt-card__quote{font-size:15px;font-style:italic;margin:12px 2px 0;border-left:3px solid var(--wg-gold);padding-left:10px}
+.mt-card__wants{display:flex;flex-wrap:wrap;gap:6px;margin:12px 2px 4px}
+.mt-card__wants span{font-size:12px;font-weight:800;padding:4px 9px;border-radius:999px;background:#f3efe0;color:#8a7430}
+.mt-lock{font-size:14px;color:var(--wg-muted);margin:14px 2px 0;display:flex;gap:8px;align-items:center}
+.mt-done{background:var(--wg-ink);color:#fff;padding:30px}
+.mt-done h3{color:#fff;font-size:26px;font-weight:900;margin:0 0 8px}
+.mt-done p{color:#d6d6d6;margin:0}
+@media (max-width:991.98px){.mt-wrap{grid-template-columns:1fr}.mt-prev{position:static;order:-1;max-width:360px}}
+@media (max-width:575.98px){.mt-row{grid-template-columns:1fr}}
+</style>
+
+<section class="wg-section wg-pagehead">
+  <div class="container">
+    <p class="wg-eyebrow">Voor monteurs</p>
+    <h1>Hier kies jij.</h1>
+    <p class="wg-lead">Je doet goed werk. Tijd dat iemand dat ziet. Maak in drie minuten je profiel met een korte video, zonder cv of brief. Werkgevers solliciteren bij jou en jij kiest waar je morgen instapt.</p>
+  </div>
+</section>
+
+<section class="wg-section wg-section--tight">
+  <div class="container mt-wrap">
+    <form id="mt" name="monteur-profiel" novalidate>
+      <fieldset class="mt-q"><legend><span>1</span>Wat voor werk doe je?</legend>
+        <div class="mt-chips" data-one="role">
+          <label class="mt-chip"><input type="radio" name="role" value="Servicemonteur cv en warmtepomp">Servicemonteur cv en warmtepomp</label>
+          <label class="mt-chip"><input type="radio" name="role" value="Elektromonteur">Elektromonteur</label>
+          <label class="mt-chip"><input type="radio" name="role" value="Installatiemonteur">Installatiemonteur</label>
+          <label class="mt-chip"><input type="radio" name="role" value="Servicetechnicus">Servicetechnicus</label>
+          <label class="mt-chip"><input type="radio" name="role" value="Montagemonteur">Montagemonteur</label>
+          <label class="mt-chip"><input type="radio" name="role" value="Monteur zonnepanelen">Zonnepanelen</label>
+        </div></fieldset>
+
+      <fieldset class="mt-q"><legend><span>2</span>Waar woon je?</legend>
+        <div class="mt-row">
+          <label>Woonplaats<input name="city" autocomplete="address-level2" placeholder="Bijvoorbeeld Amersfoort"></label>
+          <div class="mt-lbl">Hoe ver wil je rijden?<div class="mt-range"><input type="range" name="km" min="10" max="60" step="5" value="25"><output id="mt-km">25 km</output></div></div>
+        </div></fieldset>
+
+      <fieldset class="mt-q"><legend><span>3</span>Ervaring en wanneer</legend>
+        <div class="mt-chips" style="margin-bottom:12px">
+          <label class="mt-chip"><input type="radio" name="years" value="1">0 tot 2 jaar</label>
+          <label class="mt-chip"><input type="radio" name="years" value="4">3 tot 5 jaar</label>
+          <label class="mt-chip"><input type="radio" name="years" value="8">6 tot 10 jaar</label>
+          <label class="mt-chip"><input type="radio" name="years" value="12">Meer dan 10 jaar</label>
+        </div>
+        <div class="mt-chips">
+          <label class="mt-chip"><input type="radio" name="available" value="Direct">Kan direct</label>
+          <label class="mt-chip"><input type="radio" name="available" value="Binnen een maand">Binnen een maand</label>
+          <label class="mt-chip"><input type="radio" name="available" value="In overleg">In overleg</label>
+        </div></fieldset>
+
+      <fieldset class="mt-q"><legend><span>4</span>Wat moet je nieuwe werkgever hebben?</legend>
+        <div class="mt-chips" style="margin-bottom:14px">
+          <label class="mt-chip"><input type="checkbox" name="wants" value="Eigen bus">Eigen bus</label>
+          <label class="mt-chip"><input type="checkbox" name="wants" value="Vaste ploeg">Vaste ploeg</label>
+          <label class="mt-chip"><input type="checkbox" name="wants" value="Zelf mijn dag indelen">Zelf mijn dag indelen</label>
+          <label class="mt-chip"><input type="checkbox" name="wants" value="Opleiding">Opleiding</label>
+          <label class="mt-chip"><input type="checkbox" name="wants" value="Dicht bij huis">Dicht bij huis</label>
+          <label class="mt-chip"><input type="checkbox" name="wants" value="Goed salaris">Goed salaris</label>
+          <label class="mt-chip"><input type="checkbox" name="wants" value="Geen overwerk">Geen overwerk</label>
+        </div>
+        <label class="mt-lbl">In één zin: wat zoek je?<textarea name="quote" rows="2" maxlength="120" placeholder="Ik wil een team waar ik zelf mijn dag mag indelen."></textarea></label>
+      </fieldset>
+
+      <fieldset class="mt-q"><legend><span>5</span>Jouw video, 30 seconden</legend>
+        <div class="mt-vid">
+          <ul class="mt-vid__tips">
+            <li>Vertel wie je bent en wat je zoekt</li>
+            <li>Gewoon praten, zoals in de bus</li>
+            <li>Werkkleding mag, buiten mag</li>
+          </ul>
+          <video id="mt-live" playsinline muted hidden></video>
+          <div class="mt-vid__btns">
+            <button type="button" class="mt-btn mt-btn--rec" id="mt-rec">&#9679; Opnemen</button>
+            <button type="button" class="mt-btn" id="mt-stop" disabled>Stop</button>
+            <span class="mt-vid__t" id="mt-t">0:30</span>
+          </div>
+          <p class="mt-file">Liever een video van je telefoon? <label for="mt-upload">Kies een bestand</label><input id="mt-upload" type="file" accept="video/*" capture="user" hidden></p>
+        </div></fieldset>
+
+      <fieldset class="mt-q"><legend><span>6</span>Hoe bereiken werkgevers je?</legend>
+        <div class="mt-row">
+          <label>Voornaam<input name="first_name" autocomplete="given-name" required></label>
+          <label>Achternaam<input name="last_name" autocomplete="family-name" required></label>
+          <label>Telefoon<input type="tel" name="phone" autocomplete="tel" required></label>
+          <label>E-mail<input type="email" name="email" autocomplete="email" required></label>
+        </div>
+        <p class="mt-sub">Werkgevers zien je voornaam en de eerste letter van je achternaam. Je nummer zien alleen werkgevers met een open vacature.</p>
+        <label class="mt-check"><input type="checkbox" name="consent" required>Ik vind het goed dat YoungDedicated mijn profiel en video laat zien aan werkgevers in de techniek. Ik kan mijn profiel altijd laten verwijderen.</label>
+      </fieldset>
+
+      <button class="button" type="submit" data-cta="monteur-profiel">Zet mijn profiel live</button>
+      <p class="mt-sub" id="mt-err" hidden></p>
+      <div class="mt-done" id="mt-done" hidden>
+        <h3>Je profiel staat klaar.</h3>
+        <p>Dit is een voorproef. Zodra deze pagina live gaat, zien werkgevers in jouw regio je profiel en nemen ze contact met je op.</p>
+      </div>
+    </form>
+
+    <aside class="mt-prev" aria-live="polite">
+      <p class="mt-prev__label">Zo zien werkgevers jou</p>
+      <div class="mt-card">
+        <div class="mt-tile" id="mt-tile"><span class="mt-tile__ini" id="mt-ini">?</span>
+          <span class="mt-tile__play"><svg viewBox="0 0 24 24" fill="#111"><path d="M8 5v14l11-7z"/></svg></span><span class="mt-tile__len" id="mt-len">0:30</span></div>
+        <p class="mt-card__name" id="mt-name">Jouw naam</p>
+        <p class="mt-card__role" id="mt-role">Wat voor werk doe je?</p>
+        <p class="mt-card__meta" id="mt-meta">Woonplaats</p>
+        <p class="mt-card__quote" id="mt-quote" hidden></p>
+        <div class="mt-card__wants" id="mt-wants"></div>
+        <p class="mt-lock"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Nummer en e-mail verborgen</p>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section class="wg-section wg-section--grey">
+  <div class="container">
+    <p class="wg-eyebrow">Zo werkt het</p>
+    <h2>Jij hoeft niet te solliciteren.</h2>
+    <div class="wg-grid wg-grid--3">
+      <div class="wg-card"><p class="wg-card__big">Profiel in 3 minuten.</p><p>Zes vragen en een video van 30 seconden. Geen cv nodig.</p></div>
+      <div class="wg-card"><p class="wg-card__big">Werkgevers melden zich.</p><p>Technische bedrijven uit jouw regio bekijken je profiel en nemen contact op.</p></div>
+      <div class="wg-card"><p class="wg-card__big">Jij kiest.</p><p>Je praat met wie je wilt en gaat langs waar het klikt. Klaar met zoeken? Dan halen we je profiel weg.</p></div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var f=document.getElementById('mt'); if(!f) return;
+  var $=function(id){return document.getElementById(id)};
+  var secs=30;
+  function txt(el,v){el.textContent=v}
+  function upd(){
+    var fn=(f.first_name.value||'').trim(), ln=(f.last_name.value||'').trim();
+    txt($('mt-name'), fn ? fn+(ln?' '+ln.charAt(0).toUpperCase()+'.':'') : 'Jouw naam');
+    txt($('mt-ini'), fn ? (fn.charAt(0)+(ln?ln.charAt(0):'')).toUpperCase() : '?');
+    var r=f.querySelector('[name=role]:checked'); txt($('mt-role'), r?r.value:'Wat voor werk doe je?');
+    var y=f.querySelector('[name=years]:checked'), a=f.querySelector('[name=available]:checked');
+    txt($('mt-km'), f.km.value+' km');
+    var meta=[(f.city.value||'').trim()||'Woonplaats', f.km.value+' km rijden'];
+    if(y) meta.push(y.parentNode.textContent.trim()+' ervaring');
+    if(a) meta.push(a.value);
+    txt($('mt-meta'), meta.join(' · '));
+    var q=(f.quote.value||'').trim(); $('mt-quote').hidden=!q; txt($('mt-quote'), q?'“'+q+'”':'');
+    $('mt-wants').innerHTML=''; f.querySelectorAll('[name=wants]:checked').forEach(function(w){var s=document.createElement('span');s.textContent=w.value;$('mt-wants').appendChild(s)});
+    txt($('mt-len'), '0:'+String(secs).padStart(2,'0'));
+  }
+  f.addEventListener('input',upd); f.addEventListener('change',upd); upd();
+
+  // video
+  var stream=null, rec=null, chunks=[], timer=null, left=30, blobUrl=null;
+  function showClip(url,dur){
+    if(blobUrl) URL.revokeObjectURL(blobUrl); blobUrl=url;
+    var tile=$('mt-tile'), old=tile.querySelector('video'); if(old) old.remove();
+    var v=document.createElement('video'); v.src=url; v.muted=true; v.loop=true; v.playsInline=true; v.autoplay=true; tile.insertBefore(v,tile.firstChild); v.play().catch(function(){});
+    if(dur) {secs=Math.max(1,Math.min(59,Math.round(dur)));} $('mt-rec').innerHTML='&#9679; Opnieuw'; txt($('mt-t'),'Opgenomen'); upd();
+  }
+  function stopAll(){ if(timer) clearInterval(timer); timer=null; if(rec&&rec.state!=='inactive') rec.stop(); if(stream) stream.getTracks().forEach(function(t){t.stop()}); stream=null; $('mt-live').hidden=true; $('mt-rec').disabled=false; $('mt-stop').disabled=true; }
+  $('mt-rec').addEventListener('click',function(){
+    if(!navigator.mediaDevices||!window.MediaRecorder){ $('mt-upload').click(); return; }
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:true}).then(function(s){
+      stream=s; var lv=$('mt-live'); lv.srcObject=s; lv.hidden=false; lv.play().catch(function(){});
+      chunks=[]; rec=new MediaRecorder(s); rec.ondataavailable=function(e){if(e.data.size)chunks.push(e.data)};
+      rec.onstop=function(){ var used=30-left; showClip(URL.createObjectURL(new Blob(chunks,{type:rec.mimeType||'video/webm'})),used); };
+      rec.start(); left=30; txt($('mt-t'),'0:30'); $('mt-rec').disabled=true; $('mt-stop').disabled=false;
+      timer=setInterval(function(){ left--; txt($('mt-t'),'0:'+String(left).padStart(2,'0')); if(left<=0) stopAll(); },1000);
+    }).catch(function(){ $('mt-upload').click(); });
+  });
+  $('mt-stop').addEventListener('click',stopAll);
+  $('mt-upload').addEventListener('change',function(){
+    var file=this.files&&this.files[0]; if(!file) return;
+    var url=URL.createObjectURL(file), probe=document.createElement('video'); probe.preload='metadata';
+    probe.onloadedmetadata=function(){ showClip(url, probe.duration); }; probe.onerror=function(){ showClip(url,0); }; probe.src=url;
+  });
+
+  f.addEventListener('submit',function(e){
+    e.preventDefault();
+    var miss=[];
+    if(!f.querySelector('[name=role]:checked')) miss.push('je vak');
+    if(!f.first_name.value.trim()) miss.push('je voornaam');
+    if(!f.phone.value.trim()&&!f.email.value.trim()) miss.push('telefoon of e-mail');
+    if(!f.consent.checked) miss.push('je toestemming');
+    if(miss.length){ $('mt-err').hidden=false; txt($('mt-err'),'Nog nodig: '+miss.join(', ')+'.'); return; }
+    $('mt-err').hidden=true; stopAll();
+    // Voorproef: er wordt niets verstuurd. Live: profiel en video naar talent-tabel (Supabase), na akkoord en Pro.
+    f.querySelector('button[type=submit]').hidden=true; $('mt-done').hidden=false; $('mt-done').scrollIntoView({behavior:'smooth',block:'center'});
+  });
+})();
+</script>

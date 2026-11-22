@@ -1,0 +1,40 @@
+{
+  "_uitleg": "Open vacatures voor Google for Jobs (JobPosting). Vacature vervuld of gestopt? Haal de regel hier weg, dan verdwijnt hij uit Google Jobs. datePosted bijwerken bij een herstart.",
+  "/vacatures/servicetechnicus-randstad/": {
+    "title": "Servicetechnicus",
+    "datePosted": "2026-11-17",
+    "employmentType": ["FULL_TIME", "PART_TIME"],
+    "org": "Xibeo", "orgLogo": "/assets/logos/clients/xibeo.png",
+    "locality": "Amsterdam", "region": "Noord-Holland",
+    "salaryMin": 3390, "salaryMax": 4470, "unit": "MONTH",
+    "description": "<p>Servicetechnicus in de Randstad (32 tot 40 uur) bij Xibeo, specialist in beheer en onderhoud van gebouwgebonden installaties. Korte lijnen, een hecht team en ruimte om te groeien.</p><p><strong>Wat krijg je?</strong></p><ul><li>Salaris tussen € 3.390 en € 4.470 bruto per maand (38 uur)</li><li>Pensioen via cao Klein Metaal</li><li>25 vakantiedagen, plus 6,5 adv-dagen</li><li>Auto, telefoon en laptop of tablet van de zaak</li></ul><p><strong>Wat neem je mee?</strong></p><ul><li>Mbo-niveau 4 installatie- of elektrotechniek</li><li>Minimaal 5 jaar ervaring in onderhoud klimaatbeheersing</li><li>Rijbewijs B</li><li>Af en toe beschikbaar voor storingsdienst</li></ul><p><strong>Wat doe je?</strong> 50% onderhoud, 30% reparaties en vervangingen, 15% storingen, 5% intern overleg.</p>"
+  },
+  "/vacatures/montagemonteur-rhenen/": {
+    "title": "Monteur haard en interieur",
+    "datePosted": "2026-11-17",
+    "employmentType": ["FULL_TIME", "PART_TIME"],
+    "org": "Kachelspecialist Van Walsem", "orgLogo": "/assets/logos/clients/vanwalsem.png",
+    "locality": "Rhenen", "region": "Utrecht",
+    "salaryMin": 3250, "salaryMax": 4250, "unit": "MONTH",
+    "description": "<p>Monteur haard en interieur (32 tot 38 uur) bij Kachelspecialist Van Walsem in Rhenen. Hecht familiebedrijf in het kwalitatieve segment. Je staat nooit alleen bij een klus.</p><p><strong>Wat krijg je?</strong></p><ul><li>Salaris tussen € 3.250 en € 4.250 bruto per maand</li><li>25 vakantiedagen en tot 13 adv-dagen</li><li>Opleidingsbudget</li><li>Pensioen via de werkgever</li></ul><p><strong>Wat neem je mee?</strong></p><ul><li>Relevante technische werkervaring</li><li>Je spreekt en schrijft Nederlands</li><li>Klantgerichte houding en sterke teamspirit</li></ul><p><strong>Wat doe je?</strong> 50% rookkanaal en ombouw timmeren, 20% kachels plaatsen, 15% werkvoorbereiding, 10% meubels plaatsen, 5% klantcontact.</p>"
+  },
+  "/vacatures/medewerker-incidentbestrijding/": {
+    "title": "Medewerker incidentbestrijding",
+    "datePosted": "2026-11-17",
+    "employmentType": ["FULL_TIME"],
+    "org": "Ecoloss", "orgLogo": "/assets/logos/clients/ecoloss.png",
+    "locality": "Rotterdam", "region": "Zuid-Holland",
+    "salaryMin": 2650, "salaryMax": 2650, "unit": "MONTH",
+    "description": "<p>Medewerker incidentbestrijding bij Ecoloss in Pernis-Rotterdam. Je rukt met collega's uit voor brandstof- en olielekkages en andere milieu-incidenten op wegen, havens en bedrijfsterreinen. Een beetje zoals de brandweer.</p><p><strong>Wat krijg je?</strong></p><ul><li>Basissalaris € 2.650 bruto per maand (40 uur), plus gemiddeld € 250 per maand wachtvergoeding</li><li>25 vakantiedagen</li><li>Pensioen volledig betaald door de werkgever</li><li>Training, opleiding en reiskostenvergoeding</li></ul><p><strong>Wat neem je mee?</strong></p><ul><li>Vmbo afgerond</li><li>Bereid om intern opgeleid te worden</li><li>Goed Nederlands in woord en geschrift</li></ul><p><strong>Wat doe je?</strong> 60% incidentbestrijding, 20% onderhoud materiaal en bus, 10% rapportage, 10% interne opleidingen.</p>"
+  },
+  "/vacatures/sales-recruiter-bunnik/": {
+    "title": "Sales recruiter",
+    "datePosted": "2026-11-17",
+    "employmentType": ["FULL_TIME", "PART_TIME"],
+    "org": "YoungDedicated", "orgLogo": "/wp-content/uploads/2024/10/YoungDedicated-logo-def-469x123-1.png",
+    "street": "P.C. Staalweg 16", "postal": "3721 TJ",
+    "locality": "Bilthoven", "region": "Utrecht",
+    "salaryMin": 2500, "salaryMax": 3500, "unit": "MONTH",
+    "description": "<p>Sales recruiter (32 tot 40 uur) bij YoungDedicated in Bilthoven. Je bouwt relaties met technische werkgevers en verbindt ze met de juiste monteurs. Klein, hecht team met veel vrijheid.</p><p><strong>Wat krijg je?</strong></p><ul><li>Salaris tussen € 2.500 en € 3.500 bruto per maand, op basis van ervaring</li><li>Persoonlijke coaching en salestrainingen</li><li>Lunch en fruit van de zaak</li></ul><p><strong>Wat neem je mee?</strong></p><ul><li>Minimaal 2 jaar ervaring in recruitment</li><li>Afgeronde mbo-opleiding niveau 4</li><li>Je durft je mening te geven en neemt initiatief</li></ul><p><strong>Wat doe je?</strong> 30% kandidaten boeien en verbinden, 20% klantrelaties versterken, 20% strategische salesgesprekken, 15% commerciële kansen benutten, 15% wervingscampagnes verbeteren.</p>"
+  }
+}

@@ -13,7 +13,7 @@
 
   var demo = /[?&]demo\b/.test(location.search) || sessionStorage.getItem('yd-demo') === '1';
   var sb = !demo && window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
-  var S = { seenAt: Date.now() - 864e5, tour: null, profile: null, orgs: [], orgId: null, vacancies: [], apps: [], stats: [], budget: [], vacFilter: 'all', mStage: 'nieuw', open: null, events: [], as: 'klant', wiz: null, poolFit: 'all', claim: null };
+  var S = { seenAt: Date.now() - 864e5, tour: null, profile: null, orgs: [], orgId: null, vacancies: [], apps: [], stats: [], budget: [], vacFilter: 'all', mStage: 'nieuw', open: null, events: [], as: 'klant', wiz: null, poolFit: 'all', claim: null, tKind: 'all', tOpen: null, tTab: 'profiel', tSlot: 0, picked: {}, chats: {}, noPack: false };
   var PRICE = { vacature: 175000, jaar: 120000, budgetVac: 75000, budgetJaar: 60000, selectie: 49500, beeld: 300000 };
   var app = document.getElementById('app');
 
@@ -49,6 +49,7 @@
     people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/></svg>',
     chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-6"/></svg>',
     bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>',
+    spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg>',
     brief: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>'
   };
 
@@ -73,6 +74,14 @@
     addEvent: function (a, type, body) { window.YD_DEMO.events.push({ application_id: a.id, type: type, body: body, created_at: new Date().toISOString(), actor_name: S.profile.full_name }); return Promise.resolve(); },
     buy: function (vacId, cents) { var t = { id: 'b' + Date.now(), organization_id: S.orgId, vacancy_id: vacId, amount_cents: cents, type: 'bijgekocht', status: 'open', created_at: new Date().toISOString() }; window.YD_DEMO.budget.push(t); S.budget.push(t); return Promise.resolve(); },
     cv: function () { toast('Demo: hier opent het cv.'); return Promise.resolve(null); },
+    talent: function () { return Promise.resolve({ list: window.YD_DEMO.talent || [], picks: { t3: 'zelf' } }); },
+    contact: function (t) { return Promise.resolve({ phone: t.phone, email: t.email }); },
+    pick: function (id, on) { return Promise.resolve(); },
+    messages: function (id) { return Promise.resolve(S.chats[id] || []); },
+    send: function (id, text) { var m = { from: 'wg', text: text, at: new Date().toISOString() }; (S.chats[id] = S.chats[id] || []).push(m); return Promise.resolve(m); },
+    interview: function (id, when) { return Promise.resolve(); },
+    pakketStop: function (v, undo) { var st = undo ? null : stopDate(v); v.opgezegd_per = st && st.toISOString(); return Promise.resolve(v.opgezegd_per); },
+    pakketSet: function (v, p) { v.pakket_next = p; return Promise.resolve(); },
     signOut: function () { sessionStorage.removeItem('yd-demo'); location.href = '/portaal/'; }
   } : {
     session: function () {
@@ -88,7 +97,7 @@
         sb.from('applications').select('*, candidate:candidates(first_name,last_name,email,phone,city,cv_path)').eq('organization_id', org).order('created_at', { ascending: false }),
         sb.from('campaign_stats_daily').select('*').eq('organization_id', org).order('date'),
         sb.from('budget_transactions').select('*').eq('organization_id', org)
-      ]).then(function (r) { return { vacancies: r[0].data || [], apps: r[1].data || [], stats: r[2].data || [], budget: r[3].data || [] }; });
+      ]).then(function (r) { (r[0].data || []).forEach(function (v) { v.opgezegd_per = v.pakket_stop; if (v.pakket_start) v.start_date = v.pakket_start; }); return { vacancies: r[0].data || [], apps: r[1].data || [], stats: r[2].data || [], budget: r[3].data || [] }; });
     },
     events: function (a) { return sb.from('application_events').select('*').eq('application_id', a.id).order('created_at').then(function (r) { return r.data || []; }); },
     setStage: function (a, stage) {
@@ -106,6 +115,39 @@
         return sb.from('budget_transactions').insert({ organization_id: S.orgId, vacancy_id: vacId, amount_cents: cents, type: 'bijgekocht', status: 'open', created_by: u.data.user.id }).select().single();
       }).then(function (r) { if (r.error) throw r.error; S.budget.push(r.data); });
     },
+    talent: function () {
+      return Promise.all([sb.rpc('talent_list'), sb.from('badges').select('*'), sb.from('talent_picks').select('talent_id,status,initiated_by').eq('organization_id', S.orgId)]).then(function (r) {
+        var B = {}; (r[1].data || []).forEach(function (b) { B[b.key] = b; });
+        var picks = {}; (r[2].data || []).forEach(function (x) { picks[x.talent_id] = x.initiated_by === 'monteur' && x.status === 'ja' ? 'zelf' : (x.status || 'uitgenodigd'); });
+        var list = (r[0].data || []).map(function (t) {
+          return { id: t.id, first_name: t.first_name, last_initial: t.last_initial || '', city: t.city || '', km: null, role: t.role, kind: t.kind, years: t.years_experience || 0,
+            available: t.available || 'In overleg', quote: t.quote || '', video_sec: t.video_seconds || 30, created_at: t.created_at,
+            badges: (t.badges || []).filter(function (k) { return B[k]; }).map(function (k) { return { key: k, name: B[k].name, text: B[k].description }; }) };
+        });
+        return { list: list, picks: picks };
+      });
+    },
+    contact: function (t) { return sb.rpc('talent_contact', { tid: t.id }).then(function (r) { return (r.data && r.data[0]) || null; }); },
+    pick: function (id, on) {
+      return sb.auth.getUser().then(function (u) {
+        return on ? sb.from('talent_picks').insert({ organization_id: S.orgId, talent_id: id, picked_by: u.data.user.id }) : sb.from('talent_picks').delete().eq('organization_id', S.orgId).eq('talent_id', id);
+      }).then(function (r) { if (r.error) throw r.error; });
+    },
+    messages: function (id) {
+      return sb.from('talent_messages').select('*').eq('organization_id', S.orgId).eq('talent_id', id).order('created_at').then(function (r) {
+        return (r.data || []).map(function (m) { return { from: m.from_side === 'werkgever' ? 'wg' : 'm', text: m.body, at: m.created_at }; });
+      });
+    },
+    send: function (id, text) {
+      return sb.auth.getUser().then(function (u) { return sb.from('talent_messages').insert({ organization_id: S.orgId, talent_id: id, from_side: 'werkgever', body: text, sender_id: u.data.user.id }); })
+        .then(function (r) { if (r.error) throw r.error; var m = { from: 'wg', text: text, at: new Date().toISOString() }; (S.chats[id] = S.chats[id] || []).push(m); return m; });
+    },
+    interview: function (id, when) {
+      return sb.auth.getUser().then(function (u) { return sb.from('talent_interviews').insert({ organization_id: S.orgId, talent_id: id, starts_at: when.toISOString(), created_by: u.data.user.id }); })
+        .then(function (r) { if (r.error) throw r.error; });
+    },
+    pakketStop: function (v, undo) { return sb.rpc('pakket_opzeggen', { vid: v.id, undo: !!undo }).then(function (r) { if (r.error) throw r.error; v.pakket_stop = r.data; v.opgezegd_per = r.data; return r.data; }); },
+    pakketSet: function (v, p) { return sb.rpc('pakket_wijzigen', { vid: v.id, p: p }).then(function (r) { if (r.error) throw r.error; v.pakket_next = p; }); },
     cv: function (path) { return sb.storage.from('cvs').createSignedUrl(path, 120).then(function (r) { return r.data && r.data.signedUrl; }); },
     signOut: function () { sb.auth.signOut().then(function () { location.href = '/portaal/'; }); }
   };
@@ -130,10 +172,10 @@
   /* ---------- shell ---------- */
   function routeParts() { return (location.hash.replace('#/', '') || '').split('/'); }
   function route() { return routeParts()[0] || (S.as === 'recruiter' ? 'pool' : 'vandaag'); }
-  var NAV_KLANT = [['vandaag', 'Vandaag', I.home], ['kandidaten', 'Kandidaten', I.people], ['resultaten', 'Resultaten', I.chart], ['vacatures', 'Vacatures', I.brief]];
+  var NAV_KLANT = [['vandaag', 'Vandaag', I.home], ['monteurs', 'Monteurs', I.spark], ['kandidaten', 'Kandidaten', I.people], ['resultaten', 'Resultaten', I.chart], ['vacatures', 'Vacatures', I.brief]];
   function navItems() {
     if (S.as === 'recruiter') return [['pool', 'Kandidatenpool', I.people], ['plaatsingen', 'Mijn plaatsingen', I.brief]];
-    if (S.as === 'yd') return [['cockpit', 'Cockpit', I.chart]].concat(NAV_KLANT.slice(0, 3));
+    if (S.as === 'yd') return [['cockpit', 'Cockpit', I.chart]].concat(NAV_KLANT.slice(0, 4));
     return NAV_KLANT;
   }
   function shell(inner) {
@@ -179,7 +221,8 @@
     var cr = credit();
     var m = metrics('all');
     var target = S.vacancies.reduce(function (t, v) { return t + (v.target_qualified || 0); }, 0) || 1;
-    var v30 = S.vacancies.find(function (v) { return v.plan === 'vacature' && v.start_date; });
+    var v30 = S.vacancies.find(function (v) { return !v.pakket && v.plan === 'vacature' && v.start_date; });
+    var vA = S.vacancies.find(function (v) { return v.pakket && v.pakket !== 'gezien' && v.status === 'live'; });
     var day = v30 ? Math.min(60, Math.max(1, Math.ceil((Date.now() - new Date(v30.start_date)) / 864e5))) : null;
     var pct = m.budget ? Math.min(100, Math.round(m.spend / m.budget * 100)) : 0;
     var first = (S.profile.full_name || '').split(' ')[0];
@@ -188,12 +231,12 @@
       '<div class="grid grid-3">' +
         '<div class="card card--dark"><p class="card__label">Bel vandaag</p><p class="big">' + fresh.length + ' <small>nieuw</small></p>' +
           (selYD ? '<p class="muted">Selectie uitbesteed. YoungDedicated belt iedereen binnen 24 uur en zet geschikte mensen klaar voor jou.</p>' : '<p class="muted">Bel binnen 24 uur. Dan is de sollicitant nog warm.</p>') +
-          (late.length && !selYD ? '<p style="margin-top:14px"><a class="btn btn--gold btn--sm" href="mailto:team@youngdedicated.nl?subject=' + encodeURIComponent('Selectie uitbesteden: wil YoungDedicated onze sollicitanten bellen?') + '">Geen tijd? Wij doen de selectie</a></p>' : '') + '</div>' +
+          (late.length && !selYD ? '<p style="margin-top:14px"><a class="btn btn--gold btn--sm" href="mailto:team@youngdedicated.nl?subject=' + encodeURIComponent('Overstappen naar Voorgeselecteerd') + '">Geen tijd? Wij selecteren voor</a></p>' : '') + '</div>' +
         '<div class="card"><p class="card__label">Campagne</p><p class="big">' + eur(m.cpa) + ' <small>per sollicitant</small></p>' +
-          '<div class="bar-legend"><span>Mediabudget inbegrepen</span><span>' + m.apps + ' sollicitanten</span></div></div>' +
-        '<div class="card"><p class="card__label">Garantie</p><p class="big">' + m.qual + ' <small>van ' + target + ' geschikt</small></p>' +
+          '<div class="bar-legend"><span>Bereik inbegrepen</span><span>' + m.apps + ' sollicitanten</span></div></div>' +
+        (vA ? afspraakMini(vA) : '<div class="card"><p class="card__label">Garantie</p><p class="big">' + m.qual + ' <small>van ' + target + ' geschikt</small></p>' +
           '<div class="bar bar--green"><span style="width:' + Math.min(100, Math.round(m.qual / target * 100)) + '%"></span></div>' +
-          '<div class="bar-legend"><span>' + (m.qual >= target ? 'Doel gehaald' : 'Nog ' + (target - m.qual) + ' te gaan') + '</span><span>' + (day ? (day <= 30 ? 'Garantiecheck dag 30, nu dag ' + day : 'Dag ' + day + ' van 60') : 'Jaarmodel') + '</span></div></div>' +
+          '<div class="bar-legend"><span>' + (m.qual >= target ? 'Doel gehaald' : 'Nog ' + (target - m.qual) + ' te gaan') + '</span><span>' + (day ? (day <= 30 ? 'Garantiecheck dag 30, nu dag ' + day : 'Dag ' + day + ' van 60') : 'Jaarmodel') + '</span></div></div>') +
       '</div>';
     if (cr.credit) h += '<div class="card section cashback"><div><p class="card__label">Cashback</p><b>' + eur(cr.credit) + ' tegoed</b><p class="hint">Een kandidaat die niet bij jou paste, is via ons netwerk elders aangenomen. Je tegoed gaat automatisch van je volgende vacature af.</p></div></div>';
     h += '<div class="section"><h2>' + (selYD ? 'Deze mensen bellen wij' : 'Bel deze mensen') + '</h2>' + (fresh.length ? '<div class="list">' + fresh.map(function (a) { return personRow(a, true); }).join('') + '</div>' : '<div class="card empty"><strong>Lekker bezig.</strong>Nieuwe sollicitanten verschijnen hier direct.</div>') + '</div>';
@@ -251,13 +294,14 @@
       '<div class="kpi kpi--hl"><span>Per geschikte kandidaat</span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b></div></div>';
     h += '<div class="grid grid-2">' +
       '<div class="card"><p class="card__label">Waar gaat je geld heen</p>' +
-        (S.vacancies.some(function (v) { return v.plan === 'jaar'; }) ?
+        S.vacancies.filter(function (v) { return pakketOf(v); }).map(function (v) { var pk = pakketOf(v); return '<div class="money-row"><span>Pakket ' + pk.name + ': ' + esc(v.title) + '</span><b>' + eur(pk.price) + ' p/m</b></div>'; }).join('') +
+        (S.vacancies.some(function (v) { return !v.pakket && v.plan === 'jaar'; }) ?
           '<div class="money-row"><span>Jaarmodel per vacature</span><b>' + eur(PRICE.jaar) + ' p/m</b></div>' +
           '' : '') +
-        (S.vacancies.some(function (v) { return v.plan === 'vacature'; }) ?
+        (S.vacancies.some(function (v) { return !v.pakket && v.plan === 'vacature'; }) ?
           '<div class="money-row"><span>Vacature, eenmalig</span><b>' + eur(PRICE.vacature) + '</b></div>' +
           '' : '') +
-        '<div class="money-row"><span>Mediabudget</span><b>inbegrepen</b></div>' +
+        '<div class="money-row"><span>Bereik</span><b>inbegrepen</b></div>' +
         '<div class="money-row"><span>Ingezet in advertenties (Facebook en Instagram)</span><b>' + eur(m.spend) + '</b></div>' +
         (m.pending ? '<div class="money-row"><span>Extra budget, wacht op betaling</span><b>' + eur(m.pending) + '</b></div>' : '') +
         '<p style="margin-top:16px"><button class="btn btn--gold btn--block" data-action="buy">Meer reacties? Verhoog je budget</button></p></div>' +
@@ -278,14 +322,14 @@
     return rows.map(function (r) { var w = r[1] ? Math.max(3, Math.log10(r[1] + 1) / max * 100) : 0; return '<div class="funnel__row"><span>' + r[0] + '</span><div class="funnel__bar" style="width:' + w + '%"></div><b>' + num(r[1]) + '</b></div>'; }).join('');
   }
 
-  function vacDay(v) { return v.plan === 'vacature' && v.start_date ? Math.min(60, Math.max(1, Math.ceil((Date.now() - new Date(v.start_date)) / 864e5))) : null; }
+  function vacDay(v) { return !v.pakket && v.plan === 'vacature' && v.start_date ? Math.min(60, Math.max(1, Math.ceil((Date.now() - new Date(v.start_date)) / 864e5))) : null; }
   function viewVacancies() {
     var h = '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>Vacatures</h1><p class="sub">Alles wat nu voor je werft.</p></div>' +
       (demo ? '<button class="btn btn--gold" data-action="newvac">+ Nieuwe vacature</button>' : '<a class="btn btn--gold" href="/plaats-je-vacature/">+ Nieuwe vacature</a>') + '</div><div class="list">';
     h += S.vacancies.map(function (v) {
       var m = metrics(v.id), day = vacDay(v);
       return '<a class="card vac vac--link" href="#/vacatures/' + v.id + '"><div class="vac__main"><span class="pill pill--' + v.status + '">' + esc(v.status) + '</span>' +
-        '<p class="vac__title" style="margin-top:8px">' + esc(v.title) + '</p><p class="hint" style="margin:2px 0 0">' + esc(v.location || '') + ' · ' + (v.status === 'concept' ? 'Aanvraag ingediend' : day ? 'Dag ' + day + ' van 60' : 'Jaarmodel') + (v.selection_by_yd ? ' · Selectie door ons' : '') + '</p></div>' +
+        '<p class="vac__title" style="margin-top:8px">' + esc(v.title) + '</p><p class="hint" style="margin:2px 0 0">' + esc(v.location || '') + ' · ' + (v.status === 'concept' ? 'Aanvraag ingediend' : pakketOf(v) ? 'Pakket ' + pakketOf(v).name + (v.opgezegd_per ? ', opgezegd' : '') : day ? 'Dag ' + day + ' van 60' : 'Jaarmodel') + (v.selection_by_yd ? ' · Selectie door ons' : '') + '</p></div>' +
         '<div class="row"><div class="kpi"><span>Sollicitanten</span><b>' + m.apps + '</b></div><div class="kpi"><span>Geschikt</span><b>' + m.qual + '</b></div><div class="kpi"><span>Besteed</span><b>' + eur(m.spend) + '</b></div></div>' +
         '<span class="vac__go" aria-hidden="true">&rsaquo;</span></a>';
     }).join('');
@@ -295,9 +339,9 @@
     var v = vac(id); if (!v.id) return viewVacancies();
     var m = metrics(id), day = vacDay(v);
     var steps = v.milestones || [{ label: 'Aanvraag', done: true }, { label: 'Kick-off', done: v.status !== 'concept' }, { label: 'Betaald', done: v.status !== 'concept' }, { label: 'Live', done: v.status === 'live' || v.status === 'vervuld' }, { label: 'Vervuld', done: v.status === 'vervuld' }];
-    var h = '<p><a class="hint" href="#/vacatures">&lsaquo; Alle vacatures</a></p><h1>' + esc(v.title) + '</h1><p class="sub">' + esc(v.location || '') + ' · ' + (day ? 'Dag ' + day + ' van 60, garantiecheck op dag 30' : v.plan === 'jaar' ? 'Jaarmodel, doorlopend' : '') + '</p>';
+    var h = '<p><a class="hint" href="#/vacatures">&lsaquo; Alle vacatures</a></p><h1>' + esc(v.title) + '</h1><p class="sub">' + esc(v.location || '') + ' · ' + (pakketOf(v) ? 'Pakket ' + pakketOf(v).name + ', ' + eur(pakketOf(v).price) + ' per maand' : day ? 'Dag ' + day + ' van 60, garantiecheck op dag 30' : v.plan === 'jaar' ? 'Jaarmodel, doorlopend' : '') + '</p>';
     h += '<div class="card"><ol class="stepper">' + steps.map(function (st, i) { var cur = !st.done && (i === 0 || steps[i - 1].done); return '<li class="' + (st.done ? 'done' : cur ? 'cur' : '') + '"><span>' + (st.done ? '&#10003;' : i + 1) + '</span>' + st.label + '</li>'; }).join('') + '</ol>' +
-      journeyHint(v, steps) + '</div>' + (v.status === 'live' ? guarantee(v, m, day) : '');
+      journeyHint(v, steps) + '</div>' + (pakketOf(v) ? pakketCard(v) + afspraakCard(v) : v.status === 'live' ? guarantee(v, m, day) : '');
     h += '<div class="kpis section"><div class="kpi"><span>Sollicitanten</span><b>' + m.apps + '</b></div><div class="kpi"><span>Geschikt</span><b>' + m.qual + '</b></div><div class="kpi"><span>Aangenomen</span><b>' + m.hired + '</b></div><div class="kpi"><span>Besteed</span><b>' + eur(m.spend) + '</b></div><div class="kpi kpi--hl"><span>Per geschikte kandidaat</span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b></div></div>';
     var ch = v.channels || [];
     if (ch.length) {
@@ -375,7 +419,7 @@
       '<div class="card section"><p class="card__label">Per dag</p>' + chart('all') + '</div>' +
       '<div class="grid grid-2 section"><div class="card"><p class="card__label">Van bereik naar aanname</p><div class="funnel">' + funnelRows(m) + '</div></div>' +
       '<div class="card"><p class="card__label">Bronnen</p>' + Object.keys(src).sort(function (a, b) { return src[b] - src[a]; }).map(function (k) { return '<div class="money-row"><span>' + esc(k) + '</span><b>' + src[k] + '</b></div>'; }).join('') +
-      '<div class="money-row"><span>Mediabudget</span><b>inbegrepen</b></div><div class="money-row"><span>Besteed</span><b>' + eur(m.spend) + '</b></div></div></div>' +
+      '<div class="money-row"><span>Bereik</span><b>inbegrepen</b></div><div class="money-row"><span>Besteed</span><b>' + eur(m.spend) + '</b></div></div></div>' +
       (hires.length ? '<div class="card section"><p class="card__label">Aangenomen</p>' + hires.map(function (a) { return '<div class="money-row"><span>' + esc(name(a)) + '</span><b>' + esc(vac(a.vacancy_id).title || '') + '</b></div>'; }).join('') + '</div>' : '') +
       '<div class="card card--dark section"><p class="card__label">Volgende maand</p><ul class="must must--dark">' + next.map(function (x) { return '<li class="ok">' + esc(x) + '</li>'; }).join('') + '</ul></div>' +
       '<p class="hint section">YoungDedicated · team@youngdedicated.nl · Cijfers uit Meta en het kandidatensysteem.</p></div>';
@@ -394,25 +438,25 @@
       '<div class="row"><button class="btn btn--ghost btn--sm" data-action="tour-end">Overslaan</button><button class="btn btn--gold btn--sm" data-action="tour-next">' + (i === TOUR.length - 1 ? 'Aan de slag' : 'Volgende') + '</button></div></div>';
   }
   var PLANS = [
-    { key: 'vacature', name: 'Vacature', price: PRICE.vacature, unit: 'eenmalig', note: '30 dagen vol gas, plus 30 dagen garantie' },
-    { key: 'jaar', name: 'Jaarmodel', price: PRICE.jaar, unit: 'p/m', note: '€14.400 per jaar, je bespaart €6.600' }
+    { key: 'basis', name: 'Kandidaten', price: 49900, unit: 'p/m', note: 'Reacties met video, jij kiest en belt. Met de afspraak' },
+    { key: 'versneld', name: 'Voorgeselecteerd', price: 99900, unit: 'p/m', note: 'Voorselectie via WhatsApp, wij bellen binnen 5 minuten, gesprek in je agenda' },
+    { key: 'moeilijk', name: 'Ontzorgd', price: 150000, unit: 'p/m', note: 'Wij doen alles tot de handtekening onder het contract' }
   ];
   function planOf(key) { return PLANS.find(function (x) { return x.key === key; }) || PLANS[0]; }
   function modalWizard() {
     var w = S.wiz, step = w.step;
     var h = '<div class="scrim" data-action="close"></div><div class="modal modal--wide" role="dialog" aria-modal="true" aria-label="Nieuwe vacature"><p class="card__label">Stap ' + step + ' van 3</p>';
     if (step === 1) h += '<h2>Wie zoek je?</h2><label for="w-title">Functie</label><input id="w-title" type="text" value="' + esc(w.title) + '" placeholder="Bijvoorbeeld: servicemonteur"><label for="w-loc">Plaats</label><input id="w-loc" type="text" value="' + esc(w.location) + '" placeholder="Bijvoorbeeld: Utrecht">';
-    if (step === 2) h += '<h2>Hoe lang?</h2><div class="packs">' +
+    if (step === 2) h += '<h2>Welk pakket past bij de functie?</h2><div class="packs">' +
       PLANS.map(function (pl) { return '<button class="pack" data-action="wset" data-k="plan" data-v="' + pl.key + '" aria-pressed="' + (w.plan === pl.key) + '"><span><b>' + pl.name + '</b><small>' + pl.note + '</small></span><span>' + eur(pl.price) + ' ' + pl.unit + '</span></button>'; }).join('') + '</div>' +
-      '<div class="money-row"><span>Pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>inbegrepen</b></div><div class="money-row"><span>Mediabudget</span><b>inbegrepen</b></div>' +
-      (w.plan === 'vacature' ? '<p class="hint">Geen resultaat? 30 dagen gratis extra, anders ' + eur(50000) + ' terug.</p>' : '<p class="hint">Altijd zichtbaar, vaste instroom. Na de opbouw vooral beheer, daarom goedkoper.</p>');
+      '<div class="money-row"><span>Pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>inbegrepen</b></div><div class="money-row"><span>Bereik</span><b>inbegrepen</b></div>' +
+      '<p class="hint">Per maand: eerste 2 maanden vast, daarna maandelijks opzegbaar. Per jaar: 10% korting. Ontzorgd loopt per maand en stopt bij de handtekening. Met de afspraak.</p>';
     if (step === 3) {
-      var once = (w.selection ? PRICE.selectie : 0) + (w.beeld ? PRICE.beeld : 0);
+      var once = w.beeld ? PRICE.beeld : 0;
       h += '<h2>Wat mogen wij nog doen?</h2><div class="packs">' +
-        '<button class="pack" data-action="wset" data-k="selection" aria-pressed="' + !!w.selection + '"><span><b>Selectie door ons</b><small>Wij bellen iedereen binnen 24 uur</small></span><span>+ ' + eur(PRICE.selectie) + '</span></button>' +
         '<button class="pack" data-action="wset" data-k="beeld" aria-pressed="' + !!w.beeld + '"><span><b>Foto en video door ons</b><small>Anders gebruiken we jullie eigen beeld</small></span><span>+ ' + eur(PRICE.beeld) + '</span></button></div>' +
-        '<div class="money-row"><span>' + (w.plan === 'jaar' ? 'Per maand, per vacature' : 'Per vacature, eenmalig') + '</span><b>' + eur(planOf(w.plan).price) + '</b></div>' + (once ? '<div class="money-row"><span>Eenmalig</span><b>' + eur(once) + '</b></div>' : '') +
-        '<p class="hint">Inclusief vacaturepagina, campagnes, portaal, opvolging en plaatsing op gratis vacaturesites. Bedragen excl. btw. Je betaalt pas na de kick-off.</p>';
+        '<div class="money-row"><span>' + 'Per maand, per vacature' + '</span><b>' + eur(planOf(w.plan).price) + '</b></div>' + (once ? '<div class="money-row"><span>Eenmalig</span><b>' + eur(once) + '</b></div>' : '') +
+        '<p class="hint">Inclusief vacaturepagina, campagnes, portaal, opvolging en koppeling met vacaturesites. Bedragen excl. btw. Je betaalt pas na de kick-off.</p>';
     }
     h += '<div class="row" style="margin-top:16px">' + (step > 1 ? '<button class="btn btn--ghost" data-action="wback">Terug</button>' : '') +
       '<button class="btn ' + (step === 3 ? 'btn--gold' : '') + '" data-action="wnext">' + (step === 3 ? 'Aanvraag versturen' : 'Volgende') + '</button></div></div>';
@@ -431,7 +475,7 @@
     var act = C.clients.reduce(function (t, c) { return t + c.vacancies; }, 0);
     var speed = C.clients.map(function (c) { return c.speed_h; }).sort(function (a, b) { return a - b; })[Math.floor(C.clients.length / 2)];
     var cpq = Math.round(C.clients.reduce(function (t, c) { return t + c.cpq; }, 0) / C.clients.length);
-    var mix = [['Jaarmodel', mrr, '#111'], ['Vacatures en selectie', C.once_month_cents, '#d1b75c'], ['Fee op extra budget', C.media_fee_month_cents, '#9c8740'], ['Recruitersnetwerk', C.network_month_cents, '#02daac']];
+    var mix = [['Pakketten', mrr, '#111'], ['Beeld op locatie', C.once_month_cents, '#d1b75c'], ['Fee op extra budget', C.media_fee_month_cents, '#9c8740'], ['Recruitersnetwerk', C.network_month_cents, '#02daac']];
     var tot = mix.reduce(function (t, x) { return t + x[1]; }, 0);
     var maxT = Math.max.apply(null, C.mrr_trend);
     var h = '<h1>Cockpit</h1><p class="sub">De cijfers waar een koper naar kijkt. Demo met verzonnen klanten.</p>';
@@ -507,7 +551,7 @@
         decide + (S.inviting ? invitePicker(a) : '') +
         (match(a).of ? '<div class="card"><p class="card__label">Harde eisen</p><ul class="must">' + match(a).items.map(function (i) { return '<li class="' + (i.ok ? 'ok' : 'no') + '">' + esc(i.label) + '</li>'; }).join('') + '</ul></div>' : '') +
         autoCard(a) +
-        '<div class="card"><p class="card__label">Geschikte kandidaat?</p><div class="row"><button class="chip" data-action="qual" data-v="true" aria-pressed="' + (a.qualified === true) + '">Ja, geschikt</button><button class="chip" data-action="qual" data-v="false" aria-pressed="' + (a.qualified === false) + '">Nee</button></div><p class="hint">Telt mee voor je garantie en leert de campagne wie je zoekt.</p></div>' +
+        '<div class="card"><p class="card__label">Geschikte kandidaat?</p><div class="row"><button class="chip" data-action="qual" data-v="true" aria-pressed="' + (a.qualified === true) + '">Ja, geschikt</button><button class="chip" data-action="qual" data-v="false" aria-pressed="' + (a.qualified === false) + '">Nee</button></div><p class="hint">Telt mee voor de afspraak en leert de campagne wie je zoekt.</p></div>' +
         (a.stage === 'afgewezen' && demo ? '<div class="card"><p class="card__label">Netwerk</p>' + (a.candidate.consent_network
             ? (a.network_status ? '<p><b>Aangeboden aan het recruitersnetwerk.</b> Wordt deze kandidaat elders aangenomen, dan krijg jij cashback als tegoed.</p>' : '<p>Past niet bij jou, maar misschien wel ergens anders. De kandidaat gaf toestemming om gedeeld te worden.</p><p><button class="btn btn--gold btn--sm" data-action="network">Doorplaatsen via netwerk</button></p>')
             : '<p class="hint">Geen toestemming om te delen. Deze kandidaat wordt na 4 weken verwijderd.</p>') + '</div>' : '') +
@@ -601,6 +645,135 @@
     render();
   }
 
+
+  /* ---------- monteurs: pakketten en kandidatenbak (fase 1 blauwdruk) ---------- */
+  var PAKKETTEN = {
+    basis: { key: 'basis', name: 'Kandidaten', price: 49900, note: 'Reacties met video, jij kiest', early: false },
+    versneld: { key: 'versneld', name: 'Voorgeselecteerd', price: 99900, note: 'Wij selecteren voor en plannen het gesprek', early: true },
+    moeilijk: { key: 'moeilijk', name: 'Ontzorgd', price: 150000, note: 'Wij doen alles tot de handtekening', early: true }
+  };
+  var EARLY_H = 48;
+  function pakketOf(v) { return v && v.pakket ? PAKKETTEN[v.pakket] : null; }
+  function activePakket() {
+    if (S.noPack) return null;
+    var best = null;
+    S.vacancies.forEach(function (v) { var p = pakketOf(v); if (p && v.status === 'live' && !v.opgezegd_per && (!best || p.price > best.price)) best = p; });
+    return best;
+  }
+  function stopDate(v) { var minTo = addMonths(v.start_date || new Date().toISOString(), 2), n = new Date(), eom = new Date(n.getFullYear(), n.getMonth() + 1, 0); return minTo > eom ? minTo : eom; }
+  function addMonths(iso, n) { var d = new Date(iso); d.setMonth(d.getMonth() + n); return d; }
+  function dday(d) { return new Date(d).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' }); }
+  function tStat(t) { return S.picked[t.id] || null; }
+  function tYes(t) { var st = tStat(t); return st === 'ja' || st === 'zelf'; }
+  function tPill(t) { var st = tStat(t); return st === 'zelf' ? '<span class="pill pill--live">Solliciteerde bij jou</span>' : st === 'ja' ? '<span class="pill pill--live">Zegt ja</span>' : st === 'uitgenodigd' ? '<span class="pill">Wacht op antwoord</span>' : st === 'nee' ? '<span class="pill">Past niet</span>' : ''; }
+  function tName(t) { return t.first_name + ' ' + t.last_initial + '.'; }
+  function tHours(t) { return hoursSince(t.created_at); }
+  function tVisible(t, pk) { return tHours(t) >= EARLY_H || (pk && pk.early); }
+  function videoTile(t, big) {
+    return '<div class="tvid' + (big ? ' tvid--big' : '') + '" role="img" aria-label="Video van ' + esc(tName(t)) + '"><span class="tvid__ini">' + esc(t.first_name.charAt(0) + t.last_initial) + '</span>' +
+      '<span class="tvid__play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span><span class="tvid__len">0:' + t.video_sec + '</span></div>';
+  }
+  function openTalent(id) {
+    S.tOpen = id; S.tTab = 'profiel'; S.tSlot = 0; modal = 'talent'; S.tContact = S.tContact || {};
+    var t = (S.talent || []).find(function (x) { return x.id === id; });
+    render();
+    if (!t || !activePakket() || !tStat(t)) return;
+    if (tYes(t)) api.contact(t).then(function (c) { S.tContact[id] = c || {}; if (modal === 'talent' && S.tOpen === id) render(); });
+    if (!demo) api.messages(id).then(function (m) { S.chats[id] = m; if (modal === 'talent' && S.tOpen === id) render(); });
+  }
+  function slotDate(i) {
+    var d = new Date(), n = 0;
+    while (true) { d = new Date(d.getTime() + 864e5); if (d.getDay() === 0 || d.getDay() === 6) continue; if (n === i) break; n++; }
+    d.setHours(i === 1 ? 14 : 10, 0, 0, 0); return d;
+  }
+  function viewTalent() {
+    var pk = activePakket(), kinds = ['all', 'Installatie', 'Elektro', 'Montage'];
+    var all = (S.talent || []).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+    var list = all.filter(function (t) { return S.tKind === 'all' ? true : S.tKind === 'gekozen' ? S.picked[t.id] : t.kind === S.tKind; });
+    var nPicked = Object.keys(S.picked).filter(function (k) { return S.picked[k]; }).length;
+    var h = '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>Monteurs</h1><p class="sub">Hier kiest de monteur. Jij solliciteert, de monteur zegt ja of nee.</p></div>' +
+      (demo ? '<label class="hint tswitch"><input type="checkbox" data-action="nopack"' + (S.noPack ? ' checked' : '') + '> Bekijk zonder pakket</label>' : '') + '</div>';
+    h += pk
+      ? '<div class="card card--dark tband"><div><p class="card__label">Pakket ' + pk.name + ' loopt</p><p>Solliciteer bij monteurs die je aanspreken. Zegt de monteur ja, dan zie je het nummer en plan je een gesprek.' + (pk.early ? ' Nieuwe monteurs zie je ' + EARLY_H + ' uur eerder dan bij Kandidaten.' : '') + '</p></div></div>'
+      : '<div class="card tband tband--lock"><div><p class="card__label">Geen pakket actief</p><p>' + (all.length ? all.length + ' monteurs zoeken nu werk. ' : 'Monteurs zoeken nu werk. ') + 'Hun profielen en video\'s zie je vanaf Gezien (&euro;99 p/m). Dan kunnen monteurs ook bij jou solliciteren. Zelf monteurs benaderen kan vanaf Kandidaten.</p></div><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket</a></div>';
+    if (!pk) return h + '<div class="tgrid">' + [0, 1, 2].map(function () { return '<div class="card tcard tcard--wait"><div class="tvid"><span class="tvid__ini">?</span></div><p class="vac__title">Monteur</p><p class="hint">Zichtbaar met een pakket.</p></div>'; }).join('') + '</div>';
+    h += '<div class="chips">' + kinds.map(function (k) { return '<button class="chip" data-action="tkind" data-id="' + k + '" aria-pressed="' + (S.tKind === k) + '">' + (k === 'all' ? 'Alle monteurs' : k) + '<span class="n">' + all.filter(function (t) { return k === 'all' || t.kind === k; }).length + '</span></button>'; }).join('') +
+      '<button class="chip" data-action="tkind" data-id="gekozen" aria-pressed="' + (S.tKind === 'gekozen') + '">Gesolliciteerd<span class="n">' + nPicked + '</span></button></div>';
+    h += '<div class="tgrid">' + list.map(function (t) {
+      var fresh = tHours(t) < EARLY_H, vis = tVisible(t, pk);
+      if (!vis) return '<div class="card tcard tcard--wait"><div class="tvid"><span class="tvid__ini">?</span></div><p class="vac__title">' + esc(t.role) + '</p><p class="hint">' + esc(t.city) + '. Nieuw profiel, zichtbaar over ' + Math.ceil(EARLY_H - tHours(t)) + ' uur.</p><p class="hint"><b>Voorgeselecteerd en Ontzorgd zien dit nu al.</b></p></div>';
+      return '<div class="card tcard" role="button" tabindex="0" data-action="topen" data-id="' + t.id + '">' + videoTile(t) +
+        '<div class="row tcard__top"><p class="vac__title">' + esc(tName(t)) + '</p>' + (tStat(t) ? tPill(t) : fresh ? '<span class="pill tpill--new">Nieuw</span>' : '') + '</div>' +
+        '<p class="hint tcard__role">' + esc(t.role) + '</p><p class="hint">' + esc(t.city) + ' · ' + t.km + ' km · ' + t.years + ' jaar ervaring · ' + esc(t.available.toLowerCase()) + '</p>' +
+        '<div class="tbadges">' + t.badges.map(function (b) { return '<span class="tbadge" title="' + esc(b.text) + '">' + esc(b.name) + '</span>'; }).join('') + '</div></div>';
+    }).join('') + '</div>';
+    if (!list.length) h += '<div class="card empty">' + (S.tKind === 'gekozen' ? '<strong>Nog bij niemand gesolliciteerd.</strong>Open een profiel en tik op Solliciteer.' : 'Geen monteurs in deze categorie.') + '</div>';
+    return h;
+  }
+  function modalTalent() {
+    var t = (S.talent || []).find(function (x) { return x.id === S.tOpen; }); if (!t) return '';
+    var pk = activePakket(), chat = S.chats[t.id] || [], tab = S.tTab;
+    var ct = S.tContact && S.tContact[t.id];
+    var st = tStat(t);
+    var contact = pk && tYes(t)
+      ? (ct ? '<div class="row">' + (ct.phone ? '<a class="btn btn--green btn--sm" href="tel:' + esc(ct.phone) + '">' + I.phone + esc(ct.phone) + '</a><a class="btn btn--sm" style="background:#25d366" href="https://wa.me/' + intlPhone(ct.phone) + '" target="_blank" rel="noopener">' + I.wa + 'WhatsApp</a>' : '') + (ct.email ? '<a class="btn btn--ghost btn--sm" href="mailto:' + esc(ct.email) + '">' + I.mail + 'Mail</a>' : '') + '</div>' : '<p class="hint">Contactgegevens laden...</p>')
+      : '<div class="tlock"><span>06 •• •• •• ••</span><span>••••••@••••••.nl</span>' + (pk ? '<p class="hint">Je ziet het nummer zodra ' + esc(t.first_name) + ' ja zegt.</p>' : '<a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket om contact te zien</a>') + '</div>';
+    var h = '<div class="scrim" data-action="close"></div><div class="modal modal--wide tmodal" role="dialog" aria-modal="true" aria-label="' + esc(tName(t)) + '">' +
+      '<button class="icon-btn drawer__close" data-action="close" aria-label="Sluiten">' + I.close + '</button>' + videoTile(t, true) +
+      '<h2 style="margin-top:16px">' + esc(tName(t)) + '</h2><p class="hint">' + esc(t.role) + ' · ' + esc(t.city) + ' · ' + t.km + ' km · ' + t.years + ' jaar ervaring · start ' + esc(t.available.toLowerCase()) + '</p>' +
+      '<blockquote class="tquote">"' + esc(t.quote) + '"</blockquote>' +
+      '<div class="row tacts">' + (st ? tPill(t) : !pk ? '<a class="btn btn--gold" href="#/vacatures">Start een pakket om te solliciteren</a>' : '<button class="btn btn--gold" data-action="tpick" data-id="' + t.id + '">Solliciteer bij ' + esc(t.first_name) + '</button>') +
+      '<button class="chip" data-action="ttab" data-id="profiel" aria-pressed="' + (tab === 'profiel') + '">Profiel</button><button class="chip" data-action="ttab" data-id="chat" aria-pressed="' + (tab === 'chat') + '">Chat' + (chat.length ? '<span class="n">' + chat.length + '</span>' : '') + '</button><button class="chip" data-action="ttab" data-id="plan" aria-pressed="' + (tab === 'plan') + '">Plan gesprek</button></div>';
+    if (tab === 'profiel') {
+      h += '<div class="card tsub"><p class="card__label">Trainingsbadges</p><ul class="tblist">' + t.badges.map(function (b) { return '<li><b>' + esc(b.name) + '</b><span>' + esc(b.text) + '</span></li>'; }).join('') + '</ul></div>' +
+        '<div class="card tsub"><p class="card__label">Contact</p>' + contact + '</div>';
+    } else if (!pk) {
+      h += '<div class="card tsub tlock"><p><b>Chat en agenda openen met een pakket.</b> Zo weet de monteur dat er een echte werkgever aan de andere kant zit.</p><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket</a></div>';
+    } else if (!st || st === 'nee') {
+      h += '<div class="card tsub tlock"><p><b>' + (st === 'nee' ? esc(t.first_name) + ' heeft bedankt.' : 'Solliciteer eerst bij ' + esc(t.first_name) + '.') + '</b> ' + (st === 'nee' ? 'Er zijn er meer. Kijk verder in de lijst.' : 'Daarna kun je berichten sturen. Zegt ' + esc(t.first_name) + ' ja, dan zie je het nummer en plan je een gesprek.') + '</p></div>';
+    } else if (tab === 'plan' && !tYes(t)) {
+      h += '<div class="card tsub tlock"><p><b>Wacht op ' + esc(t.first_name) + '.</b> Een gesprek plannen kan zodra ' + esc(t.first_name) + ' ja zegt. Stuur gerust alvast een bericht.</p></div>';
+    } else if (tab === 'chat') {
+      h += '<div class="card tsub"><div class="tchat">' + (chat.length ? chat.map(function (m) { return '<p class="tmsg tmsg--' + m.from + '">' + esc(m.text) + '<small>' + esc(/T/.test(m.at) ? fdate(m.at) : m.at) + '</small></p>'; }).join('') : '<p class="hint">Stuur ' + esc(t.first_name) + ' een eerste bericht. Kort en eerlijk werkt het best.</p>') + '</div>' +
+        '<div class="row tchat__in"><input id="tmsg" type="text" placeholder="Hoi ' + esc(t.first_name) + ', ik zag je video..." autocomplete="off"><button class="btn btn--sm" data-action="tsend" data-id="' + t.id + '">Stuur</button></div></div>';
+    } else {
+      h += '<div class="card tsub"><p class="card__label">Kies een moment</p><div class="row">' + SLOTS.map(function (sl, i) { return '<button class="chip" data-action="tslot" data-v="' + i + '" aria-pressed="' + (S.tSlot === i) + '">' + sl + '</button>'; }).join('') + '</div>' +
+        '<p><button class="btn btn--green" data-action="tinvite" data-id="' + t.id + '">Stuur uitnodiging</button></p><p class="hint">' + esc(t.first_name) + ' bevestigt met één tik. Herinnering gaat automatisch, de dag ervoor en een uur van tevoren.</p></div>';
+    }
+    return h + '</div>';
+  }
+  function afspraakCard(v) {
+    if (!v || !v.pakket || v.pakket === 'gezien') return '';
+    var start = new Date(v.start_date || v.created_at || Date.now()), m1 = addMonths(start, 1), apps = S.apps.filter(function (a) { return a.vacancy_id === v.id; });
+    var fit = apps.filter(function (a) { return ['geschikt', 'gesprek', 'aanbod', 'aangenomen'].indexOf(a.stage) > -1; }).length;
+    var rt = demo ? 3 : null, ok = function (b) { return b ? '<b style="color:var(--green-d,#0a8f6a)">&#10003;</b>' : '<b style="color:var(--gold-d,#8a7430)">&bull;</b>'; };
+    var row = function (txt, val, good) { return '<div class="money-row"><span>' + ok(good) + ' ' + txt + '</span><b>' + val + '</b></div>'; };
+    return '<div class="card section"><p class="card__label">De afspraak</p><p class="hint" style="margin-top:0">We doen dit samen. Zo staan we ervoor.</p>' +
+      '<p class="hint" style="margin:10px 0 4px"><b>Wij</b></p>' + row('Live binnen 5 werkdagen', dday(start), true) + row('Geschikte monteur gesproken in maand 1 (tot ' + dday(m1) + ')', fit ? fit + ' geschikt' : 'nog niet', fit > 0) +
+      '<p class="hint" style="margin:10px 0 4px"><b>Jij</b></p>' + row('Reageren binnen 1 werkdag', rt != null ? 'gemiddeld ' + rt + ' uur' : 'wordt gemeten', rt == null || rt <= 24) + row('Salaris past bij de markt', 'vastgelegd', true) + row('Beeld en info aangeleverd', 'binnen 5 werkdagen', true) + row('Eisen zoals afgesproken', 'ja', true) +
+      '<p class="hint">Doen we allebei wat we afspraken en spreek je in maand 1 geen geschikte monteur? Dan betaal je maand 2 niet. Wij gaan gewoon door.</p></div>';
+  }
+  function afspraakMini(v) {
+    var m1 = addMonths(v.start_date || v.created_at || Date.now(), 1), left = Math.max(0, Math.ceil((m1 - Date.now()) / 864e5));
+    var fit = S.apps.filter(function (a) { return a.vacancy_id === v.id && ['geschikt', 'gesprek', 'aanbod', 'aangenomen'].indexOf(a.stage) > -1; }).length;
+    return '<div class="card"><p class="card__label">De afspraak</p><p class="big">' + Math.min(fit, 1) + ' <small>van 1 geschikt gesproken</small></p>' +
+      '<div class="bar bar--green"><span style="width:' + (fit ? 100 : 0) + '%"></span></div>' +
+      '<div class="bar-legend"><span>' + (fit ? 'Afspraak nagekomen' : 'Op koers') + '</span><span>' + (left ? 'Maand 1, nog ' + left + ' dagen' : 'Maand 1 voorbij') + '</span></div></div>';
+  }
+  function pakketCard(v) {
+    var pk = pakketOf(v); if (!pk) return '';
+    var start = v.start_date || new Date().toISOString(), minTo = addMonths(start, 2), canStop = Date.now() >= minTo.getTime();
+    var stopAt = stopDate(v);
+    var h = '<div class="card section"><div class="row" style="justify-content:space-between"><p class="card__label" style="margin:0">Pakket</p>' + (v.opgezegd_per ? '<span class="pill pill--gepauzeerd">Opgezegd</span>' : '<span class="pill pill--live">Loopt</span>') + '</div>' +
+      '<p class="big" style="margin-top:8px">' + pk.name + ' <small>' + eur(pk.price) + ' per maand, alles inbegrepen</small></p>' +
+      '<div class="money-row"><span>Gestart</span><b>' + dday(start) + '</b></div><div class="money-row"><span>Minimaal tot</span><b>' + dday(minTo) + '</b></div>' +
+      (v.opgezegd_per ? '<div class="money-row"><span>Stopt op</span><b>' + dday(v.opgezegd_per) + '</b></div><p><button class="btn btn--ghost btn--sm" data-action="pkundo" data-id="' + v.id + '">Toch doorgaan</button></p>'
+        : ('<p class="hint">Wijzig je pakket per volgende maand' + (v.pakket_next && v.pakket_next !== v.pakket ? ' (gepland: ' + PAKKETTEN[v.pakket_next].name + ')' : '') + ':</p><div class="row">' + Object.keys(PAKKETTEN).map(function (k) { return '<button class="chip" data-action="pkset" data-id="' + v.id + '" data-v="' + k + '" aria-pressed="' + ((v.pakket_next || v.pakket) === k) + '">' + PAKKETTEN[k].name + ' · ' + eur(PAKKETTEN[k].price) + '</button>'; }).join('') + '</div>') +
+          '<p class="hint">Stoel gevuld? Zeg op met één knop. ' + (canStop ? 'Je pakket stopt dan op ' + dday(stopAt) + '.' : 'Dat kan per ' + dday(minTo) + ', na de eerste 2 maanden.') + '</p><p><button class="btn btn--red btn--sm" data-action="pkstop" data-id="' + v.id + '">Opzeggen</button></p>') +
+      '</div>';
+    return h;
+  }
+
   /* ---------- render ---------- */
   var modal = null;
   function render() {
@@ -611,8 +784,8 @@
     if (r === 'cockpit' && !(demo && S.as === 'yd')) r = 'vandaag';
     if (S.as === 'recruiter') S.tour = null;
     var body = r === 'rapport' ? viewReport() : r === 'kandidaten' ? viewCandidates() : r === 'resultaten' ? viewResults() : r === 'vacatures' ? (parts[1] ? viewVacancy(parts[1]) : viewVacancies()) :
-      r === 'cockpit' ? viewCockpit() : r === 'pool' ? viewPool() : r === 'plaatsingen' ? viewPlacements() : viewToday();
-    app.innerHTML = shell(body) + (S.open ? drawer() : '') + (modal === 'buy' ? modalBuy() : modal === 'wiz' ? modalWizard() : modal === 'claim' ? modalClaim() : modal === 'decide' ? modalDecide() : modal === 'notif' ? panelNotif() : '') + (S.tour != null ? tourCard() : '');
+      r === 'cockpit' ? viewCockpit() : r === 'monteurs' ? viewTalent() : r === 'pool' ? viewPool() : r === 'plaatsingen' ? viewPlacements() : viewToday();
+    app.innerHTML = shell(body) + (S.open ? drawer() : '') + (modal === 'buy' ? modalBuy() : modal === 'wiz' ? modalWizard() : modal === 'claim' ? modalClaim() : modal === 'decide' ? modalDecide() : modal === 'notif' ? panelNotif() : modal === 'talent' ? modalTalent() : '') + (S.tour != null ? tourCard() : '');
     document.body.classList.toggle('is-report', r === 'rapport');
     bindDnD();
   }
@@ -696,13 +869,13 @@
       return api.buy(t.dataset.vac, cents).then(function () { modal = null; render(); toast('Besteld: ' + eur(cents) + '. De betaallink komt per mail.'); }).catch(function () { toast('Bestellen mislukt. Mail team@youngdedicated.nl.'); });
     }
     if (act === 'tores') { S.vacFilter = t.dataset.id; location.hash = '#/resultaten'; return; }
-    if (act === 'newvac') { S.wiz = { step: 1, title: '', location: '', plan: 'vacature', selection: false, beeld: false }; modal = 'wiz'; return render(); }
+    if (act === 'newvac') { S.wiz = { step: 1, title: '', location: '', plan: 'basis', selection: false, beeld: false }; modal = 'wiz'; return render(); }
     if (act === 'wset') { if (t.dataset.v) S.wiz[t.dataset.k] = t.dataset.v; else S.wiz[t.dataset.k] = !S.wiz[t.dataset.k]; return render(); }
     if (act === 'wback') { S.wiz.step--; return render(); }
     if (act === 'wnext') {
       if (S.wiz.step === 1) { S.wiz.title = document.getElementById('w-title').value.trim(); S.wiz.location = document.getElementById('w-loc').value.trim(); if (!S.wiz.title) { toast('Vul een functie in.'); return; } }
       if (S.wiz.step < 3) { S.wiz.step++; return render(); }
-      var nv = { id: 'vac-' + Date.now(), organization_id: S.orgId, title: S.wiz.title, location: S.wiz.location, status: 'concept', plan: S.wiz.plan, selection_by_yd: S.wiz.selection, target_qualified: 5, channels: [], branch: (S.vacancies[0] || {}).branch,
+      var nv = { id: 'vac-' + Date.now(), organization_id: S.orgId, title: S.wiz.title, location: S.wiz.location, status: 'concept', plan: S.wiz.plan, pakket: S.wiz.plan, selection_by_yd: S.wiz.selection, target_qualified: 5, channels: [], branch: (S.vacancies[0] || {}).branch,
         milestones: [{ label: 'Aanvraag', done: true }, { label: 'Kick-off', done: false }, { label: 'Betaald', done: false }, { label: 'Live', done: false }, { label: 'Vervuld', done: false }],
         qa: { 'Relevante ervaring': ['Ja, meer dan 2 jaar', 'Ja, 1 tot 2 jaar', 'Nee'], 'Wanneer kun je starten': ['Direct', 'Binnen een maand', 'Na opzegtermijn'], 'Uren per week': ['32 tot 40', '24 tot 32', '12 tot 24'] },
         must: [{ label: 'Relevante ervaring', q: 'Relevante ervaring', ok: '^Ja' }, { label: 'Start binnen een maand', q: 'Wanneer kun je starten', ok: 'Direct|Binnen' }, { label: 'Minimaal 24 uur', q: 'Uren per week', ok: '^24|^32' }] };
@@ -729,10 +902,38 @@
       window.YD_DEMO.placements.push({ id: 'pl' + Date.now(), org: pp.from_org, initials: pp.initials, role: pp.role, placed_at: new Date().toISOString(), recruiter: 'Demo Techniek Recruitment', fee_cents: pp.fee_cents, status: 'geplaatst' });
       toast('Gefeliciteerd. De werkgever krijgt ' + eur(Math.round(pp.fee_cents * 0.2)) + ' tegoed.'); return render();
     }
+    if (act === 'tkind') { S.tKind = t.dataset.id; return render(); }
+    if (act === 'topen') return openTalent(t.dataset.id);
+    if (act === 'ttab') { S.tTab = t.dataset.id; return render(); }
+    if (act === 'tpick') {
+      if (!activePakket()) { toast('Solliciteren kan met een lopend pakket.'); return; }
+      var pid = t.dataset.id, pt = (S.talent || []).find(function (x) { return x.id === pid; });
+      return api.pick(pid, true).then(function () {
+        S.picked[pid] = 'uitgenodigd'; toast('Je sollicitatie staat bij ' + pt.first_name + '. Je hoort het zodra er antwoord is.'); render();
+        if (demo) setTimeout(function () { S.picked[pid] = 'ja'; api.contact(pt).then(function (c) { S.tContact[pid] = c; toast(pt.first_name + ' zegt ja. Je ziet nu het nummer.'); render(); }); }, 2500);
+      }).catch(function () { toast('Opslaan mislukt.'); });
+    }
+    if (act === 'tslot') { S.tSlot = +t.dataset.v; return render(); }
+    if (act === 'tsend' || act === 'tinvite') {
+      var tt = (S.talent || []).find(function (x) { return x.id === t.dataset.id; }); if (!tt) return;
+      var slot = SLOTS[S.tSlot || 0], txt = act === 'tinvite' ? 'Uitnodiging voor een kennismaking: ' + slot + '.' : ((document.getElementById('tmsg') || {}).value || '').trim();
+      if (!txt) return;
+      var done = function () {
+        if (act === 'tinvite') { S.tTab = 'chat'; toast('Uitnodiging verstuurd aan ' + tt.first_name); }
+        render();
+        if (demo) setTimeout(function () { (S.chats[tt.id] = S.chats[tt.id] || []).push({ from: 'm', text: act === 'tinvite' ? 'Bevestigd. Tot dan!' : 'Hoi, dank voor je bericht. Ik bel je vanavond even, past dat?', at: new Date().toISOString() }); if (modal === 'talent') render(); }, 1400);
+      };
+      var pr = act === 'tinvite' ? api.interview(tt.id, slotDate(S.tSlot || 0)).then(function () { return api.send(tt.id, txt); }) : api.send(tt.id, txt);
+      return pr.then(done).catch(function () { toast('Versturen mislukt. Probeer het opnieuw.'); });
+    }
+    if (act === 'pkset') { var pv = vac(t.dataset.id), np = t.dataset.v; return api.pakketSet(pv, np).then(function () { toast('Pakket ' + PAKKETTEN[np].name + ' gaat in per volgende maand.'); render(); }).catch(function () { toast('Wijzigen mislukt. Mail team@youngdedicated.nl.'); }); }
+    if (act === 'pkstop') { var sv = vac(t.dataset.id); return api.pakketStop(sv, false).then(function () { toast('Opgezegd. Je pakket stopt op ' + dday(sv.opgezegd_per) + '.'); render(); }).catch(function () { toast('Opzeggen mislukt. Mail team@youngdedicated.nl.'); }); }
+    if (act === 'pkundo') { var uv = vac(t.dataset.id); return api.pakketStop(uv, true).then(function () { uv.opgezegd_per = null; toast('Je pakket loopt door.'); render(); }).catch(function () { toast('Opslaan mislukt.'); }); }
     if (act === 'logout') return api.signOut();
     if (act === 'demo') { sessionStorage.setItem('yd-demo', '1'); location.reload(); }
   });
   document.addEventListener('change', function (e) {
+    if (e.target.dataset.action === 'nopack') { S.noPack = e.target.checked; return render(); }
     if (e.target.dataset.action === 'org') { S.orgId = e.target.value; S.vacFilter = 'all'; loadOrg(); }
     if (e.target.dataset.action === 'role') { S.as = e.target.value; S.open = null; modal = null; if (S.as === 'klant' && S.orgId === 'org-yd') { S.orgId = 'org-walsem'; S.vacFilter = 'all'; loadOrg(); } location.hash = S.as === 'recruiter' ? '#/pool' : S.as === 'yd' ? '#/cockpit' : '#/vandaag'; render(); }
   });
@@ -740,13 +941,15 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && (S.open || modal)) { S.open = null; modal = null; render(); }
     if (e.key === 'Enter' && e.target.matches('.person')) openApp(e.target.dataset.id);
+    if (e.key === 'Enter' && e.target.matches('.tcard[data-id]')) openTalent(e.target.dataset.id);
+    if (e.key === 'Enter' && e.target.id === 'tmsg') { var sb2 = app.querySelector('[data-action=tsend]'); if (sb2) sb2.click(); }
   });
   window.addEventListener('hashchange', function () { S.open = null; modal = null; render(); window.scrollTo(0, 0); });
   function tourDone() { try { localStorage.setItem('yd-tour-v1', '1'); } catch (e) {} }
 
   /* ---------- login ---------- */
   function viewLogin(sent) {
-    app.innerHTML = '<div class="login"><div class="login__art"><h2>Personeel dat blijft.<br>Zonder gedoe.</h2><p>Jouw sollicitanten, je resultaten en je budget. Altijd live, op één plek.</p></div>' +
+    app.innerHTML = '<div class="login"><div class="login__art"><h2>Hier kiest<br>de monteur.</h2><p>Monteurs die bij jou willen, je pakket en de afspraak. Altijd live, op één plek.</p></div>' +
       '<form class="login__form" id="login"><img src="' + LOGO + '" alt="YoungDedicated">' +
       (sent ? '<h1>Check je mail.</h1><p class="sub">We stuurden een inloglink naar ' + esc(sent) + '. Tik erop en je bent binnen.</p>'
         : '<h1>Inloggen</h1><p class="sub">Geen wachtwoord nodig. Je krijgt een link per mail.</p><label for="email">E-mailadres</label><input id="email" type="email" required autocomplete="email" placeholder="naam@bedrijf.nl"><p style="margin-top:16px"><button class="btn btn--block" type="submit">Stuur mijn inloglink</button></p>') +
@@ -765,6 +968,7 @@
   function loadOrg() {
     return api.load(S.orgId).then(function (d) {
       Object.assign(S, d);
+      api.talent().then(function (t) { S.talent = t.list; if (!demo || !Object.keys(S.picked).length) S.picked = t.picks; if (route() === 'monteurs') render(); }).catch(function () { S.talent = []; });
       if (demo && S.tour == null && !S.tourChecked) { S.tourChecked = true; var seen = '1'; try { seen = localStorage.getItem('yd-tour-v1'); } catch (e) {} if (!seen) { S.tour = 0; location.hash = '#/vandaag'; } }
       render();
     });

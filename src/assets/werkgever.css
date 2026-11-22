@@ -519,3 +519,11 @@
 .wg-fast h2:before,.wg-fast h2:after,.wg-fast__btn:before,.wg-fast__btn:after{display:none!important}
 .wg-next__step strong{font-size:inherit}
 .wg-order__submit:before,.wg-order__submit:after{display:none!important}
+/* Merkverhaal 22 nov: stappen op lichte achtergrond, compacte prijskaarten op home */
+.wg-section:not(.wg-section--dark) .wg-steps--big li span:last-child{color:var(--wg-muted)}
+.wg-prices--compact .wg-price__amount{font-size:40px}
+.wg-prices--compact .wg-price__amount small{display:block;margin-top:4px}
+.wg-flow li{counter-increment:f;position:relative;display:flex;flex-direction:column;gap:8px;background:#fff;padding:84px 22px 24px;box-shadow:0 20px 50px rgba(0,0,0,.07);border-top:3px solid var(--wg-gold);font-size:15px}
+.wg-flow li>span:last-child{color:var(--wg-muted)}
+.wg-section--dark .wg-card{background:#1b1b1b;box-shadow:none;border-top:3px solid var(--wg-gold);color:#e6e6e6}
+.wg-section--dark .wg-card .wg-card__big{color:#fff}

@@ -1,0 +1,179 @@
+---
+layout: "base.njk"
+title: "Werkgeversscan | YoungDedicated"
+description: "Zes vragen, twee minuten. Zie waarom monteurs jou nog niet kiezen en wat je open vacature je per week kost."
+permalink: "/scan/"
+bodyClass: "page wg-page"
+noindex: true
+---
+<style>
+.sc-wrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:40px;align-items:start}
+.sc-q{border:0;padding:0;margin:0 0 34px;min-width:0}
+.sc-q legend{font-size:21px;font-weight:800;margin-bottom:12px;display:flex;gap:12px;align-items:center}
+.sc-q legend span{display:inline-flex;flex:0 0 32px;width:32px;height:32px;align-items:center;justify-content:center;background:var(--wg-ink);color:#fff;border-radius:50%;font-size:15px}
+.sc-opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sc-opt{display:flex;gap:10px;align-items:center;border:2px solid var(--wg-line);background:#fff;padding:12px 14px;cursor:pointer;font-size:15px;font-weight:600;margin:0;transition:border-color .15s}
+.sc-opt input{accent-color:var(--wg-ink);width:18px;height:18px;flex:0 0 18px;margin:0}
+.sc-opt:has(input:checked){border-color:var(--wg-ink);box-shadow:6px 6px var(--wg-gold)}
+.sc-cost{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px}
+.sc-cost label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:15px;margin:0}
+.sc-cost input{border:2px solid var(--wg-line);padding:10px 12px;font:inherit;font-size:16px;width:100%;background:#fff}
+.sc-cost input:focus{outline:0;border-color:var(--wg-ink)}
+.sc-res{position:sticky;top:110px;background:var(--wg-ink);color:#fff;padding:30px}
+.sc-res__label{font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--wg-gold);margin:0 0 6px}
+.sc-score{font-size:76px;font-weight:900;line-height:1;letter-spacing:-.03em;margin:0}
+.sc-score small{font-size:22px;color:#9a9a9a;font-weight:700}
+.sc-bar{height:8px;background:rgba(255,255,255,.15);margin:14px 0 12px}
+.sc-bar i{display:block;height:100%;width:0;background:var(--wg-gold);transition:width .4s}
+.sc-verdict{font-size:18px;font-weight:800;margin:0 0 20px}
+.sc-loss{border-top:1px solid rgba(255,255,255,.18);padding-top:18px;margin-bottom:18px}
+.sc-loss strong{display:block;font-size:34px;font-weight:900;color:var(--wg-gold);line-height:1.1}
+.sc-loss span{font-size:14px;color:#cfcfcf}
+.sc-fix{list-style:none;padding:0;margin:0 0 20px;font-size:15px}
+.sc-fix li{padding:8px 0 8px 26px;border-bottom:1px solid rgba(255,255,255,.12);position:relative}
+.sc-fix li:before{content:"\2192";position:absolute;left:0;color:var(--wg-gold);font-weight:800}
+.sc-res .button{width:100%;margin:6px 0 0!important}
+.sc-res .button:before{display:none}
+.sc-empty{color:#bdbdbd;font-size:15px;margin:0 0 6px}
+.sc-lead{background:var(--wg-grey);padding:30px;margin-top:10px}
+.sc-lead h3{font-size:24px;font-weight:900;margin:0 0 6px}
+.sc-done{border-left:6px solid var(--wg-green);background:#fff;padding:24px 28px;font-weight:600}
+@media (max-width:991.98px){.sc-wrap{display:flex;flex-direction:column;gap:0}.sc-wrap>form{display:contents}.sc-q{order:1}.sc-res{position:static;order:2;margin-bottom:24px}.sc-lead,.sc-done{order:3}}
+@media (max-width:575.98px){.sc-opts,.sc-cost{grid-template-columns:1fr}.sc-score{font-size:60px}}
+</style>
+
+<section class="wg-section wg-pagehead">
+  <div class="container">
+    <p class="wg-eyebrow">Werkgeversscan</p>
+    <h1>Zou een monteur jou kiezen?</h1>
+    <p class="wg-lead">Ergens zoekt een monteur een nieuwe plek. De vraag is of hij bij jou uitkomt. Zes vragen, twee minuten: je ziet je score, wat de lege stoel je per week kost en wat je als eerste moet fixen.</p>
+  </div>
+</section>
+
+<section class="wg-section wg-section--tight">
+  <div class="container sc-wrap">
+    <form id="scan" name="werkgeversscan" method="POST" action="/bedankt/" data-netlify="true" netlify-honeypot="bot-field">
+      <input type="hidden" name="form-name" value="werkgeversscan">
+      <p hidden><label>Niet invullen: <input name="bot-field"></label></p>
+      <input type="hidden" name="score"><input type="hidden" name="kosten_per_week"><input type="hidden" name="kosten_tot_nu">
+
+      <fieldset class="sc-q"><legend><span>1</span>Hoe lang staat je vacature al open?</legend>
+        <div class="sc-opts">
+          <label class="sc-opt"><input type="radio" name="open" value="2" data-w="4" data-p="20">Korter dan een maand</label>
+          <label class="sc-opt"><input type="radio" name="open" value="8" data-w="13" data-p="12">1 tot 3 maanden</label>
+          <label class="sc-opt"><input type="radio" name="open" value="18" data-w="26" data-p="5">3 tot 6 maanden</label>
+          <label class="sc-opt"><input type="radio" name="open" value="30" data-w="40" data-p="0">Langer dan een half jaar</label>
+        </div></fieldset>
+
+      <fieldset class="sc-q"><legend><span>2</span>Hoeveel monteurs reageren per maand?</legend>
+        <div class="sc-opts">
+          <label class="sc-opt"><input type="radio" name="reacties" value="0" data-p="0">Geen</label>
+          <label class="sc-opt"><input type="radio" name="reacties" value="1-3" data-p="6">1 tot 3</label>
+          <label class="sc-opt"><input type="radio" name="reacties" value="4-10" data-p="14">4 tot 10</label>
+          <label class="sc-opt"><input type="radio" name="reacties" value="10+" data-p="20">Meer dan 10</label>
+        </div></fieldset>
+
+      <fieldset class="sc-q"><legend><span>3</span>Wat ziet een monteur als hij jou opzoekt?</legend>
+        <div class="sc-opts">
+          <label class="sc-opt"><input type="radio" name="beeld" value="werkpagina" data-p="20">Een werkpagina met onze mensen en bussen</label>
+          <label class="sc-opt"><input type="radio" name="beeld" value="tekst" data-p="8">Alleen een vacaturetekst</label>
+          <label class="sc-opt"><input type="radio" name="beeld" value="oud" data-p="2">Een oude site of stockfoto's</label>
+          <label class="sc-opt"><input type="radio" name="beeld" value="weet-niet" data-p="0">Geen idee</label>
+        </div></fieldset>
+
+      <fieldset class="sc-q"><legend><span>4</span>Hoe snel bel je een sollicitant terug?</legend>
+        <div class="sc-opts">
+          <label class="sc-opt"><input type="radio" name="opvolging" value="uur" data-p="20">Binnen een uur</label>
+          <label class="sc-opt"><input type="radio" name="opvolging" value="dag" data-p="12">Dezelfde dag</label>
+          <label class="sc-opt"><input type="radio" name="opvolging" value="dagen" data-p="4">Binnen een paar dagen</label>
+          <label class="sc-opt"><input type="radio" name="opvolging" value="soms" data-p="0">Dat schiet er weleens bij in</label>
+        </div></fieldset>
+
+      <fieldset class="sc-q"><legend><span>5</span>Staat het salaris in je vacature?</legend>
+        <div class="sc-opts">
+          <label class="sc-opt"><input type="radio" name="salaris" value="ja" data-p="10">Ja, met bedrag</label>
+          <label class="sc-opt"><input type="radio" name="salaris" value="marktconform" data-p="2">"Marktconform"</label>
+          <label class="sc-opt"><input type="radio" name="salaris" value="nee" data-p="0">Nee</label>
+        </div></fieldset>
+
+      <fieldset class="sc-q"><legend><span>6</span>Wat kost een lege stoel?</legend>
+        <div class="sc-cost">
+          <label>Uurtarief dat je klant betaalt<input type="number" name="tarief" value="65" min="0" step="1" inputmode="numeric"></label>
+          <label>Declarabele uren per week<input type="number" name="uren" value="32" min="0" max="60" step="1" inputmode="numeric"></label>
+        </div>
+        <p class="wg-small" style="margin-top:10px">Een schatting is genoeg. Je ziet wat er elke week blijft liggen.</p>
+      </fieldset>
+
+      <div class="sc-lead" id="sc-lead">
+        <h3>Wil je weten hoe je dit oplost?</h3>
+        <p>Laat je gegevens achter. We bellen je binnen een werkdag met wat wij als eerste zouden doen voor jouw vacature.</p>
+        <div class="wg-fields">
+          <label>Naam<input name="naam" required autocomplete="name"></label>
+          <label>Bedrijf<input name="bedrijf" required autocomplete="organization"></label>
+          <label>E-mail<input type="email" name="email" required autocomplete="email"></label>
+          <label>Telefoon<input type="tel" name="telefoon" required autocomplete="tel"></label>
+          <label class="wg-fields__wide">Welke functie zoek je?<input name="functie" placeholder="Bijvoorbeeld servicemonteur warmtepompen"></label>
+        </div>
+        <button class="button" type="submit" data-cta="scan-verstuur">Bel me terug</button>
+        <p class="wg-small" style="margin-top:10px">We gebruiken je gegevens alleen om je te bellen over deze scan.</p>
+      </div>
+      <div class="sc-done" id="sc-done" hidden>Ontvangen. We bellen je binnen een werkdag. Liever direct? Bel <a href="tel:+31850607714">085 0607 714</a>.</div>
+    </form>
+
+    <aside class="sc-res" aria-live="polite">
+      <p class="sc-res__label">Jouw score</p>
+      <p class="sc-score"><span id="sc-n">0</span><small>/100</small></p>
+      <div class="sc-bar"><i id="sc-bar"></i></div>
+      <p class="sc-verdict" id="sc-verdict">Beantwoord de vragen.</p>
+      <div class="sc-loss">
+        <strong id="sc-week">&euro;0</strong><span>blijft per week liggen door de lege stoel</span>
+        <strong id="sc-tot" style="margin-top:12px">&euro;0</strong><span id="sc-tot-l">tot nu toe</span>
+      </div>
+      <p class="sc-res__label">Eerst fixen</p>
+      <ul class="sc-fix" id="sc-fix"><li class="sc-empty">Verschijnt zodra je antwoordt.</li></ul>
+      <a class="button" href="#sc-lead" data-cta="scan-naar-lead">Bel me terug</a>
+    </aside>
+  </div>
+</section>
+
+<script>
+(function(){
+  var f=document.getElementById('scan'); if(!f) return;
+  var eur=function(n){return '€'+Math.round(n).toLocaleString('nl-NL')};
+  var FIX={
+    reacties:'Je vacature wordt niet gezien. Monteurs zoeken niet, ze scrollen. Je moet ze opzoeken waar ze zitten.',
+    beeld:'Laat je echte mensen, bussen en werkplaats zien. Een monteur kiest de ploeg, de tekst leest hij niet.',
+    opvolging:'Bel binnen een uur. Na een dag heeft een goede monteur al met twee anderen gesproken.',
+    salaris:'Zet het bedrag erin. "Marktconform" leest als: we willen het niet zeggen.',
+    open:'Hoe langer je vacature openstaat, hoe meer het je kost. Wachten maakt het niet goedkoper.'
+  };
+  function val(n){var e=f.querySelector('input[name="'+n+'"]:checked');return e||null}
+  function calc(){
+    var keys=['open','reacties','beeld','opvolging','salaris'],pts=0,done=0,weak=[];
+    keys.forEach(function(k){var e=val(k);if(e){done++;var p=+e.dataset.p;pts+=p;var max=k==='salaris'?10:20;if(p<max*0.6)weak.push([p/max,k])}});
+    var score=Math.round(pts*100/90);
+    var week=(+f.tarief.value||0)*(+f.uren.value||0);
+    var o=val('open'),weeks=o?+o.dataset.w:0;
+    document.getElementById('sc-n').textContent=done?score:0;
+    document.getElementById('sc-bar').style.width=(done?score:0)+'%';
+    document.getElementById('sc-verdict').textContent=!done?'Beantwoord de vragen.':done<5?'Nog '+(5-done)+' vraag'+(5-done>1?'en':'')+' te gaan.':score>=75?'Sterk. Monteurs zien je staan.':score>=45?'Monteurs zien je, maar kiezen een ander.':'Monteurs zien je nu niet staan.';
+    document.getElementById('sc-week').textContent=eur(week);
+    document.getElementById('sc-tot').textContent=eur(week*weeks);
+    document.getElementById('sc-tot-l').textContent=o?'tot nu toe, over ongeveer '+weeks+' weken':'tot nu toe';
+    weak.sort(function(a,b){return a[0]-b[0]});
+    var ul=document.getElementById('sc-fix');
+    ul.innerHTML=weak.length?weak.slice(0,3).map(function(w){return '<li>'+FIX[w[1]]+'</li>'}).join(''):(done?'<li>Weinig te fixen. Dan wil je vooral sneller en breder bereik.</li>':'<li class="sc-empty">Verschijnt zodra je antwoordt.</li>');
+    f.score.value=done?score:''; f.kosten_per_week.value=Math.round(week); f.kosten_tot_nu.value=Math.round(week*weeks);
+  }
+  f.addEventListener('input',calc); f.addEventListener('change',calc); calc();
+  f.addEventListener('submit',function(e){
+    e.preventDefault(); calc();
+    var btn=f.querySelector('button[type=submit]'); btn.disabled=true;
+    fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(new FormData(f)).toString()})
+      .then(function(r){if(!r.ok)throw 0;document.getElementById('sc-lead').hidden=true;document.getElementById('sc-done').hidden=false;
+        try{window.fbq&&fbq('trackCustom','Werkgeversscan',{score:+f.score.value||0})}catch(_){}
+        try{window.dataLayer&&dataLayer.push({event:'werkgeversscan',score:+f.score.value||0})}catch(_){}})
+      .catch(function(){f.submit()});
+  });
+})();
+</script>
