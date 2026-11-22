@@ -158,15 +158,15 @@
   ];
   var cockpit = {
     clients: [
-      { name: 'Van Walsem Kachelspecialist', plan: 'Jaarmodel', mrr: 60000, vacancies: 1, cpq: 8200, speed_h: 6, health: 'op koers' },
-      { name: 'YoungDedicated (eigen)', plan: 'Vacature', mrr: 0, vacancies: 1, cpq: 9100, speed_h: 9, health: 'op koers' },
-      { name: 'Demo Installatietechniek', plan: 'Jaarmodel', mrr: 120000, vacancies: 2, cpq: 7400, speed_h: 4, health: 'op koers' },
-      { name: 'Demo Installatietechniek', plan: 'Jaarmodel', mrr: 60000, vacancies: 1, cpq: 5100, speed_h: 31, health: 'let op: belt traag' },
-      { name: 'Demo Servicebedrijf', plan: 'Vacature', mrr: 0, vacancies: 1, cpq: 12600, speed_h: 12, health: 'let op: weinig geschikt' }
+      { name: 'Van Walsem Kachelspecialist', plan: 'Voorgeselecteerd', mrr: 99900, vacancies: 1, cpq: 8200, speed_h: 6, health: 'op koers' },
+      { name: 'YoungDedicated (eigen)', plan: 'Kandidaten', mrr: 0, vacancies: 1, cpq: 9100, speed_h: 9, health: 'op koers' },
+      { name: 'Demo Installatietechniek', plan: 'Ontzorgd', mrr: 150000, vacancies: 2, cpq: 7400, speed_h: 4, health: 'op koers' },
+      { name: 'Demo Installatietechniek', plan: 'Kandidaten', mrr: 49900, vacancies: 1, cpq: 5100, speed_h: 31, health: 'let op: belt traag' },
+      { name: 'Demo Servicebedrijf', plan: 'Gezien', mrr: 9900, vacancies: 1, cpq: 12600, speed_h: 12, health: 'let op: weinig geschikt' }
     ],
-    mrr_trend: [60000, 60000, 120000, 120000, 180000, 240000],
+    mrr_trend: [49900, 99900, 149800, 199700, 259700, 309700],
     months: ['jun', 'jul', 'aug', 'sep', 'okt', 'nov'],
-    once_month_cents: 100000 * 3 + 49500,
+    once_month_cents: 300000,
     media_fee_month_cents: 41250,
     network_month_cents: 150000,
     nrr: 112

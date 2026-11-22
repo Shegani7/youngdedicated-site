@@ -452,9 +452,8 @@
       '<div class="money-row"><span>Pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>inbegrepen</b></div><div class="money-row"><span>Bereik</span><b>inbegrepen</b></div>' +
       '<p class="hint">Per maand: eerste 2 maanden vast, daarna maandelijks opzegbaar. Per jaar: 10% korting. Ontzorgd loopt per maand en stopt bij de handtekening. Met de afspraak.</p>';
     if (step === 3) {
-      var once = (w.selection ? PRICE.selectie : 0) + (w.beeld ? PRICE.beeld : 0);
+      var once = w.beeld ? PRICE.beeld : 0;
       h += '<h2>Wat mogen wij nog doen?</h2><div class="packs">' +
-        '<button class="pack" data-action="wset" data-k="selection" aria-pressed="' + !!w.selection + '"><span><b>Selectie door ons</b><small>Wij bellen iedereen binnen 24 uur</small></span><span>+ ' + eur(PRICE.selectie) + '</span></button>' +
         '<button class="pack" data-action="wset" data-k="beeld" aria-pressed="' + !!w.beeld + '"><span><b>Foto en video door ons</b><small>Anders gebruiken we jullie eigen beeld</small></span><span>+ ' + eur(PRICE.beeld) + '</span></button></div>' +
         '<div class="money-row"><span>' + 'Per maand, per vacature' + '</span><b>' + eur(planOf(w.plan).price) + '</b></div>' + (once ? '<div class="money-row"><span>Eenmalig</span><b>' + eur(once) + '</b></div>' : '') +
         '<p class="hint">Inclusief vacaturepagina, campagnes, portaal, opvolging en koppeling met vacaturesites. Bedragen excl. btw. Je betaalt pas na de kick-off.</p>';
@@ -476,7 +475,7 @@
     var act = C.clients.reduce(function (t, c) { return t + c.vacancies; }, 0);
     var speed = C.clients.map(function (c) { return c.speed_h; }).sort(function (a, b) { return a - b; })[Math.floor(C.clients.length / 2)];
     var cpq = Math.round(C.clients.reduce(function (t, c) { return t + c.cpq; }, 0) / C.clients.length);
-    var mix = [['Jaarmodel', mrr, '#111'], ['Vacatures en selectie', C.once_month_cents, '#d1b75c'], ['Fee op extra budget', C.media_fee_month_cents, '#9c8740'], ['Recruitersnetwerk', C.network_month_cents, '#02daac']];
+    var mix = [['Pakketten', mrr, '#111'], ['Beeld op locatie', C.once_month_cents, '#d1b75c'], ['Fee op extra budget', C.media_fee_month_cents, '#9c8740'], ['Recruitersnetwerk', C.network_month_cents, '#02daac']];
     var tot = mix.reduce(function (t, x) { return t + x[1]; }, 0);
     var maxT = Math.max.apply(null, C.mrr_trend);
     var h = '<h1>Cockpit</h1><p class="sub">De cijfers waar een koper naar kijkt. Demo met verzonnen klanten.</p>';
