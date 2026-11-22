@@ -339,7 +339,7 @@
     var steps = v.milestones || [{ label: 'Aanvraag', done: true }, { label: 'Kick-off', done: v.status !== 'concept' }, { label: 'Betaald', done: v.status !== 'concept' }, { label: 'Live', done: v.status === 'live' || v.status === 'vervuld' }, { label: 'Vervuld', done: v.status === 'vervuld' }];
     var h = '<p><a class="hint" href="#/vacatures">&lsaquo; Alle vacatures</a></p><h1>' + esc(v.title) + '</h1><p class="sub">' + esc(v.location || '') + ' · ' + (pakketOf(v) ? 'Pakket ' + pakketOf(v).name + ', ' + eur(pakketOf(v).price) + ' per maand' : day ? 'Dag ' + day + ' van 60, garantiecheck op dag 30' : v.plan === 'jaar' ? 'Jaarmodel, doorlopend' : '') + '</p>';
     h += '<div class="card"><ol class="stepper">' + steps.map(function (st, i) { var cur = !st.done && (i === 0 || steps[i - 1].done); return '<li class="' + (st.done ? 'done' : cur ? 'cur' : '') + '"><span>' + (st.done ? '&#10003;' : i + 1) + '</span>' + st.label + '</li>'; }).join('') + '</ol>' +
-      journeyHint(v, steps) + '</div>' + (pakketOf(v) ? pakketCard(v) : v.status === 'live' ? guarantee(v, m, day) : '');
+      journeyHint(v, steps) + '</div>' + (pakketOf(v) ? pakketCard(v) + afspraakCard(v) : v.status === 'live' ? guarantee(v, m, day) : '');
     h += '<div class="kpis section"><div class="kpi"><span>Sollicitanten</span><b>' + m.apps + '</b></div><div class="kpi"><span>Geschikt</span><b>' + m.qual + '</b></div><div class="kpi"><span>Aangenomen</span><b>' + m.hired + '</b></div><div class="kpi"><span>Besteed</span><b>' + eur(m.spend) + '</b></div><div class="kpi kpi--hl"><span>Per geschikte kandidaat</span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b></div></div>';
     var ch = v.channels || [];
     if (ch.length) {
@@ -436,9 +436,9 @@
       '<div class="row"><button class="btn btn--ghost btn--sm" data-action="tour-end">Overslaan</button><button class="btn btn--gold btn--sm" data-action="tour-next">' + (i === TOUR.length - 1 ? 'Aan de slag' : 'Volgende') + '</button></div></div>';
   }
   var PLANS = [
-    { key: 'basis', name: 'Gevuld', price: 49900, unit: 'p/m', note: 'Monteur of servicetechnicus in de regio' },
-    { key: 'versneld', name: 'Voorrang', price: 75000, unit: 'p/m', note: 'Krappe functie of haast. Nieuwe monteurs 48 uur eerder zien' },
-    { key: 'moeilijk', name: 'Topvakman', price: 100000, unit: 'p/m', note: 'Schaarse vakman. Wij benaderen actief uit de pool' }
+    { key: 'basis', name: 'Kandidaten', price: 49900, unit: 'p/m', note: 'Reacties met video, jij kiest en belt. Met de afspraak' },
+    { key: 'versneld', name: 'Voorgeselecteerd', price: 75000, unit: 'p/m', note: 'Voorselectie via WhatsApp, wij bellen binnen 5 minuten, gesprek in je agenda' },
+    { key: 'moeilijk', name: 'Ontzorgd', price: 125000, unit: 'p/m', note: 'Wij doen alles tot de handtekening onder het contract' }
   ];
   function planOf(key) { return PLANS.find(function (x) { return x.key === key; }) || PLANS[0]; }
   function modalWizard() {
@@ -647,9 +647,9 @@
 
   /* ---------- monteurs: pakketten en kandidatenbak (fase 1 blauwdruk) ---------- */
   var PAKKETTEN = {
-    basis: { key: 'basis', name: 'Gevuld', price: 49900, note: 'Monteur of servicetechnicus in de regio', early: false },
-    versneld: { key: 'versneld', name: 'Voorrang', price: 75000, note: 'Krappe functie of je hebt haast', early: true },
-    moeilijk: { key: 'moeilijk', name: 'Topvakman', price: 100000, note: 'Schaarse, ervaren vakman', early: true }
+    basis: { key: 'basis', name: 'Kandidaten', price: 49900, note: 'Reacties met video, jij kiest', early: false },
+    versneld: { key: 'versneld', name: 'Voorgeselecteerd', price: 75000, note: 'Wij selecteren voor en plannen het gesprek', early: true },
+    moeilijk: { key: 'moeilijk', name: 'Ontzorgd', price: 125000, note: 'Wij doen alles tot de handtekening', early: true }
   };
   var EARLY_H = 48;
   function pakketOf(v) { return v && v.pakket ? PAKKETTEN[v.pakket] : null; }
@@ -693,13 +693,13 @@
     var h = '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>Monteurs</h1><p class="sub">Hier kiest de monteur. Jij solliciteert, de monteur zegt ja of nee.</p></div>' +
       (demo ? '<label class="hint tswitch"><input type="checkbox" data-action="nopack"' + (S.noPack ? ' checked' : '') + '> Bekijk zonder pakket</label>' : '') + '</div>';
     h += pk
-      ? '<div class="card card--dark tband"><div><p class="card__label">Pakket ' + pk.name + ' loopt</p><p>Solliciteer bij monteurs die je aanspreken. Zegt de monteur ja, dan zie je het nummer en plan je een gesprek.' + (pk.early ? ' Nieuwe monteurs zie je ' + EARLY_H + ' uur eerder dan bij Gevuld.' : '') + '</p></div></div>'
-      : '<div class="card tband tband--lock"><div><p class="card__label">Geen pakket actief</p><p>' + all.length + ' monteurs zoeken nu werk. Kijk gerust rond. Solliciteren bij een monteur en contact openen zodra een pakket loopt.</p></div><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket</a></div>';
+      ? '<div class="card card--dark tband"><div><p class="card__label">Pakket ' + pk.name + ' loopt</p><p>Solliciteer bij monteurs die je aanspreken. Zegt de monteur ja, dan zie je het nummer en plan je een gesprek.' + (pk.early ? ' Nieuwe monteurs zie je ' + EARLY_H + ' uur eerder dan bij Kandidaten.' : '') + '</p></div></div>'
+      : '<div class="card tband tband--lock"><div><p class="card__label">Geen pakket actief</p><p>' + all.length + ' monteurs zoeken nu werk. Kijk gerust rond. Met Gezien (&euro;75 p/m) kunnen monteurs bij jou solliciteren. Zelf monteurs benaderen kan vanaf Kandidaten.</p></div><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket</a></div>';
     h += '<div class="chips">' + kinds.map(function (k) { return '<button class="chip" data-action="tkind" data-id="' + k + '" aria-pressed="' + (S.tKind === k) + '">' + (k === 'all' ? 'Alle monteurs' : k) + '<span class="n">' + all.filter(function (t) { return k === 'all' || t.kind === k; }).length + '</span></button>'; }).join('') +
       '<button class="chip" data-action="tkind" data-id="gekozen" aria-pressed="' + (S.tKind === 'gekozen') + '">Gesolliciteerd<span class="n">' + nPicked + '</span></button></div>';
     h += '<div class="tgrid">' + list.map(function (t) {
       var fresh = tHours(t) < EARLY_H, vis = tVisible(t, pk);
-      if (!vis) return '<div class="card tcard tcard--wait"><div class="tvid"><span class="tvid__ini">?</span></div><p class="vac__title">' + esc(t.role) + '</p><p class="hint">' + esc(t.city) + '. Nieuw profiel, zichtbaar over ' + Math.ceil(EARLY_H - tHours(t)) + ' uur.</p><p class="hint"><b>Voorrang en Topvakman zien dit nu al.</b></p></div>';
+      if (!vis) return '<div class="card tcard tcard--wait"><div class="tvid"><span class="tvid__ini">?</span></div><p class="vac__title">' + esc(t.role) + '</p><p class="hint">' + esc(t.city) + '. Nieuw profiel, zichtbaar over ' + Math.ceil(EARLY_H - tHours(t)) + ' uur.</p><p class="hint"><b>Voorgeselecteerd en Ontzorgd zien dit nu al.</b></p></div>';
       return '<div class="card tcard" role="button" tabindex="0" data-action="topen" data-id="' + t.id + '">' + videoTile(t) +
         '<div class="row tcard__top"><p class="vac__title">' + esc(tName(t)) + '</p>' + (tStat(t) ? tPill(t) : fresh ? '<span class="pill tpill--new">Nieuw</span>' : '') + '</div>' +
         '<p class="hint tcard__role">' + esc(t.role) + '</p><p class="hint">' + esc(t.city) + ' · ' + t.km + ' km · ' + t.years + ' jaar ervaring · ' + esc(t.available.toLowerCase()) + '</p>' +
@@ -739,6 +739,17 @@
         '<p><button class="btn btn--green" data-action="tinvite" data-id="' + t.id + '">Stuur uitnodiging</button></p><p class="hint">' + esc(t.first_name) + ' bevestigt met één tik. Herinnering gaat automatisch, de dag ervoor en een uur van tevoren.</p></div>';
     }
     return h + '</div>';
+  }
+  function afspraakCard(v) {
+    if (!v || v.pakket !== 'basis') return '';
+    var start = new Date(v.start_date || v.created_at || Date.now()), m1 = addMonths(start, 1), apps = S.apps.filter(function (a) { return a.vacancy_id === v.id; });
+    var fit = apps.filter(function (a) { return ['geschikt', 'gesprek', 'aanbod', 'aangenomen'].indexOf(a.stage) > -1; }).length;
+    var rt = demo ? 3 : null, ok = function (b) { return b ? '<b style="color:var(--green-d,#0a8f6a)">&#10003;</b>' : '<b style="color:var(--gold-d,#8a7430)">&bull;</b>'; };
+    var row = function (txt, val, good) { return '<div class="money-row"><span>' + ok(good) + ' ' + txt + '</span><b>' + val + '</b></div>'; };
+    return '<div class="card section"><p class="card__label">De afspraak</p><p class="hint" style="margin-top:0">We doen dit samen. Zo staan we ervoor.</p>' +
+      '<p class="hint" style="margin:10px 0 4px"><b>Wij</b></p>' + row('Live binnen 5 werkdagen', dday(start), true) + row('Geschikte monteur gesproken in maand 1 (tot ' + dday(m1) + ')', fit ? fit + ' geschikt' : 'nog niet', fit > 0) +
+      '<p class="hint" style="margin:10px 0 4px"><b>Jij</b></p>' + row('Reageren binnen 1 werkdag', rt != null ? 'gemiddeld ' + rt + ' uur' : 'wordt gemeten', rt == null || rt <= 24) + row('Salaris past bij de markt', 'vastgelegd', true) + row('Beeld en info aangeleverd', 'binnen 5 werkdagen', true) + row('Eisen zoals afgesproken', 'ja', true) +
+      '<p class="hint">Doen we allebei wat we afspraken en spreek je in maand 1 geen geschikte monteur? Dan betaal je maand 2 niet. Wij gaan gewoon door.</p></div>';
   }
   function pakketCard(v) {
     var pk = pakketOf(v); if (!pk) return '';

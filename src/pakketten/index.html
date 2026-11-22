@@ -20,6 +20,16 @@ noindex: true
 .pk-cost strong{display:block;font-size:44px;font-weight:900;line-height:1;letter-spacing:-.02em}
 .pk-cost span{display:block;margin-top:8px;font-size:15px;color:var(--wg-muted)}
 .wg-section--dark .wg-price:not(.wg-price--featured) .pk-dream{color:#fff}
+.pk-grid4{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.pk-grid4 .wg-price{padding:24px}
+.pk-grid4 .wg-price__amount{font-size:34px}
+.pk-grid4 .wg-price__name{font-size:17px!important;letter-spacing:.04em!important}
+.pk-grid4+.wg-note{margin-top:44px}
+.pk-week a{color:inherit;text-decoration:underline}
+.pk-deal ul{padding-left:20px;margin:0}
+.pk-deal li{margin-bottom:8px}
+@media (max-width:1199.98px){.pk-grid4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:575.98px){.pk-grid4{grid-template-columns:1fr}}
 .wg-prices .wg-price__name{font-size:26px;font-weight:900;margin-bottom:6px}
 @media (max-width:991.98px){.pk-cost{grid-template-columns:1fr}}
 </style>
@@ -38,7 +48,7 @@ noindex: true
     <div class="pk-cost">
       <div><strong>&euro;2.080</strong><span>omzet die per week blijft liggen bij &euro;65 per uur en 32 declarabele uren</span></div>
       <div><strong>&euro;27.000</strong><span>na drie maanden openstaan</span></div>
-      <div><strong>&euro;115</strong><span>per week kost het om monteurs jou te laten kiezen</span></div>
+      <div><strong>&euro;115</strong><span>per week kost Kandidaten, zodat monteurs jou kiezen</span></div>
     </div>
     <p class="wg-note" style="margin-top:24px">Reken het uit voor je eigen bedrijf in de <a class="wg-link" href="/scan/">werkgeversscan</a>.</p>
   </div>
@@ -47,54 +57,90 @@ noindex: true
 <section class="wg-section wg-section--dark" id="pakketten">
   <div class="container">
     <p class="wg-eyebrow wg-eyebrow--gold">Waar sta jij nu?</p>
-    <h2>Kies wat bij je situatie past</h2>
-    <div class="wg-grid wg-grid--3 wg-prices">
+    <h2>Jij kiest hoeveel wij uit handen nemen</h2>
+    <div class="wg-grid pk-grid4 wg-prices">
+      <div class="wg-price wg-reveal">
+        <p class="pk-when">Je wilt gevonden worden</p>
+        <p class="wg-price__name">Gezien</p>
+        <p class="pk-dream">Monteurs die een nieuwe plek zoeken, komen jou tegen.</p>
+        <p class="wg-price__amount">&euro;75 <small>per maand</small></p>
+        <p class="pk-week">Per werkgever</p>
+        <ul class="wg-incl">
+          <li>Jouw werkgeversprofiel tussen de monteurs</li>
+          <li>Monteurs solliciteren rechtstreeks bij jou</li>
+          <li>Je vacatures op de gratis vacaturesites</li>
+          <li>Je ziet welke monteurs er in jouw regio rondkijken</li>
+        </ul>
+        <a class="wg-ghost wg-ghost--light" href="/plaats-je-vacature/?pakket=gezien" data-cta="pakket-gezien">Kies Gezien</a>
+      </div>
       <div class="wg-price wg-reveal">
         <p class="pk-when">Je zoekt een monteur</p>
-        <p class="wg-price__name">Gevuld</p>
+        <p class="wg-price__name">Kandidaten</p>
         <p class="pk-dream">Je bus rijdt weer. Het werk gaat de deur uit.</p>
         <p class="wg-price__amount">&euro;499 <small>per maand</small></p>
-        <p class="pk-week">Ongeveer &euro;115 per week</p>
+        <p class="pk-week">Per vacature, met <a href="#afspraak">de afspraak</a></p>
         <ul class="wg-incl">
-          <li>Monteurs zien een werkgever waar ze willen werken, in jouw kleuren</li>
+          <li class="pk-all">Alles van Gezien</li>
+          <li>Een werkgeverspagina in jouw kleuren</li>
           <li>Je vacature komt bij monteurs die niet eens zoeken</li>
-          <li>Je ziet wie er reageert, met video, en jij kiest</li>
+          <li>Reacties met video, jij kiest</li>
           <li>Binnen een uur een seintje, zodat niemand afhaakt</li>
-          <li>Alles op één scherm, ook op je telefoon</li>
         </ul>
-        <a class="wg-ghost wg-ghost--light" href="/plaats-je-vacature/?pakket=basis" data-cta="pakket-basis">Kies Gevuld</a>
+        <a class="wg-ghost wg-ghost--light" href="/plaats-je-vacature/?pakket=basis" data-cta="pakket-basis">Kies Kandidaten</a>
       </div>
       <div class="wg-price wg-price--featured wg-reveal">
-        <p class="wg-price__badge">Als je klanten al wachten</p>
-        <p class="pk-when">Je hebt haast of de functie is krap</p>
-        <p class="wg-price__name">Voorrang</p>
-        <p class="pk-dream">Jij spreekt de beste monteurs voordat je concurrent ze ziet.</p>
+        <p class="wg-price__badge">Aanbevolen</p>
+        <p class="pk-when">Je hebt geen tijd om te bellen</p>
+        <p class="wg-price__name">Voorgeselecteerd</p>
+        <p class="pk-dream">Jij spreekt alleen nog monteurs die passen.</p>
         <p class="wg-price__amount">&euro;750 <small>per maand</small></p>
-        <p class="pk-week">Ongeveer &euro;173 per week</p>
+        <p class="pk-week">Per vacature</p>
         <ul class="wg-incl">
-          <li class="pk-all">Alles van Gevuld</li>
-          <li>Nieuwe monteurs zie je 48 uur eerder dan de rest</li>
-          <li>Elke 2 weken nieuwe advertenties, zodat je zichtbaar blijft</li>
-          <li>We zoeken breder in de regio</li>
+          <li class="pk-all">Alles van Kandidaten</li>
+          <li>Voorselectie via WhatsApp, automatisch</li>
+          <li>Goede kandidaten bellen wij binnen 5 minuten</li>
+          <li>Het gesprek staat in jouw agenda</li>
+          <li>Nieuwe monteurs zie je 48 uur eerder</li>
         </ul>
-        <a class="button" href="/plaats-je-vacature/?pakket=versneld" data-cta="pakket-versneld">Kies Voorrang</a>
+        <a class="button" href="/plaats-je-vacature/?pakket=versneld" data-cta="pakket-versneld">Kies Voorgeselecteerd</a>
       </div>
       <div class="wg-price wg-reveal">
-        <p class="pk-when">Je zoekt de vakman die niemand heeft</p>
-        <p class="wg-price__name">Topvakman</p>
-        <p class="pk-dream">De specialist waar je klanten om vragen. Wij gaan hem halen.</p>
-        <p class="wg-price__amount">&euro;1.000 <small>per maand</small></p>
-        <p class="pk-week">Ongeveer &euro;231 per week</p>
+        <p class="pk-when">Je wilt het helemaal uit handen</p>
+        <p class="wg-price__name">Ontzorgd</p>
+        <p class="pk-dream">Jij tekent. Wij doen de rest.</p>
+        <p class="wg-price__amount">&euro;1.250 <small>per maand</small></p>
+        <p class="pk-week">Per vacature</p>
         <ul class="wg-incl">
-          <li class="pk-all">Alles van Voorrang</li>
-          <li>Wij benaderen zelf de monteurs uit onze pool die passen</li>
+          <li class="pk-all">Alles van Voorgeselecteerd</li>
+          <li>Wij benaderen zelf monteurs uit onze pool</li>
+          <li>Wij begeleiden tot de handtekening: gesprek, aanbod, contract</li>
           <li>Eén vast aanspreekpunt dat jouw bedrijf kent</li>
           <li>Elke 2 weken samen kijken wat werkt</li>
         </ul>
-        <a class="wg-ghost wg-ghost--light" href="/plaats-je-vacature/?pakket=moeilijk" data-cta="pakket-moeilijk">Kies Topvakman</a>
+        <a class="wg-ghost wg-ghost--light" href="/plaats-je-vacature/?pakket=moeilijk" data-cta="pakket-moeilijk">Kies Ontzorgd</a>
       </div>
     </div>
-    <p class="wg-note wg-note--light">Prijzen per vacature, excl. btw, bereik inbegrepen. Eerste 2 maanden vast, daarna maandelijks opzegbaar. Je neemt zelf aan, zoveel mensen als je wilt. Extra: wij doen de eerste selectie (&euro;495 per vacature) of wij maken het beeld op locatie (&euro;3.000).</p>
+    <p class="wg-note wg-note--light">Prijzen excl. btw, bereik inbegrepen. Eerste 2 maanden vast, daarna maandelijks opzegbaar. Je neemt zelf aan, zoveel mensen als je wilt. Liever beeld van ons? Wij maken het op locatie voor &euro;3.000.</p>
+  </div>
+</section>
+
+<section class="wg-section" id="afspraak">
+  <div class="container">
+    <p class="wg-eyebrow">De afspraak</p>
+    <h2>We doen dit samen. Dus spreken we het samen af.</h2>
+    <p class="wg-lead" style="margin-bottom:30px">Bij Kandidaten leggen we in de kick-off vast wat ieder doet. Zo weet je precies waar je aan toe bent, en wij ook.</p>
+    <div class="wg-grid wg-grid--2">
+      <div class="wg-card pk-deal"><p class="pk-when">Wij beloven</p><ul>
+        <li>Je vacature staat binnen 5 werkdagen live.</li>
+        <li>In de eerste maand spreek je minstens één geschikte monteur. Wat geschikt is, schrijven we samen op.</li>
+        <li>Je ziet in je portaal altijd hoe we ervoor staan.</li></ul></div>
+      <div class="wg-card pk-deal"><p class="pk-when">Jij belooft</p><ul>
+        <li>Je reageert binnen 1 werkdag op een nieuwe kandidaat.</li>
+        <li>Je salaris past bij de markt. Wij geven je de range.</li>
+        <li>Je levert beeld en info binnen 5 werkdagen.</li>
+        <li>Je eisen blijven zoals we ze samen afspraken.</li></ul></div>
+    </div>
+    <p class="wg-answer">Doen we allebei wat we afspraken en heb je in de eerste maand nog geen geschikte monteur gesproken? Dan betaal je de tweede maand niet. Wij gaan gewoon door.</p>
   </div>
 </section>
 
@@ -122,7 +168,7 @@ noindex: true
 <section class="wg-section wg-section--grey">
   <div class="container wg-narrow">
     <h2>Veelgestelde vragen</h2>
-    <details class="wg-faq"><summary>Welk pakket past bij mij?</summary><p>Zoek je een monteur of servicetechnicus in de regio, dan is Gevuld genoeg. Wachten je klanten al of is de functie krap, kies Voorrang. Zoek je een ervaren specialist die bijna niemand heeft, kies Topvakman. Twijfel je, dan kijken we het samen na in de kick-off.</p></details>
+    <details class="wg-faq"><summary>Welk pakket past bij mij?</summary><p>Wil je gevonden worden door monteurs die zelf zoeken, dan is Gezien genoeg. Zoek je een monteur en bel je graag zelf, kies Kandidaten. Heb je geen tijd om te bellen, kies Voorgeselecteerd. Wil je alleen nog tekenen, kies Ontzorgd. Twijfel je, dan kijken we het samen na in de kick-off.</p></details>
     <details class="wg-faq"><summary>Waarom eerst 2 maanden vast?</summary><p>Een campagne heeft een paar weken nodig om te leren wie reageert. In maand twee zie je het echte resultaat. Daarna stop je wanneer je wilt.</p></details>
     <details class="wg-faq"><summary>Betaal ik per aanname?</summary><p>Nee. Je betaalt per vacature per maand. Neem zoveel mensen aan als je wilt.</p></details>
     <details class="wg-faq"><summary>Wat gebeurt er als ik stop?</summary><p>Je vacature en campagne gaan offline. Monteurs die je al gesproken hebt, blijven van jou.</p></details>
