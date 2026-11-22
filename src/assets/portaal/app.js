@@ -439,7 +439,7 @@
   }
   var PLANS = [
     { key: 'basis', name: 'Kandidaten', price: 49900, unit: 'p/m', note: 'Reacties met video, jij kiest en belt. Met de afspraak' },
-    { key: 'versneld', name: 'Voorgeselecteerd', price: 99900, unit: 'p/m', note: 'Voorselectie via WhatsApp, wij bellen binnen 5 minuten, gesprek in je agenda' },
+    { key: 'versneld', name: 'Voorgeselecteerd', price: 99900, unit: 'p/m', note: 'Voorselectie via WhatsApp, wij bellen binnen een uur (kantooruren), gesprek in je agenda' },
     { key: 'moeilijk', name: 'Ontzorgd', price: 150000, unit: 'p/m', note: 'Wij doen alles tot de handtekening onder het contract' }
   ];
   function planOf(key) { return PLANS.find(function (x) { return x.key === key; }) || PLANS[0]; }
