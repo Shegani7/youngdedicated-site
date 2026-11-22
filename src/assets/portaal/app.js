@@ -221,7 +221,8 @@
     var cr = credit();
     var m = metrics('all');
     var target = S.vacancies.reduce(function (t, v) { return t + (v.target_qualified || 0); }, 0) || 1;
-    var v30 = S.vacancies.find(function (v) { return v.plan === 'vacature' && v.start_date; });
+    var v30 = S.vacancies.find(function (v) { return !v.pakket && v.plan === 'vacature' && v.start_date; });
+    var vA = S.vacancies.find(function (v) { return v.pakket && v.pakket !== 'gezien' && v.status === 'live'; });
     var day = v30 ? Math.min(60, Math.max(1, Math.ceil((Date.now() - new Date(v30.start_date)) / 864e5))) : null;
     var pct = m.budget ? Math.min(100, Math.round(m.spend / m.budget * 100)) : 0;
     var first = (S.profile.full_name || '').split(' ')[0];
@@ -230,12 +231,12 @@
       '<div class="grid grid-3">' +
         '<div class="card card--dark"><p class="card__label">Bel vandaag</p><p class="big">' + fresh.length + ' <small>nieuw</small></p>' +
           (selYD ? '<p class="muted">Selectie uitbesteed. YoungDedicated belt iedereen binnen 24 uur en zet geschikte mensen klaar voor jou.</p>' : '<p class="muted">Bel binnen 24 uur. Dan is de sollicitant nog warm.</p>') +
-          (late.length && !selYD ? '<p style="margin-top:14px"><a class="btn btn--gold btn--sm" href="mailto:team@youngdedicated.nl?subject=' + encodeURIComponent('Selectie uitbesteden: wil YoungDedicated onze sollicitanten bellen?') + '">Geen tijd? Wij doen de selectie</a></p>' : '') + '</div>' +
+          (late.length && !selYD ? '<p style="margin-top:14px"><a class="btn btn--gold btn--sm" href="mailto:team@youngdedicated.nl?subject=' + encodeURIComponent('Overstappen naar Voorgeselecteerd') + '">Geen tijd? Wij selecteren voor</a></p>' : '') + '</div>' +
         '<div class="card"><p class="card__label">Campagne</p><p class="big">' + eur(m.cpa) + ' <small>per sollicitant</small></p>' +
           '<div class="bar-legend"><span>Bereik inbegrepen</span><span>' + m.apps + ' sollicitanten</span></div></div>' +
-        '<div class="card"><p class="card__label">Garantie</p><p class="big">' + m.qual + ' <small>van ' + target + ' geschikt</small></p>' +
+        (vA ? afspraakMini(vA) : '<div class="card"><p class="card__label">Garantie</p><p class="big">' + m.qual + ' <small>van ' + target + ' geschikt</small></p>' +
           '<div class="bar bar--green"><span style="width:' + Math.min(100, Math.round(m.qual / target * 100)) + '%"></span></div>' +
-          '<div class="bar-legend"><span>' + (m.qual >= target ? 'Doel gehaald' : 'Nog ' + (target - m.qual) + ' te gaan') + '</span><span>' + (day ? (day <= 30 ? 'Garantiecheck dag 30, nu dag ' + day : 'Dag ' + day + ' van 60') : 'Jaarmodel') + '</span></div></div>' +
+          '<div class="bar-legend"><span>' + (m.qual >= target ? 'Doel gehaald' : 'Nog ' + (target - m.qual) + ' te gaan') + '</span><span>' + (day ? (day <= 30 ? 'Garantiecheck dag 30, nu dag ' + day : 'Dag ' + day + ' van 60') : 'Jaarmodel') + '</span></div></div>') +
       '</div>';
     if (cr.credit) h += '<div class="card section cashback"><div><p class="card__label">Cashback</p><b>' + eur(cr.credit) + ' tegoed</b><p class="hint">Een kandidaat die niet bij jou paste, is via ons netwerk elders aangenomen. Je tegoed gaat automatisch van je volgende vacature af.</p></div></div>';
     h += '<div class="section"><h2>' + (selYD ? 'Deze mensen bellen wij' : 'Bel deze mensen') + '</h2>' + (fresh.length ? '<div class="list">' + fresh.map(function (a) { return personRow(a, true); }).join('') + '</div>' : '<div class="card empty"><strong>Lekker bezig.</strong>Nieuwe sollicitanten verschijnen hier direct.</div>') + '</div>';
@@ -293,10 +294,11 @@
       '<div class="kpi kpi--hl"><span>Per geschikte kandidaat</span><b>' + (m.qual ? eur(m.cpq) : '–') + '</b></div></div>';
     h += '<div class="grid grid-2">' +
       '<div class="card"><p class="card__label">Waar gaat je geld heen</p>' +
-        (S.vacancies.some(function (v) { return v.plan === 'jaar'; }) ?
+        S.vacancies.filter(function (v) { return pakketOf(v); }).map(function (v) { var pk = pakketOf(v); return '<div class="money-row"><span>Pakket ' + pk.name + ': ' + esc(v.title) + '</span><b>' + eur(pk.price) + ' p/m</b></div>'; }).join('') +
+        (S.vacancies.some(function (v) { return !v.pakket && v.plan === 'jaar'; }) ?
           '<div class="money-row"><span>Jaarmodel per vacature</span><b>' + eur(PRICE.jaar) + ' p/m</b></div>' +
           '' : '') +
-        (S.vacancies.some(function (v) { return v.plan === 'vacature'; }) ?
+        (S.vacancies.some(function (v) { return !v.pakket && v.plan === 'vacature'; }) ?
           '<div class="money-row"><span>Vacature, eenmalig</span><b>' + eur(PRICE.vacature) + '</b></div>' +
           '' : '') +
         '<div class="money-row"><span>Bereik</span><b>inbegrepen</b></div>' +
@@ -320,7 +322,7 @@
     return rows.map(function (r) { var w = r[1] ? Math.max(3, Math.log10(r[1] + 1) / max * 100) : 0; return '<div class="funnel__row"><span>' + r[0] + '</span><div class="funnel__bar" style="width:' + w + '%"></div><b>' + num(r[1]) + '</b></div>'; }).join('');
   }
 
-  function vacDay(v) { return v.plan === 'vacature' && v.start_date ? Math.min(60, Math.max(1, Math.ceil((Date.now() - new Date(v.start_date)) / 864e5))) : null; }
+  function vacDay(v) { return !v.pakket && v.plan === 'vacature' && v.start_date ? Math.min(60, Math.max(1, Math.ceil((Date.now() - new Date(v.start_date)) / 864e5))) : null; }
   function viewVacancies() {
     var h = '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>Vacatures</h1><p class="sub">Alles wat nu voor je werft.</p></div>' +
       (demo ? '<button class="btn btn--gold" data-action="newvac">+ Nieuwe vacature</button>' : '<a class="btn btn--gold" href="/plaats-je-vacature/">+ Nieuwe vacature</a>') + '</div><div class="list">';
@@ -550,7 +552,7 @@
         decide + (S.inviting ? invitePicker(a) : '') +
         (match(a).of ? '<div class="card"><p class="card__label">Harde eisen</p><ul class="must">' + match(a).items.map(function (i) { return '<li class="' + (i.ok ? 'ok' : 'no') + '">' + esc(i.label) + '</li>'; }).join('') + '</ul></div>' : '') +
         autoCard(a) +
-        '<div class="card"><p class="card__label">Geschikte kandidaat?</p><div class="row"><button class="chip" data-action="qual" data-v="true" aria-pressed="' + (a.qualified === true) + '">Ja, geschikt</button><button class="chip" data-action="qual" data-v="false" aria-pressed="' + (a.qualified === false) + '">Nee</button></div><p class="hint">Telt mee voor je garantie en leert de campagne wie je zoekt.</p></div>' +
+        '<div class="card"><p class="card__label">Geschikte kandidaat?</p><div class="row"><button class="chip" data-action="qual" data-v="true" aria-pressed="' + (a.qualified === true) + '">Ja, geschikt</button><button class="chip" data-action="qual" data-v="false" aria-pressed="' + (a.qualified === false) + '">Nee</button></div><p class="hint">Telt mee voor de afspraak en leert de campagne wie je zoekt.</p></div>' +
         (a.stage === 'afgewezen' && demo ? '<div class="card"><p class="card__label">Netwerk</p>' + (a.candidate.consent_network
             ? (a.network_status ? '<p><b>Aangeboden aan het recruitersnetwerk.</b> Wordt deze kandidaat elders aangenomen, dan krijg jij cashback als tegoed.</p>' : '<p>Past niet bij jou, maar misschien wel ergens anders. De kandidaat gaf toestemming om gedeeld te worden.</p><p><button class="btn btn--gold btn--sm" data-action="network">Doorplaatsen via netwerk</button></p>')
             : '<p class="hint">Geen toestemming om te delen. Deze kandidaat wordt na 4 weken verwijderd.</p>') + '</div>' : '') +
@@ -752,6 +754,13 @@
       '<p class="hint" style="margin:10px 0 4px"><b>Jij</b></p>' + row('Reageren binnen 1 werkdag', rt != null ? 'gemiddeld ' + rt + ' uur' : 'wordt gemeten', rt == null || rt <= 24) + row('Salaris past bij de markt', 'vastgelegd', true) + row('Beeld en info aangeleverd', 'binnen 5 werkdagen', true) + row('Eisen zoals afgesproken', 'ja', true) +
       '<p class="hint">Doen we allebei wat we afspraken en spreek je in maand 1 geen geschikte monteur? Dan betaal je maand 2 niet. Wij gaan gewoon door.</p></div>';
   }
+  function afspraakMini(v) {
+    var m1 = addMonths(v.start_date || v.created_at || Date.now(), 1), left = Math.max(0, Math.ceil((m1 - Date.now()) / 864e5));
+    var fit = S.apps.filter(function (a) { return a.vacancy_id === v.id && ['geschikt', 'gesprek', 'aanbod', 'aangenomen'].indexOf(a.stage) > -1; }).length;
+    return '<div class="card"><p class="card__label">De afspraak</p><p class="big">' + Math.min(fit, 1) + ' <small>van 1 geschikt gesproken</small></p>' +
+      '<div class="bar bar--green"><span style="width:' + (fit ? 100 : 0) + '%"></span></div>' +
+      '<div class="bar-legend"><span>' + (fit ? 'Afspraak nagekomen' : 'Op koers') + '</span><span>' + (left ? 'Maand 1, nog ' + left + ' dagen' : 'Maand 1 voorbij') + '</span></div></div>';
+  }
   function pakketCard(v) {
     var pk = pakketOf(v); if (!pk) return '';
     var start = v.start_date || new Date().toISOString(), minTo = addMonths(start, 2), canStop = Date.now() >= minTo.getTime();
@@ -941,7 +950,7 @@
 
   /* ---------- login ---------- */
   function viewLogin(sent) {
-    app.innerHTML = '<div class="login"><div class="login__art"><h2>Personeel dat blijft.<br>Zonder gedoe.</h2><p>Jouw sollicitanten, je resultaten en je budget. Altijd live, op één plek.</p></div>' +
+    app.innerHTML = '<div class="login"><div class="login__art"><h2>Hier kiest<br>de monteur.</h2><p>Monteurs die bij jou willen, je pakket en de afspraak. Altijd live, op één plek.</p></div>' +
       '<form class="login__form" id="login"><img src="' + LOGO + '" alt="YoungDedicated">' +
       (sent ? '<h1>Check je mail.</h1><p class="sub">We stuurden een inloglink naar ' + esc(sent) + '. Tik erop en je bent binnen.</p>'
         : '<h1>Inloggen</h1><p class="sub">Geen wachtwoord nodig. Je krijgt een link per mail.</p><label for="email">E-mailadres</label><input id="email" type="email" required autocomplete="email" placeholder="naam@bedrijf.nl"><p style="margin-top:16px"><button class="btn btn--block" type="submit">Stuur mijn inloglink</button></p>') +
