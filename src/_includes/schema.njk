@@ -1,0 +1,39 @@
+{%- set site = "https://www.youngdedicated.nl" -%}
+{%- if page.url == "/" %}
+  <script type="application/ld+json">{{ {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": site + "/#organization",
+        "name": "YoungDedicated",
+        "url": site + "/",
+        "logo": site + "/wp-content/uploads/2024/10/YoungDedicated-logo-def-469x123-1.png",
+        "slogan": "Hier kiest de monteur.",
+        "telephone": "+31850607714",
+        "email": "team@youngdedicated.nl",
+        "address": { "@type": "PostalAddress", "streetAddress": "P.C. Staalweg 16", "postalCode": "3721 TJ", "addressLocality": "Bilthoven", "addressRegion": "Utrecht", "addressCountry": "NL" },
+        "areaServed": "NL"
+      },
+      { "@type": "WebSite", "@id": site + "/#website", "url": site + "/", "name": "YoungDedicated", "inLanguage": "nl-NL", "publisher": { "@id": site + "/#organization" } }
+    ]
+  } | dump | safe }}</script>
+{%- endif %}
+{%- set job = jobs[page.url] -%}
+{%- if job %}
+  {%- set loc = { "@type": "PostalAddress", "addressLocality": job.locality, "addressRegion": job.region, "addressCountry": "NL" } -%}
+  {%- if job.street %}{% set loc = { "@type": "PostalAddress", "streetAddress": job.street, "postalCode": job.postal, "addressLocality": job.locality, "addressRegion": job.region, "addressCountry": "NL" } %}{% endif %}
+  <script type="application/ld+json">{{ {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    "title": job.title,
+    "description": job.description,
+    "datePosted": job.datePosted,
+    "employmentType": job.employmentType,
+    "directApply": true,
+    "url": site + page.url,
+    "hiringOrganization": { "@type": "Organization", "name": job.org, "logo": site + job.orgLogo },
+    "jobLocation": { "@type": "Place", "address": loc },
+    "baseSalary": { "@type": "MonetaryAmount", "currency": "EUR", "value": { "@type": "QuantitativeValue", "minValue": job.salaryMin, "maxValue": job.salaryMax, "unitText": job.unit } }
+  } | dump | safe }}</script>
+{%- endif %}
