@@ -436,9 +436,9 @@
       '<div class="row"><button class="btn btn--ghost btn--sm" data-action="tour-end">Overslaan</button><button class="btn btn--gold btn--sm" data-action="tour-next">' + (i === TOUR.length - 1 ? 'Aan de slag' : 'Volgende') + '</button></div></div>';
   }
   var PLANS = [
-    { key: 'basis', name: 'Basis', price: 49900, unit: 'p/m', note: 'Monteur of servicetechnicus in de regio' },
-    { key: 'versneld', name: 'Versneld', price: 75000, unit: 'p/m', note: 'Krappe functie of haast. Nieuwe monteurs 48 uur eerder zien' },
-    { key: 'moeilijk', name: 'Moeilijk', price: 100000, unit: 'p/m', note: 'Schaarse vakman. Wij benaderen actief uit de pool' }
+    { key: 'basis', name: 'Gevuld', price: 49900, unit: 'p/m', note: 'Monteur of servicetechnicus in de regio' },
+    { key: 'versneld', name: 'Voorrang', price: 75000, unit: 'p/m', note: 'Krappe functie of haast. Nieuwe monteurs 48 uur eerder zien' },
+    { key: 'moeilijk', name: 'Topvakman', price: 100000, unit: 'p/m', note: 'Schaarse vakman. Wij benaderen actief uit de pool' }
   ];
   function planOf(key) { return PLANS.find(function (x) { return x.key === key; }) || PLANS[0]; }
   function modalWizard() {
@@ -647,9 +647,9 @@
 
   /* ---------- monteurs: pakketten en kandidatenbak (fase 1 blauwdruk) ---------- */
   var PAKKETTEN = {
-    basis: { key: 'basis', name: 'Basis', price: 49900, note: 'Monteur of servicetechnicus in de regio', early: false },
-    versneld: { key: 'versneld', name: 'Versneld', price: 75000, note: 'Krappe functie of je hebt haast', early: true },
-    moeilijk: { key: 'moeilijk', name: 'Moeilijk', price: 100000, note: 'Schaarse, ervaren vakman', early: true }
+    basis: { key: 'basis', name: 'Gevuld', price: 49900, note: 'Monteur of servicetechnicus in de regio', early: false },
+    versneld: { key: 'versneld', name: 'Voorrang', price: 75000, note: 'Krappe functie of je hebt haast', early: true },
+    moeilijk: { key: 'moeilijk', name: 'Topvakman', price: 100000, note: 'Schaarse, ervaren vakman', early: true }
   };
   var EARLY_H = 48;
   function pakketOf(v) { return v && v.pakket ? PAKKETTEN[v.pakket] : null; }
@@ -693,13 +693,13 @@
     var h = '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>Monteurs</h1><p class="sub">Hier kiest de monteur. Jij solliciteert, de monteur zegt ja of nee.</p></div>' +
       (demo ? '<label class="hint tswitch"><input type="checkbox" data-action="nopack"' + (S.noPack ? ' checked' : '') + '> Bekijk zonder pakket</label>' : '') + '</div>';
     h += pk
-      ? '<div class="card card--dark tband"><div><p class="card__label">Pakket ' + pk.name + ' loopt</p><p>Solliciteer bij monteurs die je aanspreken. Zegt de monteur ja, dan zie je het nummer en plan je een gesprek.' + (pk.early ? ' Nieuwe monteurs zie je ' + EARLY_H + ' uur eerder dan bij Basis.' : '') + '</p></div></div>'
+      ? '<div class="card card--dark tband"><div><p class="card__label">Pakket ' + pk.name + ' loopt</p><p>Solliciteer bij monteurs die je aanspreken. Zegt de monteur ja, dan zie je het nummer en plan je een gesprek.' + (pk.early ? ' Nieuwe monteurs zie je ' + EARLY_H + ' uur eerder dan bij Gevuld.' : '') + '</p></div></div>'
       : '<div class="card tband tband--lock"><div><p class="card__label">Geen pakket actief</p><p>' + all.length + ' monteurs zoeken nu werk. Kijk gerust rond. Solliciteren bij een monteur en contact openen zodra een pakket loopt.</p></div><a class="btn btn--gold btn--sm" href="#/vacatures">Start een pakket</a></div>';
     h += '<div class="chips">' + kinds.map(function (k) { return '<button class="chip" data-action="tkind" data-id="' + k + '" aria-pressed="' + (S.tKind === k) + '">' + (k === 'all' ? 'Alle monteurs' : k) + '<span class="n">' + all.filter(function (t) { return k === 'all' || t.kind === k; }).length + '</span></button>'; }).join('') +
       '<button class="chip" data-action="tkind" data-id="gekozen" aria-pressed="' + (S.tKind === 'gekozen') + '">Gesolliciteerd<span class="n">' + nPicked + '</span></button></div>';
     h += '<div class="tgrid">' + list.map(function (t) {
       var fresh = tHours(t) < EARLY_H, vis = tVisible(t, pk);
-      if (!vis) return '<div class="card tcard tcard--wait"><div class="tvid"><span class="tvid__ini">?</span></div><p class="vac__title">' + esc(t.role) + '</p><p class="hint">' + esc(t.city) + '. Nieuw profiel, zichtbaar over ' + Math.ceil(EARLY_H - tHours(t)) + ' uur.</p><p class="hint"><b>Versneld en Moeilijk zien dit nu al.</b></p></div>';
+      if (!vis) return '<div class="card tcard tcard--wait"><div class="tvid"><span class="tvid__ini">?</span></div><p class="vac__title">' + esc(t.role) + '</p><p class="hint">' + esc(t.city) + '. Nieuw profiel, zichtbaar over ' + Math.ceil(EARLY_H - tHours(t)) + ' uur.</p><p class="hint"><b>Voorrang en Topvakman zien dit nu al.</b></p></div>';
       return '<div class="card tcard" role="button" tabindex="0" data-action="topen" data-id="' + t.id + '">' + videoTile(t) +
         '<div class="row tcard__top"><p class="vac__title">' + esc(tName(t)) + '</p>' + (tStat(t) ? tPill(t) : fresh ? '<span class="pill tpill--new">Nieuw</span>' : '') + '</div>' +
         '<p class="hint tcard__role">' + esc(t.role) + '</p><p class="hint">' + esc(t.city) + ' · ' + t.km + ' km · ' + t.years + ' jaar ervaring · ' + esc(t.available.toLowerCase()) + '</p>' +
