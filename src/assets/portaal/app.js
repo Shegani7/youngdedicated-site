@@ -455,7 +455,7 @@
         '<button class="pack" data-action="wset" data-k="selection" aria-pressed="' + !!w.selection + '"><span><b>Selectie door ons</b><small>Wij bellen iedereen binnen 24 uur</small></span><span>+ ' + eur(PRICE.selectie) + '</span></button>' +
         '<button class="pack" data-action="wset" data-k="beeld" aria-pressed="' + !!w.beeld + '"><span><b>Foto en video door ons</b><small>Anders gebruiken we jullie eigen beeld</small></span><span>+ ' + eur(PRICE.beeld) + '</span></button></div>' +
         '<div class="money-row"><span>' + 'Per maand, per vacature' + '</span><b>' + eur(planOf(w.plan).price) + '</b></div>' + (once ? '<div class="money-row"><span>Eenmalig</span><b>' + eur(once) + '</b></div>' : '') +
-        '<p class="hint">Inclusief vacaturepagina, campagnes, portaal, opvolging en plaatsing op gratis vacaturesites. Bedragen excl. btw. Je betaalt pas na de kick-off.</p>';
+        '<p class="hint">Inclusief vacaturepagina, campagnes, portaal, opvolging en koppeling met vacaturesites. Bedragen excl. btw. Je betaalt pas na de kick-off.</p>';
     }
     h += '<div class="row" style="margin-top:16px">' + (step > 1 ? '<button class="btn btn--ghost" data-action="wback">Terug</button>' : '') +
       '<button class="btn ' + (step === 3 ? 'btn--gold' : '') + '" data-action="wnext">' + (step === 3 ? 'Aanvraag versturen' : 'Volgende') + '</button></div></div>';
