@@ -20,3 +20,15 @@
     window.addEventListener('scroll', tick, { passive: true }); tick();
   }
 })();
+
+/* Meting werkgeversfunnel: elke data-cta klik naar GTM (dataLayer) en Meta (custom event). */
+(function () {
+  window.dataLayer = window.dataLayer || [];
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest && e.target.closest('[data-cta]');
+    if (!el) return;
+    var cta = el.getAttribute('data-cta');
+    window.dataLayer.push({ event: 'cta_click', cta: cta, page: location.pathname });
+    if (window.fbq) window.fbq('trackCustom', 'CTA', { cta: cta });
+  }, true);
+})();

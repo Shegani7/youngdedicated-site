@@ -16,3 +16,4 @@
   n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
   (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
   fbq('init','340027404693635');fbq('track','PageView');{% if metaEvent %}fbq('track','{{ metaEvent }}');{% endif %}</script>
+  {% if metaEvent %}<script>window.dataLayer=window.dataLayer||[];dataLayer.push({event:'{{ metaEvent | lower }}'});</script>{% endif %}
