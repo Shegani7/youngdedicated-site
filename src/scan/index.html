@@ -105,19 +105,19 @@ noindex: true
       </fieldset>
 
       <div class="sc-lead" id="sc-lead">
-        <h3>Wil je weten hoe je dit oplost?</h3>
-        <p>Laat je gegevens achter. We bellen je binnen een werkdag met wat wij als eerste zouden doen voor jouw vacature.</p>
+        <h3>Je uitslag en het plan in je mail</h3>
+        <p>Laat je gegevens achter. Je krijgt je score, je lege-stoelbedrag en wat wij als eerste zouden doen voor jouw vacature. Liever meteen starten? <a class="wg-link" href="/plaats-je-vacature/" data-cta="scan-lead-zelf-kiezen">Kies zelf je pakket</a>, je vacaturepagina staat direct live.</p>
         <div class="wg-fields">
           <label>Naam<input name="naam" required autocomplete="name"></label>
           <label>Bedrijf<input name="bedrijf" required autocomplete="organization"></label>
           <label>E-mail<input type="email" name="email" required autocomplete="email"></label>
-          <label>Telefoon<input type="tel" name="telefoon" required autocomplete="tel"></label>
+          <label>Telefoon (mag leeg)<input type="tel" name="telefoon" autocomplete="tel"></label>
           <label class="wg-fields__wide">Welke functie zoek je?<input name="functie" placeholder="Bijvoorbeeld servicemonteur warmtepompen"></label>
         </div>
-        <button class="button" type="submit" data-cta="scan-verstuur">Bel me terug</button>
-        <p class="wg-small" style="margin-top:10px">We gebruiken je gegevens alleen om je te bellen over deze scan.</p>
+        <button class="button" type="submit" data-cta="scan-verstuur">Stuur mij de uitslag</button>
+        <p class="wg-small" style="margin-top:10px">We gebruiken je gegevens alleen voor deze scan.</p>
       </div>
-      <div class="sc-done" id="sc-done" hidden>Ontvangen. We bellen je binnen een werkdag. Liever direct? Bel <a href="tel:+31850607714">085 0607 714</a>.</div>
+      <div class="sc-done" id="sc-done" hidden>Ontvangen. Je uitslag en ons plan staan binnen een werkdag in je mail. Vandaag nog starten? <a class="wg-link" href="/plaats-je-vacature/" data-cta="scan-done-zelf-kiezen">Kies zelf je pakket</a>.</div>
     </form>
 
     <aside class="sc-res" aria-live="polite">
@@ -131,7 +131,8 @@ noindex: true
       </div>
       <p class="sc-res__label">Eerst fixen</p>
       <ul class="sc-fix" id="sc-fix"><li class="sc-empty">Verschijnt zodra je antwoordt.</li></ul>
-      <a class="button" href="#sc-lead" data-cta="scan-naar-lead">Bel me terug</a>
+      <a class="button" href="/plaats-je-vacature/" data-cta="scan-zelf-kiezen">Vandaag starten</a>
+      <a class="wg-link" href="#sc-lead" data-cta="scan-naar-lead" style="display:block;margin-top:12px;color:#fff">Of stuur mij de uitslag</a>
     </aside>
   </div>
 </section>
