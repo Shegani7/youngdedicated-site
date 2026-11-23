@@ -527,3 +527,6 @@
 .wg-flow li>span:last-child{color:var(--wg-muted)}
 .wg-section--dark .wg-card{background:#1b1b1b;box-shadow:none;border-top:3px solid var(--wg-gold);color:#e6e6e6}
 .wg-section--dark .wg-card .wg-card__big{color:#fff}
+.wg-seo-links{list-style:none;padding:0;margin:16px 0 0;display:flex;flex-wrap:wrap;gap:10px}
+.wg-seo-links a{display:inline-block;padding:10px 16px;border:1px solid var(--wg-line);border-radius:999px;font-weight:700;text-decoration:none;background:#fff}
+.wg-seo-links a:hover{border-color:var(--wg-gold)}
