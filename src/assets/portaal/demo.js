@@ -160,7 +160,7 @@
     clients: [
       { name: 'Van Walsem Kachelspecialist', plan: 'Voorgeselecteerd', mrr: 99900, vacancies: 1, cpq: 8200, speed_h: 6, health: 'op koers' },
       { name: 'YoungDedicated (eigen)', plan: 'Kandidaten', mrr: 0, vacancies: 1, cpq: 9100, speed_h: 9, health: 'op koers' },
-      { name: 'Demo Installatietechniek', plan: 'Ontzorgd', mrr: 150000, vacancies: 2, cpq: 7400, speed_h: 4, health: 'op koers' },
+      { name: 'Demo Installatietechniek', plan: 'Ontzorgd', mrr: 99900, vacancies: 2, cpq: 7400, speed_h: 4, health: 'op koers' },
       { name: 'Demo Installatietechniek', plan: 'Kandidaten', mrr: 49900, vacancies: 1, cpq: 5100, speed_h: 31, health: 'let op: belt traag' },
       { name: 'Demo Servicebedrijf', plan: 'Gezien', mrr: 9900, vacancies: 1, cpq: 12600, speed_h: 12, health: 'let op: weinig geschikt' }
     ],

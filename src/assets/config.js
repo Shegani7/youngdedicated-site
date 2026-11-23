@@ -4,7 +4,7 @@
     gezien:   { naam: 'Gezien',           m: 99,   j: 89 },
     basis:    { naam: 'Kandidaten',       m: 499,  j: 449 },
     versneld: { naam: 'Voorgeselecteerd', m: 999,  j: 899 },
-    moeilijk: { naam: 'Ontzorgd',         m: 1500, j: null }
+    moeilijk: { naam: 'Ontzorgd',         m: 999,  j: null }
   };
   var BEELD = 3000;
   function eur(v) { return '€' + v.toLocaleString('nl-NL'); }
@@ -20,10 +20,10 @@
     lines.push(['Werkgeverspagina, tekst en advertenties', 'inbegrepen']);
     if (k.pakket !== 'gezien') lines.push(['De afspraak', 'inbegrepen']);
     if (k.pakket === 'versneld' || k.pakket === 'moeilijk') lines.push(['Voorselectie via WhatsApp, gesprek in je agenda', 'inbegrepen']);
-    if (k.pakket === 'moeilijk') lines.push(['Begeleiding tot de handtekening', 'inbegrepen']);
+    if (k.pakket === 'moeilijk') { lines.push(['Begeleiding tot de handtekening', 'inbegrepen']); lines.push(['Na de handtekening: zolang hij blijft, max. 12 mnd', '€400 p/m']); }
     if (k.beeld === 'wij') { once += BEELD; lines.push(['Beeld op locatie', eur(BEELD)]); }
     else lines.push(['Eigen beeld: jouw foto\'s en video\'s', 'inbegrepen']);
-    lines.push(['Aannemen zoveel je wilt', 'geen extra kosten']);
+    if (k.pakket !== 'moeilijk') lines.push(['Aannemen zoveel je wilt', 'geen extra kosten']);
     if (k.ontvangst === 'eigen-systeem') lines.push(['Koppeling met je eigen systeem', 'niet inbegrepen']);
     else lines.push([k.ontvangst === 'mailbox' ? 'Sollicitanten in je mailbox' : 'Portaal met eigen inlog', 'inbegrepen']);
     return { n: n, jaar: !!jaar, pk: pk, lines: lines, once: once, month: month, eur: eur };
