@@ -171,7 +171,7 @@ noindex: true
     e.preventDefault(); calc();
     var btn=f.querySelector('button[type=submit]'); btn.disabled=true;
     fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(new FormData(f)).toString()})
-      .then(function(r){if(!r.ok)throw 0;document.getElementById('sc-lead').hidden=true;document.getElementById('sc-done').hidden=false;
+      .then(function(r){if(!r.ok)throw 0;document.getElementById('sc-lead').hidden=true;document.getElementById('sc-done').hidden=false;window.dataLayer=window.dataLayer||[];dataLayer.push({event:'scan_lead',score:f.score.value,kosten:f.kosten_per_week.value});if(window.fbq)fbq('track','Lead',{content_name:'werkgeversscan'});
         try{window.fbq&&fbq('trackCustom','Werkgeversscan',{score:+f.score.value||0})}catch(_){}
         try{window.dataLayer&&dataLayer.push({event:'werkgeversscan',score:+f.score.value||0})}catch(_){}})
       .catch(function(){f.submit()});
