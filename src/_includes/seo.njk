@@ -1,0 +1,57 @@
+---
+layout: "base.njk"
+bodyClass: "page wg-page"
+---
+<section class="wg-hero2 wg-hero2--page">
+  <div class="wg-hero2__bg" style="background-image:url({{ heroImg or '/wp-content/uploads/2024/12/actiefoto-servicetechnicus-xibeo-youngdedicated-8.jpg' }})"></div>
+  <div class="container wg-hero2__inner">
+    <p class="wg-eyebrow wg-eyebrow--gold">{{ eyebrow }}</p>
+    <h1>{{ h1 | safe }}</h1>
+    <p class="wg-lead">{{ lead | safe }}</p>
+    <div class="wg-ctas">
+      <a class="button" href="/plaats-je-vacature/" data-cta="seo-{{ page.fileSlug }}-hero">Plan je kick-off</a>
+      <a class="wg-ghost" href="/prijzen/" data-cta="seo-{{ page.fileSlug }}-prijzen">Bekijk de pakketten</a>
+    </div>
+  </div>
+</section>
+
+{% for s in sections %}
+<section class="wg-section{% if s.dark %} wg-section--dark{% elif s.grey %} wg-section--grey{% endif %}">
+  <div class="container{% if not s.cards %} wg-narrow{% endif %}">
+    {% if s.eyebrow %}<p class="wg-eyebrow{% if s.dark %} wg-eyebrow--gold{% endif %}">{{ s.eyebrow }}</p>{% endif %}
+    <h2>{{ s.h2 | safe }}</h2>
+    {% for p in s.text %}<p class="wg-intro">{{ p | safe }}</p>{% endfor %}
+    {% if s.cards %}<div class="wg-grid wg-grid--3">{% for c in s.cards %}<div class="wg-card wg-feat wg-reveal"><p class="wg-card__big">{{ c[0] | safe }}</p><p>{{ c[1] | safe }}</p></div>{% endfor %}</div>{% endif %}
+    {% if s.note %}<p class="wg-note{% if s.dark %} wg-note--light{% endif %}">{{ s.note | safe }}</p>{% endif %}
+  </div>
+</section>
+{% endfor %}
+
+{% if faq %}
+<section class="wg-section">
+  <div class="container wg-narrow">
+    <p class="wg-eyebrow">Vragen</p>
+    <h2>Wat werkgevers ons vragen</h2>
+    {% for f in faq %}<details class="wg-faq"><summary>{{ f[0] }}</summary><p>{{ f[1] | safe }}</p></details>{% endfor %}
+  </div>
+</section>
+<script type="application/ld+json">{{ { "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": faqLd(faq) } | dump | safe }}</script>
+{% endif %}
+
+<section class="wg-section wg-section--grey">
+  <div class="container wg-narrow">
+    <p class="wg-eyebrow">Lees verder</p>
+    <h2>Meer over monteurs werven</h2>
+    <ul class="wg-seo-links">{% for l in seoLinks %}{% if l.url != page.url %}<li><a href="{{ l.url }}">{{ l.label }}</a></li>{% endif %}{% endfor %}</ul>
+  </div>
+</section>
+
+<section class="wg-section wg-final">
+  <div class="container wg-center">
+    <h2 class="wg-final__title">{{ finalTitle or "Hoe lang staat jouw vacature al open?" }}</h2>
+    <p>Plan je kick-off. Binnen 5 werkdagen kiezen monteurs jou.</p>
+    <a class="button" href="/plaats-je-vacature/" data-cta="seo-{{ page.fileSlug }}-slot">Plan je kick-off</a>
+    <p class="wg-small">Liever eerst sparren? Bel Ransder Shegani, oprichter &amp; merkstrateeg: <a href="tel:+31614242727">06 1424 2727</a>.</p>
+  </div>
+</section>
+<div class="wg-sticky" id="wg-sticky"><a class="button" href="/plaats-je-vacature/" data-cta="sticky-seo-{{ page.fileSlug }}">Plan je kick-off</a></div>
