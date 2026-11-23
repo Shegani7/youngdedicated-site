@@ -440,7 +440,7 @@
   var PLANS = [
     { key: 'basis', name: 'Kandidaten', price: 49900, unit: 'p/m', note: 'Reacties met video, jij kiest en belt. Met de afspraak' },
     { key: 'versneld', name: 'Voorgeselecteerd', price: 99900, unit: 'p/m', note: 'Voorselectie via WhatsApp, wij bellen binnen een uur (kantooruren), gesprek in je agenda' },
-    { key: 'moeilijk', name: 'Ontzorgd', price: 150000, unit: 'p/m', note: 'Wij doen alles tot de handtekening onder het contract' }
+    { key: 'moeilijk', name: 'Ontzorgd', price: 99900, unit: 'p/m', note: 'Wij doen alles tot de handtekening. Daarna €400 p/m zolang hij blijft, max. 12 maanden' }
   ];
   function planOf(key) { return PLANS.find(function (x) { return x.key === key; }) || PLANS[0]; }
   function modalWizard() {
@@ -450,7 +450,7 @@
     if (step === 2) h += '<h2>Welk pakket past bij de functie?</h2><div class="packs">' +
       PLANS.map(function (pl) { return '<button class="pack" data-action="wset" data-k="plan" data-v="' + pl.key + '" aria-pressed="' + (w.plan === pl.key) + '"><span><b>' + pl.name + '</b><small>' + pl.note + '</small></span><span>' + eur(pl.price) + ' ' + pl.unit + '</span></button>'; }).join('') + '</div>' +
       '<div class="money-row"><span>Pagina, campagnes, vacaturesites, systeem, opvolging, dashboard</span><b>inbegrepen</b></div><div class="money-row"><span>Bereik</span><b>inbegrepen</b></div>' +
-      '<p class="hint">Per maand: eerste 2 maanden vast, daarna maandelijks opzegbaar. Per jaar: 10% korting. Ontzorgd loopt per maand en stopt bij de handtekening. Met de afspraak.</p>';
+      '<p class="hint">Per maand: eerste 2 maanden vast, daarna maandelijks opzegbaar. Per jaar: 10% korting. Ontzorgd loopt per maand tot de handtekening, daarna €400 p/m zolang de monteur blijft (max. 12 maanden). Met de afspraak.</p>';
     if (step === 3) {
       var once = w.beeld ? PRICE.beeld : 0;
       h += '<h2>Wat mogen wij nog doen?</h2><div class="packs">' +
@@ -650,7 +650,7 @@
   var PAKKETTEN = {
     basis: { key: 'basis', name: 'Kandidaten', price: 49900, note: 'Reacties met video, jij kiest', early: false },
     versneld: { key: 'versneld', name: 'Voorgeselecteerd', price: 99900, note: 'Wij selecteren voor en plannen het gesprek', early: true },
-    moeilijk: { key: 'moeilijk', name: 'Ontzorgd', price: 150000, note: 'Wij doen alles tot de handtekening', early: true }
+    moeilijk: { key: 'moeilijk', name: 'Ontzorgd', price: 99900, note: 'Wij doen alles tot de handtekening, daarna €400 p/m zolang hij blijft', early: true }
   };
   var EARLY_H = 48;
   function pakketOf(v) { return v && v.pakket ? PAKKETTEN[v.pakket] : null; }
