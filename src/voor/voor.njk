@@ -1,0 +1,148 @@
+---
+layout: "base.njk"
+pagination:
+  data: voorstellen
+  size: 1
+  alias: v
+permalink: "/voor/{{ v.slug }}/"
+eleventyComputed:
+  title: "Voor {{ v.bedrijf }}: zo vul je je vacature {{ v.functie }} | YoungDedicated"
+  description: "Persoonlijk voorstel van YoungDedicated voor {{ v.bedrijf }}."
+bodyClass: "page wg-page"
+noindex: true
+---
+<style>
+.vs-hero{position:relative;background:var(--wg-ink);color:#fff;padding:84px 0 72px;overflow:hidden}
+.vs-hero:before{content:"";position:absolute;inset:0;background:var(--vs-foto) center/cover no-repeat;opacity:.28;filter:grayscale(1)}
+.vs-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#111 35%,rgba(17,17,17,.55))}
+.vs-hero .container{position:relative;z-index:1}
+.vs-tag{display:inline-block;border:2px solid var(--wg-gold);color:var(--wg-gold);font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;margin:0 0 26px}
+.vs-hero h1{color:#fff;font-size:clamp(36px,5.6vw,68px);font-weight:900;line-height:1.02;margin:0 0 22px;max-width:15ch;text-wrap:balance}
+.vs-hero h1 em{font-style:normal;color:var(--wg-gold)}
+.vs-hero p.vs-sub{color:#d6d6d6;font-size:clamp(17px,1.6vw,20px);max-width:46ch;margin:0 0 30px}
+.vs-sticker{display:inline-block;background:#fff;color:var(--wg-ink);font-weight:900;font-size:clamp(20px,2.6vw,28px);padding:10px 16px;transform:rotate(-1.5deg);box-shadow:7px 7px var(--wg-gold)}
+.vs-sticker span{color:#b3261e}
+.vs-h2{font-size:clamp(28px,3.6vw,44px);font-weight:900;line-height:1.08;margin:0 0 14px;text-wrap:balance}
+.vs-signal{border-left:6px solid var(--wg-gold);padding:6px 0 6px 22px;font-size:clamp(20px,2.2vw,26px);font-weight:700;line-height:1.35;max-width:38ch}
+.vs-cost{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:34px}
+.vs-cost div{background:#fff;border:2px solid var(--wg-ink);padding:22px}
+.vs-cost div:last-child{background:var(--wg-ink);color:#fff;box-shadow:8px 8px var(--wg-gold)}
+.vs-cost small{display:block;font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.06em;opacity:.7;margin-bottom:6px}
+.vs-cost strong{display:block;font-size:clamp(30px,3.6vw,44px);font-weight:900;line-height:1}
+.vs-proof{display:grid;grid-template-columns:1.05fr 1fr;gap:0;border:3px solid var(--wg-ink);box-shadow:12px 12px var(--wg-gold);background:#fff}
+.vs-proof__img{background:var(--vs-foto2) center/cover no-repeat;min-height:380px}
+.vs-proof__body{padding:36px}
+.vs-big{font-size:clamp(64px,9vw,112px);font-weight:900;line-height:.9;margin:6px 0 4px}
+.vs-bars{display:flex;gap:14px;align-items:flex-end;height:120px;margin:22px 0 10px}
+.vs-bars div{flex:1;background:var(--wg-gold);position:relative;transform-origin:bottom;transition:transform 1s ease}
+.vs-bars div span{position:absolute;top:-24px;left:0;right:0;text-align:center;font-weight:900}
+.vs-bars div i{position:absolute;bottom:-24px;left:0;right:0;text-align:center;font-style:normal;font-size:14px;color:var(--wg-muted)}
+.wg-js .vs-bars:not(.is-in) div{transform:scaleY(.05)}
+.vs-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.vs-stats div{border-top:4px solid var(--wg-gold);padding-top:14px}
+.vs-stats strong{display:block;font-size:clamp(36px,4.4vw,54px);font-weight:900;line-height:1;color:#fff}
+.vs-stats span{color:#cfcfcf}
+.vs-steps{counter-reset:s;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.vs-steps div{counter-increment:s;background:#fff;padding:28px;border:2px solid var(--wg-line)}
+.vs-steps div:before{content:counter(s);display:inline-grid;place-items:center;width:42px;height:42px;background:var(--wg-ink);color:var(--wg-gold);font-weight:900;font-size:20px;margin-bottom:14px}
+.vs-steps h3{font-size:21px;font-weight:900;margin:0 0 8px}
+.vs-offer{display:grid;grid-template-columns:1.2fr 1fr;gap:34px;align-items:center}
+.vs-card{background:var(--wg-ink);color:#fff;padding:36px;box-shadow:12px 12px var(--wg-gold)}
+.vs-card .vs-price{font-size:clamp(44px,5vw,60px);font-weight:900;line-height:1;margin:8px 0}
+.vs-card .vs-price small{font-size:18px;font-weight:700;color:#cfcfcf}
+.vs-card .button{margin-top:18px}
+.vs-deal{border:3px dashed var(--wg-gold);padding:26px;background:#fffdf6}
+.vs-deal h3{font-size:24px;font-weight:900;margin:0 0 8px}
+@media (max-width:991.98px){.vs-cost,.vs-stats,.vs-steps,.vs-offer,.vs-proof{grid-template-columns:1fr}.vs-proof__img{min-height:240px}}
+</style>
+
+<section class="vs-hero" style="--vs-foto:url({{ v.vergelijk.foto }})">
+  <div class="container">
+    <p class="vs-tag">Persoonlijk voorstel voor {{ v.bedrijf }}</p>
+    <h1>Jullie volgende {{ v.functie }} kiest voor <em>{{ v.kort }}</em>.</h1>
+    <p class="vs-sub">Wij hebben dit eerder gedaan voor een vergelijkbare vacature. Hieronder zie je hoe, wat het opleverde en wat het jullie kost om te wachten.</p>
+    <p class="vs-sticker">Elke maand zonder kost <span>€10.400</span></p>
+  </div>
+</section>
+
+<section class="wg-section">
+  <div class="container">
+    <p class="wg-eyebrow">Wat wij zien</p>
+    <p class="vs-signal wg-reveal">{{ v.signaal }}</p>
+    <div class="vs-cost wg-reveal">
+      <div><small>Na 1 maand</small><strong>€10.400</strong></div>
+      <div><small>Na 2 maanden</small><strong>€20.800</strong></div>
+      <div><small>Na 3 maanden</small><strong>€31.200</strong></div>
+    </div>
+    <p class="wg-small" style="margin-top:14px">Rekensom: €75 per uur aan omzet × 32 uur per week. Werk dat blijft liggen of dat je klant elders laat doen.</p>
+  </div>
+</section>
+
+<section class="wg-section wg-section--grey">
+  <div class="container">
+    <p class="wg-eyebrow">Bewijs uit een vergelijkbare vacature</p>
+    <h2 class="vs-h2">{{ v.vergelijk.functie }} bij {{ v.vergelijk.bedrijf }}. Dezelfde handen, hetzelfde tekort.</h2>
+    <div class="vs-proof wg-reveal" style="--vs-foto2:url({{ v.vergelijk.portret }});margin-top:30px">
+      <div class="vs-proof__img" role="img" aria-label="{{ v.vergelijk.functie }} bij {{ v.vergelijk.bedrijf }}"></div>
+      <div class="vs-proof__body">
+        <p class="wg-eyebrow">{{ v.vergelijk.bedrijf }} · {{ v.vergelijk.regio }}</p>
+        <p class="vs-big">{{ v.vergelijk.sollicitanten }}</p>
+        <p style="font-weight:800;font-size:20px;margin:0">sollicitanten in {{ v.vergelijk.periode }}</p>
+        <div class="vs-bars" data-bars>
+          {% for m in v.vergelijk.maanden %}<div style="height:{{ (m[1] / 40 * 100) | round }}%"><span>{{ m[1] }}</span><i>{{ m[0] }}</i></div>{% endfor %}
+        </div>
+        <p style="margin-top:36px">Eigen beeld, een vacaturepagina waar de monteur kiest, en campagnes die we elke dag bijsturen. <a class="wg-link" href="{{ v.vergelijk.link }}">Bekijk de live vacature</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wg-section wg-section--dark">
+  <div class="container">
+    <p class="wg-eyebrow wg-eyebrow--gold">Onze cijfers</p>
+    <div class="vs-stats wg-reveal">
+      <div><strong>85%</strong><span>van onze vacatures vervuld</span></div>
+      <div><strong>1.592</strong><span>sollicitanten via onze campagnes</span></div>
+      <div><strong>€44</strong><span>gemiddeld per sollicitant</span></div>
+    </div>
+    <p class="wg-stats-note" style="margin-top:18px">Gemeten over 37 campagnes, oktober 2023 tot november 2026. Alleen volledig ingevulde formulieren.</p>
+  </div>
+</section>
+
+<section class="wg-section">
+  <div class="container">
+    <p class="wg-eyebrow">Zo pakken we het aan voor {{ v.kort }}</p>
+    <h2 class="vs-h2" style="margin-bottom:30px">Hier kiest de monteur. Niet andersom.</h2>
+    <div class="vs-steps wg-reveal">
+      <div><h3>Jouw vacature, vanuit de monteur</h3><p>Geen lijst met eisen. Een pagina die laat zien waarom een {{ v.functie }} bij {{ v.kort }} beter af is. Solliciteren in 60 seconden, zonder cv.</p></div>
+      <div><h3>Bereik in {{ v.regio }}</h3><p>Campagnes op monteurs die nu niet zoeken maar wel openstaan. Gekoppeld met vacaturesites. Bereik inbegrepen.</p></div>
+      <div><h3>Elke dag bijsturen</h3><p>We kijken dagelijks naar wie solliciteert en sturen bij op kwaliteit. Jij ziet elke sollicitant direct binnenkomen.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="wg-section wg-section--grey">
+  <div class="container vs-offer">
+    <div>
+      <p class="wg-eyebrow">Ons advies voor {{ v.kort }}</p>
+      <h2 class="vs-h2">{{ v.pakketnaam }}</h2>
+      <p class="wg-lead">{{ v.waarom }}</p>
+      <div class="vs-deal" style="margin-top:22px">
+        <h3>De afspraak</h3>
+        <p style="margin:0">Komen wij onze afspraak niet na, dan is maand 2 gratis. Het risico ligt bij ons, niet bij jou.</p>
+      </div>
+    </div>
+    <div class="vs-card wg-reveal">
+      <p class="wg-eyebrow wg-eyebrow--gold">Start vandaag</p>
+      <p class="vs-price">€{{ v.pakketprijs }} <small>per maand</small></p>
+      <p style="color:#cfcfcf;margin:0">Of €{{ v.pakketjaar }} per maand met een jaar. Je kiest zelf, zonder gesprek vooraf.</p>
+      <a class="button" href="/plaats-je-vacature/?pakket={{ v.pakket }}&utm_source=voorstel&utm_campaign=persoonlijk-voorstel&utm_content={{ v.slug }}" data-cta="voorstel-start">Start voor {{ v.kort }}</a>
+      <p class="wg-small" style="color:#cfcfcf;margin-top:12px"><a class="wg-link wg-link--light" href="/prijzen/">Alle pakketten vergelijken</a></p>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){var b=document.querySelector('[data-bars]');if(!b)return;if(!('IntersectionObserver' in window)){b.classList.add('is-in');return;}
+var o=new IntersectionObserver(function(e){if(e[0].isIntersecting){b.classList.add('is-in');o.disconnect();}},{threshold:.4});o.observe(b);})();
+</script>
