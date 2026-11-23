@@ -1,0 +1,76 @@
+---
+layout: "base.njk"
+pagination:
+  data: voorbeelden
+  size: 1
+  alias: v
+permalink: "/voorbeeld/{{ v.slug }}/"
+eleventyComputed:
+  title: "Voorbeeld: {{ v.functie }} bij {{ v.kort }} | YoungDedicated"
+  description: "Voorbeeld van een vacaturepagina, gemaakt door YoungDedicated. Nog niet live."
+bodyClass: "page wg-page"
+noindex: true
+---
+<style>
+.vb-bar{display:inline-block;background:var(--wg-gold);color:var(--wg-ink);font-weight:800;font-size:14px;padding:6px 12px;margin:0 0 22px}
+.vb-hero{background:var(--wg-ink);color:#fff;padding:70px 0 60px}
+.vb-hero h1{color:#fff;font-size:clamp(34px,5vw,56px);font-weight:900;line-height:1.05;margin:0 0 14px;text-wrap:balance}
+.vb-hero .vb-meta{color:#cfcfcf;font-size:17px;margin:0 0 22px}
+.vb-hero .vb-haak{display:inline-block;background:#fff;color:var(--wg-ink);font-weight:900;font-size:clamp(18px,2.4vw,24px);padding:8px 14px;transform:rotate(-1.5deg);box-shadow:6px 6px var(--wg-gold)}
+.vb-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+.vb-grid h2{font-size:22px;font-weight:900;margin:0 0 12px}
+.vb-grid ul{list-style:none;padding:0;margin:0}
+.vb-grid li{padding:9px 0 9px 26px;border-bottom:1px solid var(--wg-line);position:relative}
+.vb-grid li:before{content:"\2713";position:absolute;left:0;color:var(--wg-green);font-weight:900}
+.vb-apply{background:var(--wg-grey);padding:34px;max-width:640px}
+.vb-apply h2{font-size:26px;font-weight:900;margin:0 0 8px}
+.vb-apply ol{margin:0 0 18px;padding-left:20px}
+.vb-apply .button[aria-disabled]{opacity:.55;pointer-events:none}
+.vb-wg{border:3px solid var(--wg-ink);padding:34px;box-shadow:10px 10px var(--wg-gold)}
+.vb-wg h2{font-size:28px;font-weight:900;margin:0 0 10px}
+@media (max-width:991.98px){.vb-grid{grid-template-columns:1fr}}
+</style>
+
+<section class="vb-hero">
+  <div class="container">
+    <p class="vb-bar">Voorbeeld voor {{ v.bedrijf }}. Gemaakt door YoungDedicated. Nog niet live.</p>
+    <p class="wg-eyebrow" style="color:var(--wg-gold)">{{ v.bedrijf }} zoekt</p>
+    <h1>{{ v.functie }}</h1>
+    <p class="vb-meta">{{ v.plaats }} · {{ v.uren }}</p>
+    <p class="vb-haak">{{ v.haak }}</p>
+  </div>
+</section>
+
+<section class="wg-section">
+  <div class="container">
+    <p class="wg-lead" style="margin-bottom:40px">{{ v.intro }}</p>
+    <div class="vb-grid">
+      <div><h2>Wat je doet</h2><ul>{% for x in v.doen %}<li>{{ x }}</li>{% endfor %}</ul></div>
+      <div><h2>Wat je meeneemt</h2><ul>{% for x in v.mee %}<li>{{ x }}</li>{% endfor %}</ul></div>
+      <div><h2>Wat je krijgt</h2><ul>{% for x in v.krijg %}<li>{{ x }}</li>{% endfor %}</ul></div>
+    </div>
+  </div>
+</section>
+
+<section class="wg-section wg-section--tight">
+  <div class="container">
+    <div class="vb-apply">
+      <h2>Solliciteren in 60 seconden</h2>
+      <ol><li>Naam en telefoonnummer</li><li>Drie korte vragen over je ervaring</li><li>{{ v.kort }} neemt dezelfde werkdag contact op</li></ol>
+      <a class="button" aria-disabled="true">Solliciteer direct</a>
+      <p class="wg-small" style="margin-top:10px">Werkt zodra de pagina live staat. Geen cv nodig.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wg-section wg-section--grey">
+  <div class="container">
+    <div class="vb-wg">
+      <p class="wg-eyebrow">Voor {{ v.bedrijf }}</p>
+      <h2>Deze pagina staat klaar. Eén klik en hij is live.</h2>
+      <p>Wij hebben hem gebouwd op basis van jullie huidige vacature. Kies je pakket, check de vier vragen en je pagina staat direct online. Gekoppeld met vacaturesites, bereik inbegrepen. Elke maand zonder monteur kost zo'n €10.400.</p>
+      <a class="button" href="/plaats-je-vacature/?voorbeeld={{ v.slug }}&utm_source=voorbeeld&utm_campaign=pagina-staat-klaar" data-cta="voorbeeld-live">Zet mijn pagina live</a>
+      <p class="wg-small" style="margin-top:12px">Vanaf €99 per maand. <a class="wg-link" href="/prijzen/">Bekijk de pakketten</a></p>
+    </div>
+  </div>
+</section>

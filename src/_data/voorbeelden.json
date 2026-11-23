@@ -1,0 +1,41 @@
+[
+  {
+    "slug": "vossebelt-h7q2",
+    "bedrijf": "Installatiebedrijf Vossebelt",
+    "kort": "Vossebelt",
+    "functie": "Servicemonteur installatietechniek",
+    "plaats": "Houten en Utrecht",
+    "uren": "24 tot 40 uur",
+    "haak": "Klein team. Eigen auto. Jouw klanten.",
+    "intro": "Erkend installatiebedrijf in Houten. Klein en informeel: je kent iedereen en iedereen kent jou.",
+    "doen": ["Onderhoud en storingen aan cv-installaties", "Kleinere klussen: radiator verplaatsen, kraan vervangen, lekkage", "Groeien naar koeling, meet- en regeltechniek en luchtbehandeling", "Je eigen klanten en je eigen voorraad"],
+    "mee": ["Een paar jaar ervaring als zelfstandig cv-monteur", "Rijbewijs B", "Je denkt mee met de klant"],
+    "krijg": ["Auto van de zaak, telefoon en tablet", "Goed professioneel gereedschap", "Opleiding als je verder wilt", "Pensioen via PMT"]
+  },
+  {
+    "slug": "warmtegroep-p4m9",
+    "bedrijf": "Warmte Groep",
+    "kort": "Warmte Groep",
+    "functie": "Ervaren installatiemonteur",
+    "plaats": "Regio Utrecht en Amersfoort",
+    "uren": "Fulltime",
+    "haak": "Tot €5.000 bruto. Met je eigen hulpmonteur.",
+    "intro": "Onderhoudsbedrijf uit Houten met meer dan 100 jaar historie. Cv-ketels, warmtepompen, airco en ventilatie.",
+    "doen": ["Cv-ketels vervangen en in bedrijf stellen, samen met een hulpmonteur", "Warmtepompen installeren bij particulieren", "Werk afleveren waar je trots op bent"],
+    "mee": ["Ervaring als installatiemonteur", "CO-vakmanschap, of de wil om het te halen: daar helpen ze je bij"],
+    "krijg": ["€2.500 tot €5.000 bruto per maand, boven cao", "Bedrijfsauto en telefoon", "Werkkleding, materiaal en gereedschap", "Opleiding tot gecertificeerd servicemonteur", "Cao Metaal en Techniek"]
+  },
+  {
+    "slug": "scholman-t3w8",
+    "bedrijf": "Scholman Servicebedrijf",
+    "kort": "Scholman",
+    "functie": "Installatiemonteur",
+    "plaats": "Nieuwegein",
+    "uren": "32 tot 40 uur",
+    "haak": "38 vrije dagen. Eigen bus. Kwartaalbonus.",
+    "intro": "Servicebedrijf in Nieuwegein voor particulieren in de regio. Cv, ventilatie en warmtepompen.",
+    "doen": ["Cv-ketels, ventilatie en warmtepompen installeren en onderhouden", "Zelfstandig aan het werk, met de klant meedenken", "Nieuwe installaties plaatsen of bestaande uitbreiden"],
+    "mee": ["Allround W-monteur met een paar jaar ervaring", "BRL200 of warmtepompervaring is mooi meegenomen", "Vca, of je haalt hem via het bedrijf", "Rijbewijs B"],
+    "krijg": ["Werkbus met gereedschap en materiaal", "38 vrije dagen bij 40 uur", "Kwartaalbonus", "Opleidingen en cursussen", "Bedrijfsfitness, borrels en vers fruit"]
+  }
+]
