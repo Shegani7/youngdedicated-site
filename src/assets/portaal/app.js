@@ -356,14 +356,14 @@
     return h;
   }
   var JOURNEY = {
-    'Kick-off': ['Kick-off gedaan', 'Opdrachtbevestiging en factuur zijn verstuurd.'],
+    'Kick-off': ['Opdracht bevestigd', 'Opdrachtbevestiging en factuur zijn verstuurd.'],
     'Betaald': ['Betaald', 'We bouwen je pagina en advertenties. Voorbeeld binnen 3 werkdagen.'],
     'Live': ['Live', 'Je vacature staat op Instagram, Facebook en 6 vacaturesites.'],
     'Vervuld': ['Vervuld', 'Gefeliciteerd. De campagne stopt en je rapport staat klaar.']
   };
   function journeyHint(v, steps) {
     var nx = steps.find(function (x) { return !x.done; });
-    var txt = v.status === 'concept' ? 'We bellen je binnen 1 werkdag voor de kick-off.' : !nx ? 'Klaar. Deze vacature is vervuld.' : nx.label === 'Live' ? 'We bouwen je pagina en advertenties.' : '';
+    var txt = v.status === 'concept' ? 'Je factuur met betaallink komt binnen 1 werkdag per mail.' : !nx ? 'Klaar. Deze vacature is vervuld.' : nx.label === 'Live' ? 'We bouwen je pagina en advertenties.' : '';
     return (txt ? '<p class="hint" style="margin-top:12px">' + txt + '</p>' : '') + (demo && nx ? '<p><button class="btn btn--gold btn--sm" data-action="advance" data-id="' + v.id + '">Demo: ' + esc(nx.label) + ' &rsaquo;</button></p>' : '');
   }
   function guarantee(v, m, day) {
@@ -456,7 +456,7 @@
       h += '<h2>Wat mogen wij nog doen?</h2><div class="packs">' +
         '<button class="pack" data-action="wset" data-k="beeld" aria-pressed="' + !!w.beeld + '"><span><b>Foto en video door ons</b><small>Anders gebruiken we jullie eigen beeld</small></span><span>+ ' + eur(PRICE.beeld) + '</span></button></div>' +
         '<div class="money-row"><span>' + 'Per maand, per vacature' + '</span><b>' + eur(planOf(w.plan).price) + '</b></div>' + (once ? '<div class="money-row"><span>Eenmalig</span><b>' + eur(once) + '</b></div>' : '') +
-        '<p class="hint">Inclusief vacaturepagina, campagnes, portaal, opvolging en koppeling met vacaturesites. Bedragen excl. btw. Je betaalt pas na de kick-off.</p>';
+        '<p class="hint">Inclusief vacaturepagina, campagnes, portaal, opvolging en koppeling met vacaturesites. Bedragen excl. btw. Je krijgt een factuur met betaallink.</p>';
     }
     h += '<div class="row" style="margin-top:16px">' + (step > 1 ? '<button class="btn btn--ghost" data-action="wback">Terug</button>' : '') +
       '<button class="btn ' + (step === 3 ? 'btn--gold' : '') + '" data-action="wnext">' + (step === 3 ? 'Aanvraag versturen' : 'Volgende') + '</button></div></div>';
