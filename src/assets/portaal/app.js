@@ -363,7 +363,7 @@
   };
   function journeyHint(v, steps) {
     var nx = steps.find(function (x) { return !x.done; });
-    var txt = v.status === 'concept' ? 'Je factuur met betaallink komt binnen 1 werkdag per mail.' : !nx ? 'Klaar. Deze vacature is vervuld.' : nx.label === 'Live' ? 'We bouwen je pagina en advertenties.' : '';
+    var txt = v.status === 'concept' ? 'Binnen 3 werkdagen krijg je je vacaturepagina ter goedkeuring.' : !nx ? 'Klaar. Deze vacature is vervuld.' : nx.label === 'Live' ? 'We bouwen je pagina en advertenties.' : '';
     return (txt ? '<p class="hint" style="margin-top:12px">' + txt + '</p>' : '') + (demo && nx ? '<p><button class="btn btn--gold btn--sm" data-action="advance" data-id="' + v.id + '">Demo: ' + esc(nx.label) + ' &rsaquo;</button></p>' : '');
   }
   function guarantee(v, m, day) {
