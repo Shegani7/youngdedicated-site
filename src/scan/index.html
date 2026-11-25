@@ -38,6 +38,11 @@ noindex: true
 .sc-lead{background:var(--wg-grey);padding:30px;margin-top:10px}
 .sc-lead h3{font-size:24px;font-weight:900;margin:0 0 6px}
 .sc-done{border-left:6px solid var(--wg-green);background:#fff;padding:24px 28px;font-weight:600}
+.sc-lock{position:relative}
+.sc-lock>.sc-loss,.sc-lock>.sc-res__label,.sc-lock>.sc-fix{filter:blur(7px);user-select:none;pointer-events:none;transition:filter .3s}
+.sc-lock.is-open>.sc-loss,.sc-lock.is-open>.sc-res__label,.sc-lock.is-open>.sc-fix{filter:none;user-select:auto;pointer-events:auto}
+.sc-lock__cta{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--wg-green);color:#111;font-weight:700;padding:12px 18px;text-align:center;text-decoration:none;width:max-content;max-width:90%}
+.sc-lock.is-open>.sc-lock__cta{display:none}
 @media (max-width:991.98px){.sc-wrap{display:flex;flex-direction:column;gap:0}.sc-wrap>form{display:contents}.sc-q{order:1}.sc-res{position:static;order:2;margin-bottom:24px}.sc-lead,.sc-done{order:3}}
 @media (max-width:575.98px){.sc-opts,.sc-cost{grid-template-columns:1fr}.sc-score{font-size:60px}}
 </style>
@@ -46,7 +51,7 @@ noindex: true
   <div class="container">
     <p class="wg-eyebrow">Werkgeversscan</p>
     <h1>Zou een monteur jou kiezen?</h1>
-    <p class="wg-lead">Ergens zoekt een monteur een nieuwe plek. De vraag is of hij bij jou uitkomt. Zes vragen, twee minuten: je ziet je score, wat de lege stoel je per week kost en wat je als eerste moet fixen.</p>
+    <p class="wg-lead">Ergens zoekt een monteur een nieuwe plek. De vraag is of hij bij jou uitkomt. Zes vragen, twee minuten: je ziet direct je score. Met je mailadres zie je ook wat de lege stoel je per week kost en wat je als eerste moet fixen.</p>
   </div>
 </section>
 
@@ -105,19 +110,19 @@ noindex: true
       </fieldset>
 
       <div class="sc-lead" id="sc-lead">
-        <h3>Je uitslag en het plan in je mail</h3>
-        <p>Laat je gegevens achter. Je krijgt je score, je lege-stoelbedrag en wat wij als eerste zouden doen voor jouw vacature. Liever meteen starten? <a class="wg-link" href="/plaats-je-vacature/" data-cta="scan-lead-zelf-kiezen">Kies zelf je pakket</a>, je vacaturepagina staat direct live.</p>
+        <h3>Zie wat jouw lege stoel kost</h3>
+        <p>Vul je mailadres in en je ziet meteen je lege-stoelbedrag en wat je als eerste moet fixen. Je krijgt het ook in je mail, met wat wij als eerste zouden doen voor jouw vacature. Liever meteen starten? <a class="wg-link" href="/plaats-je-vacature/" data-cta="scan-lead-zelf-kiezen">Kies zelf je pakket</a>, je vacaturepagina staat direct live.</p>
         <div class="wg-fields">
-          <label>Naam<input name="naam" required autocomplete="name"></label>
-          <label>Bedrijf<input name="bedrijf" required autocomplete="organization"></label>
-          <label>E-mail<input type="email" name="email" required autocomplete="email"></label>
+          <label class="wg-fields__wide">E-mail<input type="email" name="email" required autocomplete="email"></label>
+          <label>Naam (mag leeg)<input name="naam" autocomplete="name"></label>
+          <label>Bedrijf (mag leeg)<input name="bedrijf" autocomplete="organization"></label>
           <label>Telefoon (mag leeg)<input type="tel" name="telefoon" autocomplete="tel"></label>
-          <label class="wg-fields__wide">Welke functie zoek je?<input name="functie" placeholder="Bijvoorbeeld servicemonteur warmtepompen"></label>
+          <label>Welke functie zoek je? (mag leeg)<input name="functie" placeholder="Bijvoorbeeld servicemonteur warmtepompen"></label>
         </div>
-        <button class="button" type="submit" data-cta="scan-verstuur">Stuur mij de uitslag</button>
+        <button class="button" type="submit" data-cta="scan-verstuur">Toon mijn uitslag</button>
         <p class="wg-small" style="margin-top:10px">We gebruiken je gegevens alleen voor deze scan.</p>
       </div>
-      <div class="sc-done" id="sc-done" hidden>Ontvangen. Je uitslag en ons plan staan binnen een werkdag in je mail. Vandaag nog starten? <a class="wg-link" href="/plaats-je-vacature/" data-cta="scan-done-zelf-kiezen">Kies zelf je pakket</a>.</div>
+      <div class="sc-done" id="sc-done" hidden>Je uitslag staat hiernaast. Ons plan voor jouw vacature staat binnen een werkdag in je mail. Vandaag nog starten? <a class="wg-link" href="/plaats-je-vacature/" data-cta="scan-done-zelf-kiezen">Kies zelf je pakket</a>.</div>
     </form>
 
     <aside class="sc-res" aria-live="polite">
@@ -125,14 +130,17 @@ noindex: true
       <p class="sc-score"><span id="sc-n">0</span><small>/100</small></p>
       <div class="sc-bar"><i id="sc-bar"></i></div>
       <p class="sc-verdict" id="sc-verdict">Beantwoord de vragen.</p>
+      <div class="sc-lock" id="sc-lock">
       <div class="sc-loss">
         <strong id="sc-week">&euro;0</strong><span>blijft per week liggen door de lege stoel</span>
         <strong id="sc-tot" style="margin-top:12px">&euro;0</strong><span id="sc-tot-l">tot nu toe</span>
       </div>
       <p class="sc-res__label">Eerst fixen</p>
       <ul class="sc-fix" id="sc-fix"><li class="sc-empty">Verschijnt zodra je antwoordt.</li></ul>
+      <a class="sc-lock__cta" href="#sc-lead" data-cta="scan-ontgrendel">Vul je mailadres in en zie je bedrag</a>
+      </div>
       <a class="button" href="/plaats-je-vacature/" data-cta="scan-zelf-kiezen">Vandaag starten</a>
-      <a class="wg-link" href="#sc-lead" data-cta="scan-naar-lead" style="display:block;margin-top:12px;color:#fff">Of stuur mij de uitslag</a>
+      <a class="wg-link" href="#sc-lead" data-cta="scan-naar-lead" style="display:block;margin-top:12px;color:#fff">Of zie eerst wat je lege stoel kost</a>
     </aside>
   </div>
 </section>
@@ -171,7 +179,7 @@ noindex: true
     e.preventDefault(); calc();
     var btn=f.querySelector('button[type=submit]'); btn.disabled=true;
     fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(new FormData(f)).toString()})
-      .then(function(r){if(!r.ok)throw 0;document.getElementById('sc-lead').hidden=true;document.getElementById('sc-done').hidden=false;window.dataLayer=window.dataLayer||[];dataLayer.push({event:'scan_lead',score:f.score.value,kosten:f.kosten_per_week.value});if(window.fbq)fbq('track','Lead',{content_name:'werkgeversscan'});
+      .then(function(r){if(!r.ok)throw 0;document.getElementById('sc-lead').hidden=true;document.getElementById('sc-done').hidden=false;document.getElementById('sc-lock').classList.add('is-open');window.dataLayer=window.dataLayer||[];dataLayer.push({event:'scan_lead',score:f.score.value,kosten:f.kosten_per_week.value});if(window.fbq)fbq('track','Lead',{content_name:'werkgeversscan'});
         try{window.fbq&&fbq('trackCustom','Werkgeversscan',{score:+f.score.value||0})}catch(_){}
         try{window.dataLayer&&dataLayer.push({event:'werkgeversscan',score:+f.score.value||0})}catch(_){}})
       .catch(function(){f.submit()});
